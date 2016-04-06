@@ -36,6 +36,9 @@ def read_description(filename):
 
 requirements = [
     # TODO
+    'click>=5.0',
+    'prompt-toolkit>=0.60',
+    'Pygments>=2.1.0',
 ]
 
 test_requirements = [
@@ -54,6 +57,10 @@ setup(
     author_email='eliang.cs@gmail.com',
     license='MIT',
     packages=['http_prompt'],
+    entry_points="""
+        [console_scripts]
+        http-prompt=http_prompt.cli:cli
+    """,
     install_requires=requirements,
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
