@@ -1,47 +1,41 @@
-from __future__ import unicode_literals
-
 import click
 
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
-from prompt_toolkit.contrib.completers import WordCompleter
-from pygments.style import Style
+from prompt_toolkit.layout.lexers import PygmentsLexer
+from prompt_toolkit.styles import PygmentsStyle
 from pygments.token import Token
-from pygments.styles.default import DefaultStyle
 
+from .completer import HttpPromptCompleter
+from .lexer import HttpPromptLexer
 
-httpie_completer = WordCompleter([
-    # Header keys
-    'Accept', 'Authorization', 'Content-Type',
-
-    # Header values
-    'application/json', 'text/html',
-
-    # Common query parameters
-    'page', 'password', 'username',
-], ignore_case=True)
-
-
-class DocumentStyle(Style):
-    styles = {
-        Token.Menu.Completions.Completion.Current: 'bg:#00aaaa #000000',
-        Token.Menu.Completions.Completion: 'bg:#008888 #ffffff',
-        Token.Menu.Completions.ProgressButton: 'bg:#003333',
-        Token.Menu.Completions.ProgressBar: 'bg:#00aaaa'
-    }
-    styles.update(DefaultStyle.styles)
+# command = action | header | querystring
+# action = "GET" | "POST"
+# header = header_name ":" header_value
+# header_name = ...
+# header_value = ...
+# querystring = param_name "==" param_value
 
 
 @click.command()
 @click.argument('url')
 def cli(url):
     click.echo("Welcome to HTTP Prompt!")
+
     history = InMemoryHistory()
+    lexer = PygmentsLexer(HttpPromptLexer)
+    completer = HttpPromptCompleter()
+
+    style = PygmentsStyle.from_defaults({
+        Token.Operator:       '#33aaaa bold',
+        Token.Number:         '#aa3333 bold',
+        Token.TrailingInput: 'bg:#662222 #ffffff'
+    })
 
     while True:
         try:
-            text = prompt('%s> ' % url, completer=httpie_completer,
-                          style=DocumentStyle, history=history)
+            text = prompt('%s> ' % url, completer=completer, lexer=lexer,
+                          style=style, history=history)
             click.echo("You entered: %s" % text)
         except EOFError:
             break  # Control-D pressed
