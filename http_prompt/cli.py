@@ -7,14 +7,9 @@ from prompt_toolkit.styles import PygmentsStyle
 from pygments.token import Token
 
 from .completer import HttpPromptCompleter
+from .context import Context
+from .execution import execute
 from .lexer import HttpPromptLexer
-
-# command = action | header | querystring
-# action = "GET" | "POST"
-# header = header_name ":" header_value
-# header_name = ...
-# header_value = ...
-# querystring = param_name "==" param_value
 
 
 @click.command()
@@ -22,21 +17,25 @@ from .lexer import HttpPromptLexer
 def cli(url):
     click.echo("Welcome to HTTP Prompt!")
 
+    # For prompt-toolkit
     history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter()
-
     style = PygmentsStyle.from_defaults({
         Token.Operator:       '#33aaaa bold',
         Token.Number:         '#aa3333 bold',
         Token.TrailingInput: 'bg:#662222 #ffffff'
     })
 
+    context = Context(url)
+
     while True:
         try:
-            text = prompt('%s> ' % url, completer=completer, lexer=lexer,
-                          style=style, history=history)
-            click.echo("You entered: %s" % text)
+            text = prompt('%s> ' % context.url, completer=completer,
+                          lexer=lexer, style=style, history=history)
         except EOFError:
             break  # Control-D pressed
+        else:
+            execute(text, context)
+
     click.echo("Goodbye!")

@@ -37,6 +37,7 @@ def read_description(filename):
 requirements = [
     # TODO
     'click>=5.0',
+    'parsimonious>=0.6.2',
     'prompt-toolkit>=0.60',
     'Pygments>=2.1.0',
 ]
