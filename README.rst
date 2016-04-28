@@ -1,7 +1,7 @@
-HTTP Prompt
-===========
+HTTP Prompt (A WORK IN PROGRESS)
+==============================
 
-**WORK IN PROGRESS**
+|Build Status|
 
 An interactive command-line HTTP client featuring auto-completion and syntax
 highlighting.
@@ -46,3 +46,6 @@ Use case::
         "url": "http://httpbin.org/post?sex=M"
     }
 
+
+.. |Build Status| image:: https://api.travis-ci.org/eliangcs/http-prompt.svg?branch=master
+    :target: https://travis-ci.org/eliangcs/http-prompt

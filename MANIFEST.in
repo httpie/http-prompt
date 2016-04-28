@@ -1,0 +1,1 @@
+include README.rst LICENSE requirements.txt requirements-test.txt

@@ -34,20 +34,14 @@ def read_description(filename):
         return f.read()
 
 
-requirements = [
-    # TODO
-    'click>=5.0',
-    'httpie>=0.9.0',
-    'parsimonious>=0.6.2',
-    'prompt-toolkit>=0.60',
-    'Pygments>=2.1.0',
-]
+def read_requirements(filename):
+    try:
+        with open(filename) as f:
+            return f.read().splitlines()
+    except IOError:
+        import os
+        raise IOError(os.getcwd())
 
-test_requirements = [
-    # TODO
-    'pytest',
-    'pytest-cov',
-]
 
 setup(
     name='http-prompt',
@@ -63,7 +57,7 @@ setup(
         [console_scripts]
         http-prompt=http_prompt.cli:cli
     """,
-    install_requires=requirements,
+    install_requires=read_requirements('requirements.txt'),
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Intended Audience :: Developers',
@@ -77,7 +71,5 @@ setup(
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5'
-    ],
-    test_suites='tests',
-    test_requires=test_requirements
+    ]
 )
