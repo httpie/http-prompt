@@ -18,20 +18,25 @@ grammar = Grammar(r"""
 
     concat_mutation = header_mutation / querystring_mutation / body_mutation /
                       option_mutation
-    nonconcat_mutation = cd / "reset"
+    nonconcat_mutation = cd / rm / "reset"
     preview = _ tool _ (method _)? concat_mutation*
     action = _ method _ concat_mutation*
 
     header_mutation = _ varname ":" string _
     querystring_mutation = _ varname "==" string _
     body_mutation = _ varname "=" string _
-    option_mutation = _ "--" varname _
+    option_mutation = long_option / short_option
+    long_option = _ "--" long_optname ~r"(\s+|=)" string _
+    short_option = _ "-" short_optname ~r"\s+" string _
     cd = _ "cd" _ string _
+    rm = _ "rm" _ concat_mutation+ _
     tool = "httpie" / "curl"
     method = "get" / "post" / "put" / "delete" / "patch"
 
+    long_optname = ~r"[a-z\-]+"
+    short_optname = ~r"[a-z]"i
     varname = ~r"[^\s:;=]+"
-    string = ~r"'.*'" / ~r"[^ ]+"
+    string = ~r"'[^']*'" / ~r"[^ ]+"
     _ = ~r"\s*"
 """)
 
