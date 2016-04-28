@@ -1,5 +1,9 @@
 *.egg-info
 *.pyc
+.cache
+.coverage
 .DS_Store
 .python-version
 .tox
+build
+dist
