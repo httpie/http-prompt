@@ -1,11 +1,10 @@
 import click
 
-from urlparse import urljoin
-
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from six.moves.urllib.parse import urljoin
 
 from .context import Context
 
@@ -29,7 +28,7 @@ grammar = Grammar(r"""
     long_option = _ "--" long_optname ~r"(\s+|=)" string _
     short_option = _ "-" short_optname ~r"\s+" string _
     cd = _ "cd" _ string _
-    rm = _ "rm" _ concat_mutation+ _
+    rm = _ "rm" _ (~r"\-(h|q|b)" _)? (varname _)+
     tool = "httpie" / "curl"
     method = "get" / "post" / "put" / "delete" / "patch"
 
