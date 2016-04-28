@@ -36,3 +36,27 @@ class TestExecution_cd(ExecutionTestCase):
     def test_change_base(self):
         execute('cd //example.com/api', self.context)
         self.assertEqual(self.context.url, 'http://example.com/api')
+
+    def test_root(self):
+        execute('cd /api/v2', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api/v2')
+
+        execute('cd /index.html', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/index.html')
+
+    def test_dot_dot(self):
+        execute('cd api/v1', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api/v1')
+
+        execute('cd ..', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api')
+
+        execute('cd ../rest/api', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/rest/api')
+
+    def test_trailing_slash(self):
+        execute('cd api/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api')
+
+        execute('cd movie/1/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api/movie/1')
