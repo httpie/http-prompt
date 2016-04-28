@@ -23,7 +23,7 @@ class ExecutionTestCase(unittest.TestCase):
             patcher.stop()
 
 
-def TestExecution_cd(ExecutionTestCase):
+class TestExecution_cd(ExecutionTestCase):
 
     def test_single_level(self):
         execute('cd api', self.context)
