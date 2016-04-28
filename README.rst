@@ -1,7 +1,7 @@
 HTTP Prompt (A WORK IN PROGRESS)
 ==============================
 
-|Build Status|
+|Build Status| |Coverage|
 
 An interactive command-line HTTP client featuring auto-completion and syntax
 highlighting.
@@ -49,3 +49,6 @@ Use case::
 
 .. |Build Status| image:: https://api.travis-ci.org/eliangcs/http-prompt.svg?branch=master
     :target: https://travis-ci.org/eliangcs/http-prompt
+
+.. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
+    :target: https://coveralls.io/github/eliangcs/http-prompt?branch=master
