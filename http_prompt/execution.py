@@ -17,7 +17,7 @@ grammar = Grammar(r"""
 
     concat_mutation = header_mutation / querystring_mutation / body_mutation /
                       option_mutation
-    nonconcat_mutation = cd / rm / "reset"
+    nonconcat_mutation = cd / rm
     preview = _ tool _ (method _)? concat_mutation*
     action = _ method _ concat_mutation*
 
@@ -25,16 +25,18 @@ grammar = Grammar(r"""
     querystring_mutation = _ varname "==" string _
     body_mutation = _ varname "=" string _
     option_mutation = long_option / short_option
-    long_option = _ "--" long_optname ~r"(\s+|=)" string _
-    short_option = _ "-" short_optname ~r"\s+" string _
+    long_option = _ "--" long_optname optvalue_assign? _
+    short_option = _ "-" short_optname optvalue_assign? _
     cd = _ "cd" _ string _
-    rm = _ "rm" _ (~r"\-(h|q|b)" _)? (varname _)+
+    rm = _ "rm" _ ~r"\-(h|q|b|o)" _ varname _
     tool = "httpie" / "curl"
     method = "get" / "post" / "put" / "delete" / "patch"
 
     long_optname = ~r"[a-z\-]+"
     short_optname = ~r"[a-z]"i
-    varname = ~r"[^\s:;=]+"
+    optvalue_assign = ~r"(\s+|=)" optvalue
+    optvalue = ~r"[^\-][^\s]+" / ~r"'[^']*'"
+    varname = ~r"[a-z0-9_\-\.]+"i
     string = ~r"'[^']*'" / ~r"[^ ]+"
     _ = ~r"\s*"
 """)
@@ -68,6 +70,21 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override.url = urljoin2(self.context_override.url, path)
         return node
 
+    def visit_rm(self, node, children):
+        kind = children[3].text
+        name = children[5].text
+        if kind == '-h':
+            target = self.context.headers
+        elif kind == '-q':
+            target = self.context.querystring_params
+        elif kind == '-b':
+            target = self.context.body_params
+        else:
+            assert kind == '-o'
+            target = self.context.options
+        del target[name]
+        return node
+
     def visit_header_mutation(self, node, children):
         return self._visit_key_value_mutation(
             node, children, self.context_override.headers)
@@ -87,8 +104,14 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_option_mutation(self, node, children):
-        if node.text not in self.context_override.options:
-            self.context_override.options.append(node.text)
+        option = children[0]
+        name = option.children[1].text + option.children[2].text
+        value = None
+
+        if option.children[3].text.strip():
+            value = option.children[3].children[0].children[1].text
+
+        self.context_override.options[name] = value
         return node
 
     def visit_tool(self, node, children):
@@ -108,16 +131,15 @@ class ExecutionVisitor(NodeVisitor):
         context = self._final_context()
 
         if children[0].expr_name == 'preview':
-            command = [self.tool]
             if self.tool == 'httpie':
-                command += context.httpie_args(self.method)
+                command = ['http'] + context.httpie_args(self.method)
             else:
                 assert self.tool == 'curl'
-                command += context.curl_args(self.method)
+                command = ['curl'] + context.curl_args(self.method)
             click.echo(' '.join(command))
         else:
             assert children[0].expr_name == 'action'
-            httpie_main(context.httpie_args())
+            httpie_main(context.httpie_args(self.method))
 
     def generic_visit(self, node, children):
         return node
