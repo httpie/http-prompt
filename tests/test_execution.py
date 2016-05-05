@@ -84,6 +84,31 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -b name', self.context)
         self.assertFalse(self.context.body_params)
 
+    def test_header_single_quoted(self):
+        self.context.headers['Content-Type'] = 'text/html'
+        execute("rm -h 'Content-Type'", self.context)
+        self.assertFalse(self.context.headers)
+
+    def test_option_double_quoted(self):
+        self.context.options['--form'] = None
+        execute('rm -o "--form"', self.context)
+        self.assertFalse(self.context.options)
+
+    def test_querystring_double_quoted(self):
+        self.context.querystring_params['page size'] = '10'
+        execute('rm -q "page size"', self.context)
+        self.assertFalse(self.context.querystring_params)
+
+    def test_body_param_double_quoted(self):
+        self.context.body_params['family name'] = 'Doe Doe'
+        execute('rm -b "family name"', self.context)
+        self.assertFalse(self.context.body_params)
+
+    def test_body_param_escaped(self):
+        self.context.body_params['family name'] = 'Doe Doe'
+        execute('rm -b family\ name', self.context)
+        self.assertFalse(self.context.body_params)
+
 
 class TestMutation(ExecutionTestCase):
 
@@ -186,6 +211,36 @@ class TestMutation(ExecutionTestCase):
             '--style': 'default'
         })
 
+    def test_option_and_body_param(self):
+        execute('--form name="John Doe"', self.context)
+        self.assertEqual(self.context.options, {
+            '--form': None
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe'
+        })
+
+    def test_mixed(self):
+        execute('   --form  name="John Doe"   password=1234\ 5678    '
+                'User-Agent:HTTP\ Prompt  -a   \'john:1234 5678\'  '
+                '"Accept:text/html"  ', self.context)
+        self.assertEqual(self.context.options, {
+            '--form': None,
+            '-a': 'john:1234 5678'
+        })
+        self.assertEqual(self.context.headers, {
+            'User-Agent': 'HTTP Prompt',
+            'Accept': 'text/html'
+        })
+        self.assertEqual(self.context.options, {
+            '--form': None,
+            '-a': 'john:1234 5678'
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe',
+            'password': '1234 5678'
+        })
+
 
 class TestHttpAction(ExecutionTestCase):
 
@@ -193,10 +248,66 @@ class TestHttpAction(ExecutionTestCase):
         execute('get', self.context)
         self.httpie_main.assert_called_with(['GET', 'http://localhost'])
 
+    def test_get_uppercase(self):
+        execute('GET', self.context)
+        self.httpie_main.assert_called_with(['GET', 'http://localhost'])
+
     def test_post(self):
         execute('post page==1', self.context)
         self.httpie_main.assert_called_with(['POST', 'http://localhost',
                                              'page==1'])
+        self.assertFalse(self.context.querystring_params)
+
+    def test_post_with_absolute_path(self):
+        execute('post /api/v3 name=bob', self.context)
+        self.httpie_main.assert_called_with(['POST', 'http://localhost/api/v3',
+                                             'name=bob'])
+        self.assertFalse(self.context.body_params)
+        self.assertEqual(self.context.url, 'http://localhost')
+
+    def test_post_with_relative_path(self):
+        self.context.url = 'http://localhost/api/v3'
+        execute('post ../v2/movie id=8', self.context)
+        self.httpie_main.assert_called_with([
+            'POST', 'http://localhost/api/v2/movie', 'id=8'])
+        self.assertFalse(self.context.body_params)
+        self.assertEqual(self.context.url, 'http://localhost/api/v3')
+
+    def test_post_with_full_url(self):
+        execute('post http://httpbin.org/post id=9', self.context)
+        self.httpie_main.assert_called_with([
+            'POST', 'http://httpbin.org/post', 'id=9'])
+        self.assertFalse(self.context.body_params)
+        self.assertEqual(self.context.url, 'http://localhost')
+
+    def test_post_with_full_https_url(self):
+        execute('post https://httpbin.org/post id=9', self.context)
+        self.httpie_main.assert_called_with([
+            'POST', 'https://httpbin.org/post', 'id=9'])
+        self.assertFalse(self.context.body_params)
+        self.assertEqual(self.context.url, 'http://localhost')
+
+    def test_post_uppercase(self):
+        execute('POST content=text', self.context)
+        self.httpie_main.assert_called_with(['POST', 'http://localhost',
+                                             'content=text'])
+        self.assertFalse(self.context.body_params)
+
+    def test_delete(self):
+        execute('delete', self.context)
+        self.httpie_main.assert_called_with(['DELETE', 'http://localhost'])
+
+    def test_delete_uppercase(self):
+        execute('DELETE', self.context)
+        self.httpie_main.assert_called_with(['DELETE', 'http://localhost'])
+
+    def test_patch(self):
+        execute('patch', self.context)
+        self.httpie_main.assert_called_with(['PATCH', 'http://localhost'])
+
+    def test_patch_uppercase(self):
+        execute('PATCH', self.context)
+        self.httpie_main.assert_called_with(['PATCH', 'http://localhost'])
 
 
 class TestCommandPreview(ExecutionTestCase):
@@ -209,4 +320,25 @@ class TestCommandPreview(ExecutionTestCase):
         execute('httpie post name=alice', self.context)
         self.click.echo.assert_called_with(
             'http POST http://localhost name=alice')
+        self.assertFalse(self.context.body_params)
+
+    def test_httpie_with_absolute_path(self):
+        execute('httpie post /api name=alice', self.context)
+        self.click.echo.assert_called_with(
+            'http POST http://localhost/api name=alice')
+        self.assertFalse(self.context.body_params)
+
+    def test_httpie_with_full_url(self):
+        execute('httpie post http://httpbin.org/post name=alice', self.context)
+        self.click.echo.assert_called_with(
+            'http POST http://httpbin.org/post name=alice')
+        self.assertEqual(self.context.url, 'http://localhost')
+        self.assertFalse(self.context.body_params)
+
+    def test_httpie_with_full_https_url(self):
+        execute('httpie post https://httpbin.org/post name=alice',
+                self.context)
+        self.click.echo.assert_called_with(
+            'http POST https://httpbin.org/post name=alice')
+        self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)

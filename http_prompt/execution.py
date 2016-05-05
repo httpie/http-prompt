@@ -1,5 +1,4 @@
 import click
-import six
 
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError
@@ -19,8 +18,9 @@ grammar = Grammar(r"""
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
-    preview = _ tool _ (method _)? concat_mut*
-    action = _ method _ concat_mut*
+    preview = _ tool _ (method _)? (urlpath _)? concat_mut*
+    action = _ method _ (urlpath _)? concat_mut*
+    urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -43,20 +43,25 @@ grammar = Grammar(r"""
     dquoted_mutkey_item = dquoted_mutkey_char / escapeseq
     dquoted_mutkey_char = ~r'[^\r\n"\\=:]'
 
-    option_mut = _ optname optval_assign? _
-    optname = long_optname / short_optname
-    long_optname = ~r"\-\-[a-z\-]+"
-    short_optname = ~r"\-[a-z]"i
-    optval_assign = ~r"(\s+|=)" optval
-    optval = quoted_string / unquoted_optval
-    unquoted_optval = ~r"[^\-]" unquoted_stringitem*
+    option_mut = flag_option_mut / value_option_mut
+    flag_option_mut = _ flag_optname _
+    flag_optname = "--json" / "-j" / "--form" / "-f" / "--verbose" / "-v" /
+                   "--headers" / "-h" / "--body" / "-b" / "--stream" / "-S" /
+                   "--download" / "-d" / "--continue" / "-c" / "--follow" /
+                   "--check-status" / "--ignore-stdin" / "--help" /
+                   "--version" / "--traceback" / "--debug"
+    value_option_mut = _ value_optname ~r"(\s+|=)" string _
+    value_optname = "--pretty" / "--style" / "-s" / "--print" / "-p" /
+                    "--output" / "-o" / "--session" / "--session-read-only" /
+                    "--auth" / "-a" / "--auth-type" / "--proxy" / "--verify" /
+                    "--cert" / "--cert-key" / "--timeout"
 
     cd = _ "cd" _ string _
     rm = _ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _
     tool = "httpie" / "curl"
-    method = "get" / "post" / "put" / "delete" / "patch"
+    method = ~r"get"i / ~r"post"i / ~r"put"i / ~r"delete"i / ~r"patch"i
     mutkey = unquoted_mutkey / ("'" squoted_mutkey "'") /
-             ('"' dquoted_mutkey '"') / optname
+             ('"' dquoted_mutkey '"') / flag_optname / value_optname
 
     string = quoted_string / unquoted_string
     quoted_string = ('"' dquoted_stringitem* '"') /
@@ -96,6 +101,11 @@ class ExecutionVisitor(NodeVisitor):
         self.method = node.text
         return node
 
+    def visit_urlpath(self, node, children):
+        path = node.text
+        self.context_override.url = urljoin2(self.context_override.url, path)
+        return node
+
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
@@ -117,8 +127,8 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_mutkey(self, node, children):
-        if len(children) == 3:
-            return children[1]
+        if isinstance(children[0], list):
+            return children[0][1]
         return children[0]
 
     def _mutate(self, node, key, op, val):
@@ -172,23 +182,20 @@ class ExecutionVisitor(NodeVisitor):
     def visit_dquoted_mutval(self, node, children):
         return node.text
 
-    def visit_option_mut(self, node, children):
-        key = children[1]
-        value = None
-        # TODO: Fix the isinstance hack
-        if isinstance(children[2], six.string_types):
-            value = children[2]
-        self.context_override.options[key] = value
+    def visit_flag_option_mut(self, node, children):
+        _, key, _ = children
+        self.context_override.options[key] = None
         return node
 
-    def visit_optname(self, node, children):
+    def visit_flag_optname(self, node, children):
         return node.text
 
-    def visit_optval_assign(self, node, children):
-        _, val = children
-        return val
+    def visit_value_option_mut(self, node, children):
+        _, key, _, val, _ = children
+        self.context_override.options[key] = val
+        return node
 
-    def visit_optval(self, node, children):
+    def visit_value_optname(self, node, children):
         return node.text
 
     def visit_string(self, node, children):
@@ -238,15 +245,14 @@ class ExecutionVisitor(NodeVisitor):
 def execute(command, context):
     try:
         root = grammar.parse(command)
-    except ParseError:
-        click.echo('Invalid command')
+    except ParseError as err:
+        # TODO: Better error message
+        part = command[err.pos:err.pos + 10]
+        click.secho('Syntax error near "%s"' % part, err=True, fg='red')
     else:
         visitor = ExecutionVisitor(context)
-        visitor.visit(root)
-
-
-def visit(command):
-    root = grammar.parse(command)
-    context = Context('http://httpbin.org')
-    visitor = ExecutionVisitor(context)
-    return visitor.visit(root)
+        try:
+            visitor.visit(root)
+        except Exception as err:
+            # TODO: Better error message
+            click.secho(str(err), err=True, fg='red')
