@@ -74,14 +74,116 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -o --form', self.context)
         self.assertFalse(self.context.options)
 
+    def test_querystring(self):
+        self.context.querystring_params['page'] = '1'
+        execute('rm -q page', self.context)
+        self.assertFalse(self.context.querystring_params)
 
-class TestOptionMutation(ExecutionTestCase):
+    def test_body_param(self):
+        self.context.body_params['name'] = 'alice'
+        execute('rm -b name', self.context)
+        self.assertFalse(self.context.body_params)
+
+
+class TestMutation(ExecutionTestCase):
+
+    def test_simple_headers(self):
+        execute('Accept:text/html User-Agent:HttpPrompt', self.context)
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/html',
+            'User-Agent': 'HttpPrompt'
+        })
+
+    def test_header_value_with_double_quotes(self):
+        execute('Accept:text/html User-Agent:"HTTP Prompt"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/html',
+            'User-Agent': 'HTTP Prompt'
+        })
+
+    def test_header_value_with_single_quotes(self):
+        execute("Accept:text/html User-Agent:'HTTP Prompt'", self.context)
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/html',
+            'User-Agent': 'HTTP Prompt'
+        })
+
+    def test_header_with_double_quotes(self):
+        execute('Accept:text/html "User-Agent:HTTP Prompt"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/html',
+            'User-Agent': 'HTTP Prompt'
+        })
+
+    def test_header_with_single_quotes(self):
+        execute("Accept:text/html 'User-Agent:HTTP Prompt'", self.context)
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/html',
+            'User-Agent': 'HTTP Prompt'
+        })
+
+    def test_simple_querystring(self):
+        execute('page==1 limit==20', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'page': '1',
+            'limit': '20'
+        })
+
+    def test_querystring_with_double_quotes(self):
+        execute('page==1 name=="John Doe"', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'page': '1',
+            'name': 'John Doe'
+        })
+
+    def test_querystring_with_single_quotes(self):
+        execute("page==1 name=='John Doe'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'page': '1',
+            'name': 'John Doe'
+        })
+
+    def test_simple_body_params(self):
+        execute('username=john password=123', self.context)
+        self.assertEqual(self.context.body_params, {
+            'username': 'john',
+            'password': '123'
+        })
+
+    def test_body_param_value_with_double_quotes(self):
+        execute('name="John Doe" password=123', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe',
+            'password': '123'
+        })
+
+    def test_body_param_value_with_single_quotes(self):
+        execute("name='John Doe' password=123", self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe',
+            'password': '123'
+        })
+
+    def test_body_param_with_double_quotes(self):
+        execute('"name=John Doe" password=123', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe',
+            'password': '123'
+        })
 
     def test_long_option_names(self):
         execute('--auth user:pass --form', self.context)
         self.assertEqual(self.context.options, {
             '--form': None,
             '--auth': 'user:pass'
+        })
+
+    def test_long_short_option_names_mixed(self):
+        execute('--style=default -j --stream', self.context)
+        self.assertEqual(self.context.options, {
+            '-j': None,
+            '--stream': None,
+            '--style': 'default'
         })
 
 

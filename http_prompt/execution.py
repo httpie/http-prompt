@@ -1,4 +1,5 @@
 import click
+import six
 
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError
@@ -7,37 +8,67 @@ from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
 from .context import Context
+from .utils import unescape
 
 
 grammar = Grammar(r"""
     command = mutation / immutation
 
-    mutation = concat_mutation+ / nonconcat_mutation
+    mutation = concat_mut+ / nonconcat_mut
     immutation = preview / action
 
-    concat_mutation = header_mutation / querystring_mutation / body_mutation /
-                      option_mutation
-    nonconcat_mutation = cd / rm
-    preview = _ tool _ (method _)? concat_mutation*
-    action = _ method _ concat_mutation*
+    concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
+    nonconcat_mut = cd / rm
+    preview = _ tool _ (method _)? concat_mut*
+    action = _ method _ concat_mut*
 
-    header_mutation = _ varname ":" string _
-    querystring_mutation = _ varname "==" string _
-    body_mutation = _ varname "=" string _
-    option_mutation = long_option / short_option
-    long_option = _ "--" long_optname optvalue_assign? _
-    short_option = _ "-" short_optname optvalue_assign? _
+    unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
+    full_quoted_mut = full_squoted_mut / full_dquoted_mut
+    value_quoted_mut = value_squoted_mut / value_dquoted_mut
+    full_squoted_mut = _ "'" squoted_mutkey mutop squoted_mutval "'" _
+    full_dquoted_mut = _ '"' dquoted_mutkey mutop dquoted_mutval '"' _
+    value_squoted_mut = _ unquoted_mutkey mutop "'" squoted_mutval "'" _
+    value_dquoted_mut = _ unquoted_mutkey mutop '"' dquoted_mutval '"' _
+    mutop = ":" / "==" / "="
+    unquoted_mutkey = unquoted_mutkey_item+
+    unquoted_mutval = unquoted_stringitem*
+    unquoted_mutkey_item = unquoted_mutkey_char / escapeseq
+    unquoted_mutkey_char = ~r"[^\s'\"\\=:]"
+    squoted_mutkey = squoted_mutkey_item+
+    squoted_mutval = squoted_stringitem*
+    squoted_mutkey_item = squoted_mutkey_char / escapeseq
+    squoted_mutkey_char = ~r"[^\r\n'\\=:]"
+    dquoted_mutkey = dquoted_mutkey_item+
+    dquoted_mutval = dquoted_stringitem*
+    dquoted_mutkey_item = dquoted_mutkey_char / escapeseq
+    dquoted_mutkey_char = ~r'[^\r\n"\\=:]'
+
+    option_mut = _ optname optval_assign? _
+    optname = long_optname / short_optname
+    long_optname = ~r"\-\-[a-z\-]+"
+    short_optname = ~r"\-[a-z]"i
+    optval_assign = ~r"(\s+|=)" optval
+    optval = quoted_string / unquoted_optval
+    unquoted_optval = ~r"[^\-]" unquoted_stringitem*
+
     cd = _ "cd" _ string _
-    rm = _ "rm" _ ~r"\-(h|q|b|o)" _ varname _
+    rm = _ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _
     tool = "httpie" / "curl"
     method = "get" / "post" / "put" / "delete" / "patch"
+    mutkey = unquoted_mutkey / ("'" squoted_mutkey "'") /
+             ('"' dquoted_mutkey '"') / optname
 
-    long_optname = ~r"[a-z\-]+"
-    short_optname = ~r"[a-z]"i
-    optvalue_assign = ~r"(\s+|=)" optvalue
-    optvalue = ~r"[^\-][^\s]+" / ~r"'[^']*'"
-    varname = ~r"[a-z0-9_\-\.]+"i
-    string = ~r"'[^']*'" / ~r"[^ ]+"
+    string = quoted_string / unquoted_string
+    quoted_string = ('"' dquoted_stringitem* '"') /
+                    ("'" squoted_stringitem* "'")
+    unquoted_string = unquoted_stringitem+
+    dquoted_stringitem = dquoted_stringchar / escapeseq
+    squoted_stringitem = squoted_stringchar / escapeseq
+    unquoted_stringitem = unquoted_stringchar / escapeseq
+    dquoted_stringchar = ~r'[^\r\n"\\]'
+    squoted_stringchar = ~r"[^\r\n'\\]"
+    unquoted_stringchar = ~r"[^\s'\"\\]"
+    escapeseq = ~r"\\."
     _ = ~r"\s*"
 """)
 
@@ -65,14 +96,14 @@ class ExecutionVisitor(NodeVisitor):
         self.method = node.text
         return node
 
-    def visit_cd(self, node, children):
-        path = children[3].text
+    def visit_cd(self, node, (_1, _2, _3, path, _4)):
         self.context_override.url = urljoin2(self.context_override.url, path)
         return node
 
     def visit_rm(self, node, children):
+        print(children[3])
         kind = children[3].text
-        name = children[5].text
+        name = children[5]
         if kind == '-h':
             target = self.context.headers
         elif kind == '-q':
@@ -85,34 +116,83 @@ class ExecutionVisitor(NodeVisitor):
         del target[name]
         return node
 
-    def visit_header_mutation(self, node, children):
-        return self._visit_key_value_mutation(
-            node, children, self.context_override.headers)
+    def visit_mutkey(self, node, children):
+        if len(children) == 3:
+            return children[1]
+        return children[0]
 
-    def visit_querystring_mutation(self, node, children):
-        return self._visit_key_value_mutation(
-            node, children, self.context_override.querystring_params)
-
-    def visit_body_mutation(self, node, children):
-        return self._visit_key_value_mutation(
-            node, children, self.context_override.body_params)
-
-    def _visit_key_value_mutation(self, node, children, dst_dict):
-        key = children[1].text
-        value = children[3].text
-        dst_dict[key] = value
+    def _mutate(self, node, key, op, val):
+        if op == ':':
+            target = self.context_override.headers
+        elif op == '==':
+            target = self.context_override.querystring_params
+        elif op == '=':
+            target = self.context_override.body_params
+        target[key] = val
         return node
 
-    def visit_option_mutation(self, node, children):
-        option = children[0]
-        name = option.children[1].text + option.children[2].text
+    def visit_unquoted_mut(self, node, (_1, key, op, val, _2)):
+        return self._mutate(node, key, op, val)
+
+    def visit_full_squoted_mut(self, node, (_1, _2, key, op, val, _3, _4)):
+        return self._mutate(node, key, op, val)
+
+    def visit_full_dquoted_mut(self, node, (_1, _2, key, op, val, _3, _4)):
+        return self._mutate(node, key, op, val)
+
+    def visit_value_squoted_mut(self, node, (_1, key, op, _2, val, _3, _4)):
+        return self._mutate(node, key, op, val)
+
+    def visit_value_dquoted_mut(self, node, (_1, key, op, _2, val, _3, _4)):
+        return self._mutate(node, key, op, val)
+
+    def visit_unquoted_mutkey(self, node, children):
+        return unescape(node.text)
+
+    def visit_squoted_mutkey(self, node, children):
+        return node.text
+
+    def visit_dquoted_mutkey(self, node, children):
+        return node.text
+
+    def visit_mutop(self, node, children):
+        return node.text
+
+    def visit_unquoted_mutval(self, node, children):
+        return unescape(node.text)
+
+    def visit_squoted_mutval(self, node, children):
+        return node.text
+
+    def visit_dquoted_mutval(self, node, children):
+        return node.text
+
+    def visit_option_mut(self, node, children):
+        key = children[1]
         value = None
-
-        if option.children[3].text.strip():
-            value = option.children[3].children[0].children[1].text
-
-        self.context_override.options[name] = value
+        # TODO: Fix the isinstance hack
+        if isinstance(children[2], six.string_types):
+            value = children[2]
+        self.context_override.options[key] = value
         return node
+
+    def visit_optname(self, node, children):
+        return node.text
+
+    def visit_optval_assign(self, node, (op, val)):
+        return val
+
+    def visit_optval(self, node, children):
+        return node.text
+
+    def visit_string(self, node, (val,)):
+        return val
+
+    def visit_unquoted_string(self, node, children):
+        return unescape(node.text)
+
+    def visit_quoted_string(self, node, children):
+        return node.text[1:-1]
 
     def visit_tool(self, node, children):
         self.tool = node.text
@@ -142,6 +222,10 @@ class ExecutionVisitor(NodeVisitor):
             httpie_main(context.httpie_args(self.method))
 
     def generic_visit(self, node, children):
+        if not node.expr_name and node.children:
+            if len(children) == 1:
+                return children[0]
+            return children
         return node
 
 
@@ -153,3 +237,10 @@ def execute(command, context):
     else:
         visitor = ExecutionVisitor(context)
         visitor.visit(root)
+
+
+def visit(command):
+    root = grammar.parse(command)
+    context = Context('http://httpbin.org')
+    visitor = ExecutionVisitor(context)
+    return visitor.visit(root)
