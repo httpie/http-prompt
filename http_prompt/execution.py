@@ -96,12 +96,12 @@ class ExecutionVisitor(NodeVisitor):
         self.method = node.text
         return node
 
-    def visit_cd(self, node, (_1, _2, _3, path, _4)):
+    def visit_cd(self, node, children):
+        _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
         return node
 
     def visit_rm(self, node, children):
-        print(children[3])
         kind = children[3].text
         name = children[5]
         if kind == '-h':
@@ -131,19 +131,24 @@ class ExecutionVisitor(NodeVisitor):
         target[key] = val
         return node
 
-    def visit_unquoted_mut(self, node, (_1, key, op, val, _2)):
+    def visit_unquoted_mut(self, node, children):
+        _, key, op, val, _ = children
         return self._mutate(node, key, op, val)
 
-    def visit_full_squoted_mut(self, node, (_1, _2, key, op, val, _3, _4)):
+    def visit_full_squoted_mut(self, node, children):
+        _, _, key, op, val, _, _ = children
         return self._mutate(node, key, op, val)
 
-    def visit_full_dquoted_mut(self, node, (_1, _2, key, op, val, _3, _4)):
+    def visit_full_dquoted_mut(self, node, children):
+        _, _, key, op, val, _, _ = children
         return self._mutate(node, key, op, val)
 
-    def visit_value_squoted_mut(self, node, (_1, key, op, _2, val, _3, _4)):
+    def visit_value_squoted_mut(self, node, children):
+        _, key, op, _, val, _, _ = children
         return self._mutate(node, key, op, val)
 
-    def visit_value_dquoted_mut(self, node, (_1, key, op, _2, val, _3, _4)):
+    def visit_value_dquoted_mut(self, node, children):
+        _, key, op, _, val, _, _ = children
         return self._mutate(node, key, op, val)
 
     def visit_unquoted_mutkey(self, node, children):
@@ -179,14 +184,15 @@ class ExecutionVisitor(NodeVisitor):
     def visit_optname(self, node, children):
         return node.text
 
-    def visit_optval_assign(self, node, (op, val)):
+    def visit_optval_assign(self, node, children):
+        _, val = children
         return val
 
     def visit_optval(self, node, children):
         return node.text
 
-    def visit_string(self, node, (val,)):
-        return val
+    def visit_string(self, node, children):
+        return children[0]
 
     def visit_unquoted_string(self, node, children):
         return unescape(node.text)
