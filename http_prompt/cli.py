@@ -3,8 +3,8 @@ import click
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.styles import PygmentsStyle
-from pygments.token import Token
+from prompt_toolkit.styles.from_pygments import style_from_pygments
+from pygments.styles import get_style_by_name
 
 from .completer import HttpPromptCompleter
 from .context import Context
@@ -21,11 +21,7 @@ def cli(url):
     history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter()
-    style = PygmentsStyle.from_defaults({
-        Token.Operator:       '#33aaaa bold',
-        Token.Number:         '#aa3333 bold',
-        Token.TrailingInput: 'bg:#662222 #ffffff'
-    })
+    style = style_from_pygments(get_style_by_name('monokai'))
 
     context = Context(url)
 
