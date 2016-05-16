@@ -16,14 +16,13 @@ from .lexer import HttpPromptLexer
 @click.argument('url')
 def cli(url):
     click.echo("Welcome to HTTP Prompt!")
+    context = Context(url)
 
     # For prompt-toolkit
     history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
-    completer = HttpPromptCompleter()
+    completer = HttpPromptCompleter(context)
     style = style_from_pygments(get_style_by_name('monokai'))
-
-    context = Context(url)
 
     while True:
         try:

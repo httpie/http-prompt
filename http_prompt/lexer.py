@@ -1,20 +1,15 @@
 from pygments.lexer import RegexLexer, bygroups, include, words
+
 from pygments.token import Text, String, Keyword, Name, Operator
+
+from . import options as opt
 
 
 __all__ = ['HttpPromptLexer']
 
 
-FLAG_OPTIONS = ('--json', '-j', '--form', '-f', '--verbose', '-v',
-                '--headers', '-h', '--body', '-b', '--stream', '-S',
-                '--download', '-d', '--continue', '-c', '--follow',
-                '--check-status', '--ignore-stdin', '--help',
-                '--version', '--traceback', '--debug')
-
-VALUE_OPTIONS = ('--pretty', '--style', '-s', '--print', '-p',
-                 '--output', '-o', '--session', '--session-read-only',
-                 '--auth', '-a', '--auth-type', '--proxy', '--verify',
-                 '--cert', '--cert-key', '--timeout')
+FLAG_OPTIONS = [name for name, _ in opt.FLAG_OPTIONS]
+VALUE_OPTIONS = [name for name, _ in opt.VALUE_OPTIONS]
 
 
 def string_rules(state):
