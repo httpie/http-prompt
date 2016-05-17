@@ -39,8 +39,9 @@ class HttpPromptLexer(RegexLexer):
             (r'\s+', Text),
             (r'(cd)(\s*)', bygroups(Keyword, Text), 'cd'),
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
-            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'action'),
-            include('action'),
+            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
+            (r'(?i)(get|post|put|patch|delete)(\s*)',
+             bygroups(Keyword, Text), 'urlpath'),
             (r'', Text, 'concat_mut')
         ],
 
@@ -90,9 +91,10 @@ class HttpPromptLexer(RegexLexer):
             (r'([^\r\n"\\]|(\\.))+', String, '#pop')
         ],
 
-        'action': [
+        'preview_action': [
             (r'(?i)(get|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'urlpath')
+             bygroups(Keyword, Text), 'urlpath'),
+            (r'', Text, 'urlpath')
         ],
         'urlpath': [
             (r'https?://([^\s"\'\\]|(\\.))+', String, 'concat_mut'),
@@ -117,7 +119,8 @@ class HttpPromptLexer(RegexLexer):
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\s"\'\\]|(\\.))+', String, 'concat_mut')
+            (r'([^\-][^\s"\'\\=:]|(\\.))+\s+', String, 'concat_mut'),
+            (r'', Text, 'concat_mut')
         ],
 
         'end': [

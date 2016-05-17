@@ -1,6 +1,6 @@
 import unittest
 
-from pygments.token import Keyword, String, Text, Error, Name
+from pygments.token import Keyword, String, Text, Error, Name, Operator
 
 from http_prompt.lexer import HttpPromptLexer
 
@@ -132,5 +132,45 @@ class TestLexer_rm(LexerTestCase):
             (Error, 'f'), (Error, 'o'), (Error, 'o')
         ])
 
+
+class TestLexerPreview(LexerTestCase):
+
+    def test_httpie_without_action(self):
+        cmd = 'httpie http://example.com name=jack'
+        self.assertEqual(self.get_tokens(cmd), [
+            (Keyword, 'httpie'),
+            (String, 'http://example.com'),
+            (Name, 'name'), (Operator, '='), (String, 'jack')
+        ])
+
+    def test_httpie_without_action_and_url(self):
+        cmd = 'httpie name=jack Accept:*/*'
+        self.assertEqual(self.get_tokens(cmd), [
+            (Keyword, 'httpie'),
+            (Name, 'name'), (Operator, '='), (String, 'jack'),
+            (Name, 'Accept'), (Operator, ':'), (String, '*/*')
+        ])
+
+    def test_httpie_absolute_url(self):
+        cmd = 'httpie post http://example.com name=jack'
+        self.assertEqual(self.get_tokens(cmd), [
+            (Keyword, 'httpie'), (Keyword, 'post'),
+            (String, 'http://example.com'),
+            (Name, 'name'), (Operator, '='), (String, 'jack')
+        ])
+
+    def test_httpie_option_first(self):
+        self.assertEqual(self.get_tokens('httpie post --form name=jack'), [
+            (Keyword, 'httpie'), (Keyword, 'post'),
+            (Name, '--form'),
+            (Name, 'name'), (Operator, '='), (String, 'jack')
+        ])
+
+    def test_httpie_body_param_first(self):
+        self.assertEqual(self.get_tokens('httpie post name=jack --form'), [
+            (Keyword, 'httpie'), (Keyword, 'post'),
+            (Name, 'name'), (Operator, '='), (String, 'jack'),
+            (Name, '--form')
+        ])
 
 # TODO: Add more tests...
