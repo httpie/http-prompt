@@ -12,10 +12,22 @@ from .execution import execute
 from .lexer import HttpPromptLexer
 
 
+def fix_incomplete_url(url):
+    if url.startswith('s://') or url.startswith('://'):
+        url = 'http' + url
+    elif url.startswith('//'):
+        url = 'http:' + url
+    elif not url.startswith('http://') and not url.startswith('https://'):
+        url = 'http://' + url
+    return url
+
+
 @click.command()
-@click.argument('url')
+@click.argument('url', default='http://localhost')
 def cli(url):
     click.echo("Welcome to HTTP Prompt!")
+
+    url = fix_incomplete_url(url)
     context = Context(url)
 
     # For prompt-toolkit
