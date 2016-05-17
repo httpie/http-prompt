@@ -1,4 +1,4 @@
-from pygments.lexer import RegexLexer, bygroups, include, words
+from pygments.lexer import RegexLexer, bygroups, words
 
 from pygments.token import Text, String, Keyword, Name, Operator
 
@@ -119,7 +119,7 @@ class HttpPromptLexer(RegexLexer):
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-][^\s"\'\\=:]|(\\.))+\s+', String, 'concat_mut'),
+            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, 'concat_mut'),
             (r'', Text, 'concat_mut')
         ],
 
