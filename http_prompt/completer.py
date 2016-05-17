@@ -27,6 +27,7 @@ ACTIONS = [
     ('put', 'PUT request'),
 ]
 
+# TODO: Include more header names
 HEADER_NAMES = [
     ('Accept', 'Header'),
     ('Accept-Encoding', 'Header'),
@@ -42,15 +43,18 @@ HEADER_NAMES = [
     ('User-Agent', 'Header'),
 ]
 
+
+CONTENT_TYPES = [
+    'application/json',
+    'application/x-www-form-urlencoded',
+    'multipart/form-data',
+    'text/html',
+]
+
+# TODO: Include more common header values
 HEADER_VALUES = {
-    'Content-Type': OrderedDict([
-        ('applicaiton/json', 'Content-Type'),
-        ('text/html', 'Content-Type'),
-    ]),
-    'User-Agent': OrderedDict([
-        ('Chrome', 'User-Agent'),
-        ('Firefox', 'User-Agent'),
-    ]),
+    'Accept': CONTENT_TYPES,
+    'Content-Type': CONTENT_TYPES,
 }
 
 ROOT_COMMANDS = OrderedDict(sorted(ROOT_COMMANDS))
@@ -63,9 +67,11 @@ OPTION_NAMES = OrderedDict(OPTION_NAMES)
 HEADER_NAMES = OrderedDict(HEADER_NAMES)
 
 RULES = [
-    (r'(httpie|curl)\s+\w+\s+', 'concat_mutations'),
-    (r'(httpie|curl)\s+', 'actions'),
+    (r'((?:[^\s\'"\\=:]|(?:\\.))+):((?:[^\s\'"\\]|(?:\\.))*)$',
+     'header_values'),
+
     (r'(get|post|put|patch|delete)\s+', 'concat_mutations'),
+    (r'(httpie|curl)\s+', 'preview'),
     (r'rm\s+\-b\s+', 'existing_body_params'),
     (r'rm\s+\-h\s+', 'existing_header_names'),
     (r'rm\s+\-o\s+', 'existing_option_names'),
@@ -108,17 +114,30 @@ def match_completions(cur_word, word_dict):
 
 class CompletionGenerator(object):
 
-    def root_commands(self, document, context):
+    def root_commands(self, context, match):
         return chain(
             self._generic_generate(ROOT_COMMANDS.keys(), {}, ROOT_COMMANDS),
-            self.actions(document, context),
-            self.concat_mutations(document, context)
+            self.actions(context, match),
+            self.concat_mutations(context, match)
         )
 
-    def actions(self, document, context):
+    def header_values(self, context, match):
+        header_name = match.group(1)
+        header_values = HEADER_VALUES.get(header_name)
+        if header_values:
+            for value in header_values:
+                yield value, header_name
+
+    def preview(self, context, match):
+        return chain(
+            self.actions(context, match),
+            self.concat_mutations(context, match)
+        )
+
+    def actions(self, context, match):
         return self._generic_generate(ACTIONS.keys(), {}, ACTIONS)
 
-    def concat_mutations(self, document, context):
+    def concat_mutations(self, context, match):
         return chain(
             self._generic_generate(context.body_params.keys(),
                                    context.body_params, 'Body parameter'),
@@ -131,20 +150,20 @@ class CompletionGenerator(object):
                                    context.options, OPTION_NAMES)
         )
 
-    def existing_body_params(self, document, context):
+    def existing_body_params(self, context, match):
         return self._generic_generate(context.body_params.keys(),
                                       context.body_params, 'Body parameter')
 
-    def existing_querystring_params(self, document, context):
+    def existing_querystring_params(self, context, match):
         return self._generic_generate(
             context.querystring_params.keys(),
             context.querystring_params, 'Querystring parameter')
 
-    def existing_header_names(self, document, context):
+    def existing_header_names(self, context, match):
         return self._generic_generate(context.headers.keys(),
                                       context.headers, HEADER_NAMES)
 
-    def existing_option_names(self, document, context):
+    def existing_option_names(self, context, match):
         return self._generic_generate(context.headers.keys(),
                                       context.options, OPTION_NAMES)
 
@@ -172,17 +191,25 @@ class HttpPromptCompleter(Completer):
         self.comp_gen = CompletionGenerator()
 
     def get_completions(self, document, complete_event):
-        cur_word = document.get_word_before_cursor(WORD=True)
         cur_text = document.text_before_cursor
+        cur_word = None
         word_dict = None
 
         for regex, method_name in RULES:
-            if regex.search(cur_text):
+            match = regex.search(cur_text)
+            if match:
                 gen_completions = getattr(self.comp_gen, method_name)
-                completions = gen_completions(document, self.context)
+                completions = gen_completions(self.context, match)
                 word_dict = OrderedDict(completions)
+
+                groups = match.groups()
+                if len(groups) > 1:
+                    cur_word = groups[-1]
+                else:
+                    cur_word = document.get_word_before_cursor(WORD=True)
+
                 break
 
-        if completions:
+        if word_dict:
             for comp in match_completions(cur_word, word_dict):
                 yield comp
