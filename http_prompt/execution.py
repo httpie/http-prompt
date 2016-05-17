@@ -1,9 +1,12 @@
 import click
+import six
 
+from httpie.context import Environment
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from six import BytesIO
 from six.moves.urllib.parse import urljoin
 
 from .context import Context
@@ -232,7 +235,22 @@ class ExecutionVisitor(NodeVisitor):
             click.echo(' '.join(command))
         else:
             assert children[0].expr_name == 'action'
-            httpie_main(context.httpie_args(self.method))
+            output = BytesIO()
+            try:
+                env = Environment(stdout=output)
+                httpie_main(context.httpie_args(self.method), env=env)
+                content = output.getvalue()
+            finally:
+                output.close()
+
+            # XXX: Work around a bug of click.echo_via_pager(). When you pass
+            # a bytestring to echo_via_pager(), it converts the bytestring with
+            # str(b'abc'), which makes it "b'abc'".
+            if six.PY2:
+                content = unicode(content, 'utf-8')
+            else:
+                content = str(content, 'utf-8')
+            click.echo_via_pager(content)
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:

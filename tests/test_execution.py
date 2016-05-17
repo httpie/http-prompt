@@ -22,6 +22,9 @@ class ExecutionTestCase(unittest.TestCase):
         for _, patcher in self.patchers:
             patcher.stop()
 
+    def assert_httpie_main_called_with(self, args):
+        self.assertEqual(self.httpie_main.call_args[0][0], args)
+
 
 class TestExecution_cd(ExecutionTestCase):
 
@@ -246,21 +249,21 @@ class TestHttpAction(ExecutionTestCase):
 
     def test_get(self):
         execute('get', self.context)
-        self.httpie_main.assert_called_with(['GET', 'http://localhost'])
+        self.assert_httpie_main_called_with(['GET', 'http://localhost'])
 
     def test_get_uppercase(self):
         execute('GET', self.context)
-        self.httpie_main.assert_called_with(['GET', 'http://localhost'])
+        self.assert_httpie_main_called_with(['GET', 'http://localhost'])
 
     def test_post(self):
         execute('post page==1', self.context)
-        self.httpie_main.assert_called_with(['POST', 'http://localhost',
+        self.assert_httpie_main_called_with(['POST', 'http://localhost',
                                              'page==1'])
         self.assertFalse(self.context.querystring_params)
 
     def test_post_with_absolute_path(self):
         execute('post /api/v3 name=bob', self.context)
-        self.httpie_main.assert_called_with(['POST', 'http://localhost/api/v3',
+        self.assert_httpie_main_called_with(['POST', 'http://localhost/api/v3',
                                              'name=bob'])
         self.assertFalse(self.context.body_params)
         self.assertEqual(self.context.url, 'http://localhost')
@@ -268,46 +271,46 @@ class TestHttpAction(ExecutionTestCase):
     def test_post_with_relative_path(self):
         self.context.url = 'http://localhost/api/v3'
         execute('post ../v2/movie id=8', self.context)
-        self.httpie_main.assert_called_with([
+        self.assert_httpie_main_called_with([
             'POST', 'http://localhost/api/v2/movie', 'id=8'])
         self.assertFalse(self.context.body_params)
         self.assertEqual(self.context.url, 'http://localhost/api/v3')
 
     def test_post_with_full_url(self):
         execute('post http://httpbin.org/post id=9', self.context)
-        self.httpie_main.assert_called_with([
+        self.assert_httpie_main_called_with([
             'POST', 'http://httpbin.org/post', 'id=9'])
         self.assertFalse(self.context.body_params)
         self.assertEqual(self.context.url, 'http://localhost')
 
     def test_post_with_full_https_url(self):
         execute('post https://httpbin.org/post id=9', self.context)
-        self.httpie_main.assert_called_with([
+        self.assert_httpie_main_called_with([
             'POST', 'https://httpbin.org/post', 'id=9'])
         self.assertFalse(self.context.body_params)
         self.assertEqual(self.context.url, 'http://localhost')
 
     def test_post_uppercase(self):
         execute('POST content=text', self.context)
-        self.httpie_main.assert_called_with(['POST', 'http://localhost',
+        self.assert_httpie_main_called_with(['POST', 'http://localhost',
                                              'content=text'])
         self.assertFalse(self.context.body_params)
 
     def test_delete(self):
         execute('delete', self.context)
-        self.httpie_main.assert_called_with(['DELETE', 'http://localhost'])
+        self.assert_httpie_main_called_with(['DELETE', 'http://localhost'])
 
     def test_delete_uppercase(self):
         execute('DELETE', self.context)
-        self.httpie_main.assert_called_with(['DELETE', 'http://localhost'])
+        self.assert_httpie_main_called_with(['DELETE', 'http://localhost'])
 
     def test_patch(self):
         execute('patch', self.context)
-        self.httpie_main.assert_called_with(['PATCH', 'http://localhost'])
+        self.assert_httpie_main_called_with(['PATCH', 'http://localhost'])
 
     def test_patch_uppercase(self):
         execute('PATCH', self.context)
-        self.httpie_main.assert_called_with(['PATCH', 'http://localhost'])
+        self.assert_httpie_main_called_with(['PATCH', 'http://localhost'])
 
 
 class TestCommandPreview(ExecutionTestCase):

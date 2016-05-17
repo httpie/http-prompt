@@ -1,3 +1,5 @@
+import os
+
 import click
 
 from prompt_toolkit import prompt
@@ -26,6 +28,9 @@ def fix_incomplete_url(url):
 @click.argument('url', default='http://localhost')
 def cli(url):
     click.echo("Welcome to HTTP Prompt!")
+
+    # Override less options
+    os.environ['LESS'] = '-RXF'
 
     url = fix_incomplete_url(url)
     context = Context(url)
