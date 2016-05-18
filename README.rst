@@ -26,7 +26,7 @@ To upgrade HTTP Prompt, do::
     $ pip install -U http-prompt
 
 
-Qucikstart
+Quickstart
 ----------
 
 Starting a session::
