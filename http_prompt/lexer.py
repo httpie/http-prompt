@@ -42,6 +42,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
             (r'(?i)(get|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), 'urlpath'),
+            (r'exit\s*', Keyword, 'end'),
             (r'', Text, 'concat_mut')
         ],
 
