@@ -49,6 +49,9 @@ def cli(url):
         except EOFError:
             break  # Control-D pressed
         else:
-            execute(text, context)
+            if text.strip() == 'exit':
+                break
+            else:
+                execute(text, context)
 
     click.echo("Goodbye!")

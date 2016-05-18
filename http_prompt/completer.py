@@ -17,6 +17,7 @@ ROOT_COMMANDS = [
     ('rm -q', 'Remove querystring parameter'),
     ('curl', 'Preview curl command'),
     ('httpie', 'Preview HTTPie command'),
+    ('exit', 'Exit HTTP Prompt'),
 ]
 
 ACTIONS = [
