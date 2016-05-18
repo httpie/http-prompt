@@ -8,6 +8,7 @@ from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 
+from . import __version__
 from .completer import HttpPromptCompleter
 from .context import Context
 from .execution import execute
@@ -27,7 +28,7 @@ def fix_incomplete_url(url):
 @click.command()
 @click.argument('url', default='http://localhost')
 def cli(url):
-    click.echo("Welcome to HTTP Prompt!")
+    click.echo('Version: %s' % __version__)
 
     # Override less options
     os.environ['LESS'] = '-RXF'
