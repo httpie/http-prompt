@@ -1,9 +1,11 @@
+import re
+
 import click
 import six
 
 from httpie.context import Environment
 from httpie.core import main as httpie_main
-from parsimonious.exceptions import ParseError
+from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six import BytesIO
@@ -271,6 +273,15 @@ def execute(command, context):
         visitor = ExecutionVisitor(context)
         try:
             visitor.visit(root)
-        except Exception as err:
-            # TODO: Better error message
-            click.secho(str(err), err=True, fg='red')
+        except VisitationError as err:
+            exc_class = err.original_class
+            if exc_class is KeyError:
+                # XXX: Need to parse VisitationError error message to get the
+                # original error message as VisitationError doesn't hold the
+                # original exception object
+                key = re.search(r"KeyError: '(.*)'", str(err)).group(1)
+                click.secho("Key '%s' not found" % key, err=True,
+                            fg='red')
+            else:
+                # TODO: Better error message
+                click.secho(str(err), err=True, fg='red')
