@@ -55,6 +55,7 @@ To preview how HTTP Prompt is going to call HTTPie_, do::
 To actually send a request, enter one of the HTTP methods::
 
     > get
+    > head
     > post
     > put
     > patch

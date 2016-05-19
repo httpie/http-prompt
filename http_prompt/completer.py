@@ -23,6 +23,7 @@ ROOT_COMMANDS = [
 ACTIONS = [
     ('delete', 'DELETE request'),
     ('get', 'GET request'),
+    ('head', 'HEAD request'),
     ('patch', 'GET request'),
     ('post', 'POST request'),
     ('put', 'PUT request'),
@@ -71,7 +72,7 @@ RULES = [
     (r'((?:[^\s\'"\\=:]|(?:\\.))+):((?:[^\s\'"\\]|(?:\\.))*)$',
      'header_values'),
 
-    (r'(get|post|put|patch|delete)\s+', 'concat_mutations'),
+    (r'(get|head|post|put|patch|delete)\s+', 'concat_mutations'),
     (r'(httpie|curl)\s+', 'preview'),
     (r'rm\s+\-b\s+', 'existing_body_params'),
     (r'rm\s+\-h\s+', 'existing_header_names'),
