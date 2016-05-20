@@ -31,7 +31,7 @@ class Context(object):
         self.body_params.update(context.body_params)
         self.options.update(context.options)
 
-    def httpie_args(self, method=None):
+    def httpie_args(self, method=None, quote=False):
         args = []
 
         for k, v in sorted(six.iteritems(self.options)):
@@ -44,13 +44,25 @@ class Context(object):
 
         args.append(self.url)
 
-        for k, v in sorted(six.iteritems(self.querystring_params)):
-            args.append('%s==%s' % (k, smart_quote(v)))
-        for k, v in sorted(six.iteritems(self.body_params)):
-            args.append('%s=%s' % (k, smart_quote(v)))
-        for k, v in sorted(six.iteritems(self.headers)):
-            args.append('%s:%s' % (k, smart_quote(v)))
+        if quote:
+            quote_arg = smart_quote
+        else:
+            def no_op(s): return s
+            quote_arg = no_op
+
+        operators_and_items = [
+            # (operator, dict_of_request_items)
+            ('==', self.querystring_params),
+            ('=', self.body_params),
+            (':', self.headers)
+        ]
+
+        for op, item_dict in operators_and_items:
+            for k, v in sorted(six.iteritems(item_dict)):
+                arg = quote_arg('%s%s%s' % (k, op, v))
+                args.append(arg)
+
         return args
 
-    def curl_args(self):
+    def curl_args(self, quote=False):
         raise NotImplementedError('curl is not supported yet')

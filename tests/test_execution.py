@@ -353,3 +353,15 @@ class TestCommandPreview(ExecutionTestCase):
             'http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
+
+    def test_httpie_with_quotes(self):
+        execute(r'httpie post http://httpbin.org/post name="john doe" '
+                r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
+                self.context)
+        self.click.echo.assert_called_with(
+            "http POST http://httpbin.org/post 'apikey==abc 123' "
+            "'name=john doe' 'Authorization:ApiKey 1234'")
+        self.assertEqual(self.context.url, 'http://localhost')
+        self.assertFalse(self.context.body_params)
+        self.assertFalse(self.context.querystring_params)
+        self.assertFalse(self.context.headers)

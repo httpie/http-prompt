@@ -231,10 +231,11 @@ class ExecutionVisitor(NodeVisitor):
 
         if children[0].expr_name == 'preview':
             if self.tool == 'httpie':
-                command = ['http'] + context.httpie_args(self.method)
+                command = ['http'] + context.httpie_args(self.method,
+                                                         quote=True)
             else:
                 assert self.tool == 'curl'
-                command = ['curl'] + context.curl_args(self.method)
+                command = ['curl'] + context.curl_args(self.method, quote=True)
             click.echo(' '.join(command))
         else:
             assert children[0].expr_name == 'action'
