@@ -87,8 +87,8 @@ grammar = Grammar(r"""
 def urljoin2(base, path, **kwargs):
     if not base.endswith('/'):
         base += '/'
-    url = urljoin(base, path)
-    if url.endswith('/'):
+    url = urljoin(base, path, **kwargs)
+    if url.endswith('/') and not path.endswith('/'):
         url = url[:-1]
     return url
 

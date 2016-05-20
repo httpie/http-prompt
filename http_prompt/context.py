@@ -6,8 +6,6 @@ from .utils import smart_quote
 class Context(object):
 
     def __init__(self, url=None):
-        if url.endswith('/'):
-            url = url[:-1]
         self.url = url
         self.headers = {}
         self.querystring_params = {}
