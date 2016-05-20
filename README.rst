@@ -44,28 +44,48 @@ To change URL address, use ``cd``::
     > cd api/v1
     > cd http://localhost/api
 
-To add headers, querystring, or body parameters, use the syntax as in HTTPie_::
+To add headers, querystring, or body parameters, use the syntax as in HTTPie_.
+The following are all valid::
 
     > Content-Type:application/json username=john
-    > 'name=John Doe' apikey=abc
+    > 'name=John Doe' apikey==abc
+    > Authorization:"Bearer auth_token"
 
 You can also add HTTPie_ options like this::
 
     > --form --auth user:pass
+    > --verify=no username=jane
 
 To preview how HTTP Prompt is going to call HTTPie_, do::
 
     > httpie post
     http --auth user:pass --form POST http://localhost/api apikey==abc username=john
 
+You can temporarily override the request parameters. The current session won't
+be modified::
+
+    > httpie /api/something page==2 --json
+    http --json http://localhost/api/something page==2
+
+    > httpie
+    http http://localhost
+
 To actually send a request, enter one of the HTTP methods::
 
     > get
-    > head
     > post
     > put
     > patch
     > delete
+    > head
+
+The above HTTP methods also support temporary overriding::
+
+    > post /api/v1 --form name=jane
+    ...
+
+    > httpie
+    http http://localhost
 
 To remove an existing header, querystring, body parameter, or HTTPie_ option::
 
@@ -82,7 +102,7 @@ Roadmap
 * More HTTP headers for autocomplete
 * More tests, e.g., integration test and testing on Windows
 * More documentation
-* Support for advanced HTTPie syntax, e.g, `field:=json` and `field=@file.json`
+* Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
 * Inline shell command evaluation
 * HTTP/2 support
 
