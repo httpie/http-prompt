@@ -65,7 +65,7 @@ def test_httpie_args_get():
     assert args == [
         'GET', 'http://localhost/things',
         'limit==10', 'page==2',
-        'Accept:text/html', "Authorization:'ApiKey 1234'",
+        'Accept:text/html', "Authorization:ApiKey 1234",
     ]
 
 
@@ -84,6 +84,14 @@ def test_httpie_args_post():
     args = c.httpie_args('post')
     assert args == [
         '--form', 'POST', 'http://localhost/things',
-        'email=jane@example.com', "name='Jane Doe'",
-        'Accept:text/html', "Authorization:'ApiKey 1234'",
+        'email=jane@example.com', "name=Jane Doe",
+        'Accept:text/html', "Authorization:ApiKey 1234",
+    ]
+
+    # Test quote option
+    args = c.httpie_args('post', quote=True)
+    assert args == [
+        '--form', 'POST', 'http://localhost/things',
+        'email=jane@example.com', "'name=Jane Doe'",
+        'Accept:text/html', "'Authorization:ApiKey 1234'",
     ]
