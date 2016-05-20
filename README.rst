@@ -16,10 +16,16 @@ Just install it like a regular Python package::
 
     $ pip install http-prompt
 
-You'll probably see some permission errors if you're installing it on the
-system-wide Python. If that's what you want to do, you need to ``sudo``::
+You'll probably see some permission errors if you're trying to install it on
+the system-wide Python. It isn't recommended. But if that's what you want to
+do, you need to ``sudo``::
 
     $ sudo pip install http-prompt
+
+Another alternative is to use ``--user`` option to install the package into
+your user directory::
+
+    $ pip install --user http-prompt
 
 To upgrade HTTP Prompt, do::
 
