@@ -312,6 +312,14 @@ class TestHttpAction(ExecutionTestCase):
         execute('PATCH', self.context)
         self.assert_httpie_main_called_with(['PATCH', 'http://localhost'])
 
+    def test_head(self):
+        execute('head', self.context)
+        self.assert_httpie_main_called_with(['HEAD', 'http://localhost'])
+
+    def test_head_uppercase(self):
+        execute('HEAD', self.context)
+        self.assert_httpie_main_called_with(['HEAD', 'http://localhost'])
+
 
 class TestCommandPreview(ExecutionTestCase):
 

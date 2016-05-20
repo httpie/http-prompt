@@ -64,7 +64,8 @@ grammar = Grammar(r"""
     cd = _ "cd" _ string _
     rm = _ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _
     tool = "httpie" / "curl"
-    method = ~r"get"i / ~r"post"i / ~r"put"i / ~r"delete"i / ~r"patch"i
+    method = ~r"get"i / ~r"head"i / ~r"post"i / ~r"put"i / ~r"delete"i /
+             ~r"patch"i
     mutkey = unquoted_mutkey / ("'" squoted_mutkey "'") /
              ('"' dquoted_mutkey '"') / flag_optname / value_optname
 

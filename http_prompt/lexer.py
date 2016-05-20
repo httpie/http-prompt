@@ -40,7 +40,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(cd)(\s*)', bygroups(Keyword, Text), 'cd'),
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
-            (r'(?i)(get|post|put|patch|delete)(\s*)',
+            (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), 'urlpath'),
             (r'exit\s*', Keyword, 'end'),
             (r'', Text, 'concat_mut')
@@ -93,7 +93,7 @@ class HttpPromptLexer(RegexLexer):
         ],
 
         'preview_action': [
-            (r'(?i)(get|post|put|patch|delete)(\s*)',
+            (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), 'urlpath'),
             (r'', Text, 'urlpath')
         ],
