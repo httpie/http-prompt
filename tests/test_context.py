@@ -6,11 +6,6 @@ def test_creation():
     assert context.url == 'http://example.com'
 
 
-def test_creation_with_trailing_slash_url():
-    context = Context('http://example.com/')
-    assert context.url == 'http://example.com'
-
-
 def test_creation_with_longer_url():
     context = Context('http://example.com/a/b/c/index.html')
     assert context.url == 'http://example.com/a/b/c/index.html'

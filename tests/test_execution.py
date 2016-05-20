@@ -54,15 +54,28 @@ class TestExecution_cd(ExecutionTestCase):
         execute('cd ..', self.context)
         self.assertEqual(self.context.url, 'http://localhost/api')
 
-        execute('cd ../rest/api', self.context)
-        self.assertEqual(self.context.url, 'http://localhost/rest/api')
+        # If dot-dot has a trailing slash, the resulting URL should have a
+        # trailing slash
+        execute('cd ../rest/api/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/rest/api/')
 
-    def test_trailing_slash(self):
-        execute('cd api/', self.context)
+    def test_url_with_trailing_slash(self):
+        self.context.url = 'http://localhost/'
+        execute('cd api', self.context)
         self.assertEqual(self.context.url, 'http://localhost/api')
 
+        execute('cd v2/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api/v2/')
+
+        execute('cd /objects/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/objects/')
+
+    def test_path_with_trailing_slash(self):
+        execute('cd api/', self.context)
+        self.assertEqual(self.context.url, 'http://localhost/api/')
+
         execute('cd movie/1/', self.context)
-        self.assertEqual(self.context.url, 'http://localhost/api/movie/1')
+        self.assertEqual(self.context.url, 'http://localhost/api/movie/1/')
 
 
 class TestExecution_rm(ExecutionTestCase):
