@@ -1,7 +1,7 @@
 HTTP Prompt
 ===========
 
-|PyPI| |Build Status| |Coverage|
+|PyPI| |Build| |Coverage|
 
 HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
 and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
@@ -72,16 +72,19 @@ To remove an existing header, querystring, body parameter, or HTTPie_ option::
 Roadmap
 -------
 
-* Allow users to customize via a configuration file
-* Include more headers for autocomplete
-* Write more tests
-* Write more documentation
+* User configuration file, i.e., an RC file
+* More HTTP headers for autocomplete
+* More tests, e.g., integration test and testing on Windows
+* More documentation
+* Support for advanced HTTPie syntax, e.g, `field:=json` and `field=@file.json`
+* Inline shell command evaluation
+* HTTP/2 support
 
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
     :target: https://pypi.python.org/pypi/http-prompt
 
-.. |Build Status| image:: https://api.travis-ci.org/eliangcs/http-prompt.svg?branch=master
+.. |Build| image:: https://api.travis-ci.org/eliangcs/http-prompt.svg?branch=master
     :target: https://travis-ci.org/eliangcs/http-prompt
 
 .. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
