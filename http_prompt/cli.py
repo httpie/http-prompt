@@ -10,6 +10,7 @@ from pygments.styles import get_style_by_name
 
 from . import __version__
 from .completer import HttpPromptCompleter
+from .completer import echo_help
 from .context import Context
 from .execution import execute
 from .lexer import HttpPromptLexer
@@ -52,8 +53,10 @@ def cli(url):
         else:
             if text == 'exit':
                 break
-            if text == '':
+            elif text == '':
                 continue
+            elif text == 'help':
+                echo_help()
             else:
                 execute(text, context)
 
