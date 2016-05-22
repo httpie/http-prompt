@@ -46,11 +46,14 @@ def cli(url):
         try:
             text = prompt('%s> ' % context.url, completer=completer,
                           lexer=lexer, style=style, history=history)
+            text = text.strip()
         except EOFError:
             break  # Control-D pressed
         else:
-            if text.strip() == 'exit':
+            if text == 'exit':
                 break
+            if text == '':
+                continue
             else:
                 execute(text, context)
 
