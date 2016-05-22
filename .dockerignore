@@ -1,0 +1,5 @@
+.*
+*.gif
+dist/
+build/
+*.egg*
