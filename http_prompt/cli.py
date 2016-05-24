@@ -26,9 +26,12 @@ def fix_incomplete_url(url):
     return url
 
 
-@click.command()
+@click.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
 @click.argument('url', default='http://localhost')
-def cli(url):
+@click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
+def cli(url, http_options):
     click.echo('Version: %s' % __version__)
 
     # Override less options
@@ -42,6 +45,10 @@ def cli(url):
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
     style = style_from_pygments(get_style_by_name('monokai'))
+
+    # Execute default http options.
+    if http_options:
+        execute(' '.join(http_options), context)
 
     while True:
         try:
