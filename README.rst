@@ -1,7 +1,7 @@
 HTTP Prompt
 ===========
 
-|PyPI| |Build| |Coverage|
+|PyPI| |Build| |Coverage| |Workspace|
 
 HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
 and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
@@ -115,6 +115,9 @@ Roadmap
 
 .. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
     :target: https://coveralls.io/github/eliangcs/http-prompt?branch=master
+
+.. |Workspace| image:: http://beta.codenvy.com/factory/resources/codenvy-contribute.svg
+    :target: http://beta.codenvy.com/f?id=bjzn6mwwz8x8xr4q
 
 .. _HTTPie: https://github.com/jkbrzt/httpie
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit
