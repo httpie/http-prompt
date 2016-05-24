@@ -3,7 +3,11 @@ import six
 
 import click
 
-from collections import OrderedDict
+try:
+    from collections import OrderedDict
+except ImportError:
+    from .ordereddict import OrderedDict  # For Python 2.6
+
 from itertools import chain
 
 from prompt_toolkit.completion import Completer, Completion
