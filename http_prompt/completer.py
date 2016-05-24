@@ -1,6 +1,8 @@
 import re
 import six
 
+import click
+
 from collections import OrderedDict
 from itertools import chain
 
@@ -18,6 +20,7 @@ ROOT_COMMANDS = [
     ('curl', 'Preview curl command'),
     ('httpie', 'Preview HTTPie command'),
     ('exit', 'Exit HTTP Prompt'),
+    ('help', 'List commands, option flags, and actions'),
 ]
 
 ACTIONS = [
@@ -90,6 +93,29 @@ def compile_rules(rules):
     return compiled_rules
 
 RULES = compile_rules(RULES)
+
+
+def echo_help():
+    """Prints a formatted list of current commands, option flags, http actions
+    (and their support values)
+    """
+    def echo_cmds_with_explanations(summary, cmds):
+        click.echo('\n{}:'.format(summary))
+        for cmd, explanation in cmds:
+            click.echo('\t{:<10}\t{:<20}'.format(cmd, explanation))
+
+    click.echo('\nInteractive usage: http-prompt')
+    echo_cmds_with_explanations('Commands', ROOT_COMMANDS.items())
+    echo_cmds_with_explanations('Options', OPTION_NAMES.items())
+    echo_cmds_with_explanations('Actions', ACTIONS.items())
+    echo_cmds_with_explanations(
+        'Headers',
+        [
+            (key, ', '.join(HEADER_VALUES[key])) if key in HEADER_VALUES else (key, '')
+            for key in HEADER_NAMES.keys()
+        ]
+    )
+    click.echo()
 
 
 def fuzzyfinder(text, collection):

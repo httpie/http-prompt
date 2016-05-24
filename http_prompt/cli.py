@@ -10,6 +10,7 @@ from pygments.styles import get_style_by_name
 
 from . import __version__
 from .completer import HttpPromptCompleter
+from .completer import echo_help
 from .context import Context
 from .execution import execute
 from .lexer import HttpPromptLexer
@@ -46,11 +47,16 @@ def cli(url):
         try:
             text = prompt('%s> ' % context.url, completer=completer,
                           lexer=lexer, style=style, history=history)
+            text = text.strip()
         except EOFError:
             break  # Control-D pressed
         else:
-            if text.strip() == 'exit':
+            if text == 'exit':
                 break
+            elif text == '':
+                continue
+            elif text == 'help':
+                echo_help()
             else:
                 execute(text, context)
 

@@ -9,7 +9,7 @@ FLAG_OPTIONS = [
     ('--follow', 'Allow full redirects'),
     ('--form', 'Send as form fields'),
     ('--headers', 'Print only response headers'),
-    ('--help', 'Show help message'),
+    ('--help', 'Show tool (HTTPie, cURL) help message'),
     ('--ignore-stdin', 'Do not read stdin'),
     ('--json', 'Send as a JSON object (default)'),
     ('--stream', 'Stream the output'),
