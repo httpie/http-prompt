@@ -57,6 +57,8 @@ def cli(url, http_options):
             text = text.strip()
         except EOFError:
             break  # Control-D pressed
+        except KeyboardInterrupt:
+            break  # Control-C pressed
         else:
             if text == 'exit':
                 break
@@ -67,4 +69,5 @@ def cli(url, http_options):
             else:
                 execute(text, context)
 
+    execute("httpie", context)
     click.echo("Goodbye!")
