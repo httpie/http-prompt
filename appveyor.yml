@@ -1,3 +1,5 @@
+version: {build}
+
 build: false
 
 environment:
