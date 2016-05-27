@@ -241,7 +241,7 @@ class ExecutionVisitor(NodeVisitor):
             assert children[0].expr_name == 'action'
             output = BytesIO()
             try:
-                env = Environment(stdout=output)
+                env = Environment(stdout=output, is_windows=False)
                 httpie_main(context.httpie_args(self.method), env=env)
                 content = output.getvalue()
             finally:
