@@ -4,7 +4,8 @@ build: false
 
 environment:
   matrix:
-    - PYTHON: "C:\\Python26"
+    # click doesn't work on Python 2.6 and Windows
+    # - PYTHON: "C:\\Python26"
     - PYTHON: "C:\\Python27"
     - PYTHON: "C:\\Python33"
     - PYTHON: "C:\\Python34"
