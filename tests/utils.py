@@ -7,7 +7,11 @@ def get_http_prompt_path():
     python_dir = os.path.dirname(sys.executable)
     bin_name = 'http-prompt'
     if sys.platform == 'win32':
-        bin_path = os.path.join(python_dir, 'Scripts', bin_name + '.exe')
-    else:
-        bin_path = os.path.join(python_dir, bin_name)
-    return bin_path
+        bin_name += '.exe'
+
+    bin_path = os.path.join(python_dir, bin_name)
+    if os.path.exists(bin_path):
+        return bin_path
+
+    # Try 'Scripts' directory (for Windows)
+    return os.path.join(python_dir, 'Scripts', bin_name)
