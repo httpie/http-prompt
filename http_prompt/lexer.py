@@ -50,7 +50,8 @@ class HttpPromptLexer(RegexLexer):
         'cd': string_rules('end'),
 
         'rm_option': [
-            (r'(\-(?:h|o|b|q))(\s*)', bygroups(Name, Text), 'rm_name')
+            (r'(\-(?:h|o|b|q))(\s*)', bygroups(Name, Text), 'rm_name'),
+            (r'(\*)(\s*)', bygroups(Name, Text), 'end')
         ],
         'rm_name': string_rules('end'),
 
