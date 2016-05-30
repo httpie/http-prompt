@@ -8,6 +8,10 @@ python:
   - "pypy"
   - "pypy3"
 
+env:
+  global:
+    - NEWEST_PYTHON=3.5
+
 matrix:
 
   include:
@@ -57,5 +61,7 @@ script:
     fi
 
 after_success:
-  - pip install coveralls
-  - coveralls
+  - |
+    if [[ $TRAVIS_PYTHON_VERSION == $NEWEST_PYTHON && $TRAVIS_OS_NAME == 'linux' ]]; then
+      pip install python-coveralls && coveralls
+    fi
