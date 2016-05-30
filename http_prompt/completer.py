@@ -3,8 +3,8 @@ import six
 
 try:
     from collections import OrderedDict
-except ImportError:
-    from .ordereddict import OrderedDict  # For Python 2.6
+except ImportError:  # For Python 2.6, nocover
+    from .ordereddict import OrderedDict
 
 from itertools import chain
 

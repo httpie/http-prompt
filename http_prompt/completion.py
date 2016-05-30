@@ -3,8 +3,8 @@
 
 try:
     from collections import OrderedDict
-except ImportError:
-    from .ordereddict import OrderedDict  # For Python 2.6
+except ImportError:  # For Python 2.6, nocover
+    from .ordereddict import OrderedDict
 
 from . import options as opt
 
@@ -15,6 +15,7 @@ ROOT_COMMANDS = OrderedDict([
     ('exit', 'Exit HTTP Prompt'),
     ('help', 'List commands, actions, and HTTPie options'),
     ('httpie', 'Preview HTTPie command'),
+    ('rm *', 'Remove all options and parameters'),
     ('rm -b', 'Remove body parameter'),
     ('rm -h', 'Remove header'),
     ('rm -o', 'Remove HTTPie option'),

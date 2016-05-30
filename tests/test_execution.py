@@ -184,6 +184,31 @@ class TestExecution_rm(ExecutionTestCase):
         err_msg = self.click.secho.call_args[0][0]
         self.assertEqual(err_msg, "Key 'abcd' not found")
 
+    def test_reset(self):
+        self.context.options.update({
+            '--form': None,
+            '--verify': 'no'
+        })
+        self.context.headers.update({
+            'Accept': 'dontcare',
+            'Content-Type': 'dontcare'
+        })
+        self.context.querystring_params.update({
+            'name': 'dontcare',
+            'email': 'dontcare'
+        })
+        self.context.body_params.update({
+            'name': 'dontcare',
+            'email': 'dontcare'
+        })
+
+        execute('rm *', self.context)
+
+        self.assertFalse(self.context.options)
+        self.assertFalse(self.context.headers)
+        self.assertFalse(self.context.querystring_params)
+        self.assertFalse(self.context.body_params)
+
 
 class TestMutation(ExecutionTestCase):
 

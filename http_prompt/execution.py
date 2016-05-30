@@ -65,7 +65,7 @@ grammar = Grammar(r"""
                     "--cert" / "--cert-key" / "--timeout"
 
     cd = _ "cd" _ string _
-    rm = _ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _
+    rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
     tool = "httpie" / "curl"
     method = ~r"get"i / ~r"head"i / ~r"post"i / ~r"put"i / ~r"delete"i /
              ~r"patch"i
@@ -138,7 +138,18 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_rm(self, node, children):
+        children = children[0]
         kind = children[3].text
+
+        if kind == '*':
+            # Clear context
+            for target in [self.context.headers,
+                           self.context.querystring_params,
+                           self.context.body_params,
+                           self.context.options]:
+                target.clear()
+            return node
+
         name = children[5]
         if kind == '-h':
             target = self.context.headers
@@ -149,6 +160,7 @@ class ExecutionVisitor(NodeVisitor):
         else:
             assert kind == '-o'
             target = self.context.options
+
         del target[name]
         return node
 
