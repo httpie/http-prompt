@@ -26,7 +26,7 @@ def test_help():
 @pytest.mark.slow
 def test_version():
     out, err = run_http_prompt(['--version'])
-    expected = 'http-prompt, version {0}\n'.format(__version__)
-    if hasattr(expected, 'encode'):
-        expected = expected.encode('ascii')
-    assert out == expected
+    version = __version__
+    if hasattr(version, 'encode'):
+        version = version.encode('ascii')
+    assert out.rstrip() == version

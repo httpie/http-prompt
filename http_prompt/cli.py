@@ -30,7 +30,7 @@ def fix_incomplete_url(url):
 ))
 @click.argument('url', default='http://localhost')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
-@click.version_option()
+@click.version_option(message='%(version)s')
 def cli(url, http_options):
     click.echo('Version: %s' % __version__)
 
