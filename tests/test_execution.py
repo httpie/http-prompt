@@ -1,5 +1,8 @@
 import unittest
 
+import pytest
+import six
+
 from mock import patch
 
 from http_prompt.context import Context
@@ -172,7 +175,12 @@ class TestExecution_rm(ExecutionTestCase):
 
     def test_non_existing_key(self):
         execute('rm -q abcd', self.context)
-        print(self.click.secho.call_args)
+        err_msg = self.click.secho.call_args[0][0]
+        self.assertEqual(err_msg, "Key 'abcd' not found")
+
+    @pytest.mark.skipif(not six.PY2, reason='a bug on Python 2')
+    def test_non_existing_key_unicode(self):  # See #25
+        execute(u'rm -q abcd', self.context)
         err_msg = self.click.secho.call_args[0][0]
         self.assertEqual(err_msg, "Key 'abcd' not found")
 
