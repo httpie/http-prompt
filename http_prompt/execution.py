@@ -311,7 +311,7 @@ def execute(command, context):
                 # XXX: Need to parse VisitationError error message to get the
                 # original error message as VisitationError doesn't hold the
                 # original exception object
-                key = re.search(r"KeyError: '(.*)'", str(err)).group(1)
+                key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
             else:
