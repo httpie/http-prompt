@@ -26,6 +26,51 @@ class ExecutionTestCase(unittest.TestCase):
         self.assertEqual(self.httpie_main.call_args[0][0], args)
 
 
+class TestExecution_noop(ExecutionTestCase):
+
+    def test_empty_string(self):
+        execute('', self.context)
+        self.assertEqual(self.context.url, 'http://localhost')
+        self.assertFalse(self.context.options)
+        self.assertFalse(self.context.headers)
+        self.assertFalse(self.context.querystring_params)
+        self.assertFalse(self.context.body_params)
+        self.assertFalse(self.context.should_exit)
+
+    def test_spaces(self):
+        execute('  \t \t  ', self.context)
+        self.assertEqual(self.context.url, 'http://localhost')
+        self.assertFalse(self.context.options)
+        self.assertFalse(self.context.headers)
+        self.assertFalse(self.context.querystring_params)
+        self.assertFalse(self.context.body_params)
+        self.assertFalse(self.context.should_exit)
+
+
+class TestExecution_help(ExecutionTestCase):
+
+    def test_help(self):
+        execute('help', self.context)
+        help_text = self.click.echo_via_pager.call_args[0][0]
+        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+
+    def test_help_with_spaces(self):
+        execute('  help   ', self.context)
+        help_text = self.click.echo_via_pager.call_args[0][0]
+        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+
+
+class TestExecution_exit(ExecutionTestCase):
+
+    def test_exit(self):
+        execute('exit', self.context)
+        self.assertTrue(self.context.should_exit)
+
+    def test_exit_with_spaces(self):
+        execute('   exit  ', self.context)
+        self.assertTrue(self.context.should_exit)
+
+
 class TestExecution_cd(ExecutionTestCase):
 
     def test_single_level(self):
@@ -124,6 +169,12 @@ class TestExecution_rm(ExecutionTestCase):
         self.context.body_params['family name'] = 'Doe Doe'
         execute('rm -b family\ name', self.context)
         self.assertFalse(self.context.body_params)
+
+    def test_non_existing_key(self):
+        execute('rm -q abcd', self.context)
+        print(self.click.secho.call_args)
+        err_msg = self.click.secho.call_args[0][0]
+        self.assertEqual(err_msg, "Key 'abcd' not found")
 
 
 class TestMutation(ExecutionTestCase):

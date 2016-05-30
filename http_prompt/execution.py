@@ -11,6 +11,7 @@ from parsimonious.nodes import NodeVisitor
 from six import BytesIO
 from six.moves.urllib.parse import urljoin
 
+from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
 from .utils import unescape
 
@@ -19,13 +20,15 @@ grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action
+    immutation = preview / action / help / exit / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
     preview = _ tool _ (method _)? (urlpath _)? concat_mut*
     action = _ method _ (urlpath _)? concat_mut*
     urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
+    help = _ "help" _
+    exit = _ "exit" _
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -93,6 +96,23 @@ def urljoin2(base, path, **kwargs):
     return url
 
 
+def generate_help_text():
+    """Return a formatted string listing commands, HTTPie options, and HTTP
+    actions.
+    """
+    def generate_cmds_with_explanations(summary, cmds):
+        text = '{0}:\n'.format(summary)
+        for cmd, explanation in cmds:
+            text += '\t{0:<10}\t{1:<20}\n'.format(cmd, explanation)
+        return text + '\n'
+
+    text = generate_cmds_with_explanations('Commands', ROOT_COMMANDS.items())
+    text += generate_cmds_with_explanations('Options', OPTION_NAMES.items())
+    text += generate_cmds_with_explanations('Actions', ACTIONS.items())
+    text += generate_cmds_with_explanations('Headers', HEADER_NAMES.items())
+    return text
+
+
 class ExecutionVisitor(NodeVisitor):
 
     def __init__(self, context):
@@ -130,6 +150,14 @@ class ExecutionVisitor(NodeVisitor):
             assert kind == '-o'
             target = self.context.options
         del target[name]
+        return node
+
+    def visit_help(self, node, children):
+        click.echo_via_pager(generate_help_text())
+        return node
+
+    def visit_exit(self, node, children):
+        self.context.should_exit = True
         return node
 
     def visit_mutkey(self, node, children):
@@ -228,8 +256,9 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_immutation(self, node, children):
         context = self._final_context()
+        child_type = children[0].expr_name
 
-        if children[0].expr_name == 'preview':
+        if child_type == 'preview':
             if self.tool == 'httpie':
                 command = ['http'] + context.httpie_args(self.method,
                                                          quote=True)
@@ -237,8 +266,7 @@ class ExecutionVisitor(NodeVisitor):
                 assert self.tool == 'curl'
                 command = ['curl'] + context.curl_args(self.method, quote=True)
             click.echo(' '.join(command))
-        else:
-            assert children[0].expr_name == 'action'
+        elif child_type == 'action':
             output = BytesIO()
             try:
                 env = Environment(stdout=output, is_windows=False)
@@ -251,10 +279,12 @@ class ExecutionVisitor(NodeVisitor):
             # a bytestring to echo_via_pager(), it converts the bytestring with
             # str(b'abc'), which makes it "b'abc'".
             if six.PY2:
-                content = unicode(content, 'utf-8')
+                content = unicode(content, 'utf-8')  # noqa
             else:
                 content = str(content, 'utf-8')
             click.echo_via_pager(content)
+
+        return node
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:

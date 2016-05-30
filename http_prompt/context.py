@@ -12,12 +12,24 @@ class Context(object):
         self.body_params = {}
         self.options = {}
 
+        # Indicate if main program should be terminated
+        self.should_exit = False
+
+    def __eq__(self, other):
+        return (self.url == other.url and
+                self.headers == other.headers and
+                self.options == other.options and
+                self.querystring_params == other.querystring_params and
+                self.body_params == other.body_params and
+                self.should_exit == other.should_exit)
+
     def copy(self):
         context = Context(self.url)
         context.headers = self.headers.copy()
         context.querystring_params = self.querystring_params.copy()
         context.body_params = self.body_params.copy()
         context.options = self.options.copy()
+        context.should_exit = self.should_exit
         return context
 
     def update(self, context):
@@ -28,6 +40,7 @@ class Context(object):
         self.querystring_params.update(context.querystring_params)
         self.body_params.update(context.body_params)
         self.options.update(context.options)
+        self.should_exit = self.should_exit
 
     def httpie_args(self, method=None, quote=False):
         args = []

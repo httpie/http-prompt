@@ -1,8 +1,6 @@
 import re
 import six
 
-import click
-
 try:
     from collections import OrderedDict
 except ImportError:
@@ -12,68 +10,9 @@ from itertools import chain
 
 from prompt_toolkit.completion import Completer, Completion
 
-from . import options as opt
+from .completion import (ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES,
+                         HEADER_VALUES)
 
-
-ROOT_COMMANDS = [
-    ('cd', 'Change URL/path'),
-    ('rm -b', 'Remove body parameter'),
-    ('rm -h', 'Remove header'),
-    ('rm -o', 'Remove HTTPie option'),
-    ('rm -q', 'Remove querystring parameter'),
-    ('curl', 'Preview curl command'),
-    ('httpie', 'Preview HTTPie command'),
-    ('exit', 'Exit HTTP Prompt'),
-    ('help', 'List commands, option flags, and actions'),
-]
-
-ACTIONS = [
-    ('delete', 'DELETE request'),
-    ('get', 'GET request'),
-    ('head', 'HEAD request'),
-    ('patch', 'GET request'),
-    ('post', 'POST request'),
-    ('put', 'PUT request'),
-]
-
-# TODO: Include more header names
-HEADER_NAMES = [
-    ('Accept', 'Header'),
-    ('Accept-Encoding', 'Header'),
-    ('Authorization', 'Header'),
-    ('Cache-Control', 'Header'),
-    ('Cookie', 'Header'),
-    ('Content-Length', 'Header'),
-    ('Content-Type', 'Header'),
-    ('From', 'Header'),
-    ('Host', 'Header'),
-    ('Origin', 'Header'),
-    ('Referer', 'Header'),
-    ('User-Agent', 'Header'),
-]
-
-
-CONTENT_TYPES = [
-    'application/json',
-    'application/x-www-form-urlencoded',
-    'multipart/form-data',
-    'text/html',
-]
-
-# TODO: Include more common header values
-HEADER_VALUES = {
-    'Accept': CONTENT_TYPES,
-    'Content-Type': CONTENT_TYPES,
-}
-
-ROOT_COMMANDS = OrderedDict(sorted(ROOT_COMMANDS))
-
-ACTIONS = OrderedDict(ACTIONS)
-
-OPTION_NAMES = sorted(opt.FLAG_OPTIONS + opt.VALUE_OPTIONS)
-OPTION_NAMES = OrderedDict(OPTION_NAMES)
-
-HEADER_NAMES = OrderedDict(HEADER_NAMES)
 
 RULES = [
     (r'((?:[^\s\'"\\=:]|(?:\\.))+):((?:[^\s\'"\\]|(?:\\.))*)$',
@@ -97,29 +36,6 @@ def compile_rules(rules):
     return compiled_rules
 
 RULES = compile_rules(RULES)
-
-
-def echo_help():
-    """Prints a formatted list of current commands, option flags, http actions
-    (and their support values)
-    """
-    def echo_cmds_with_explanations(summary, cmds):
-        click.echo('\n{}:'.format(summary))
-        for cmd, explanation in cmds:
-            click.echo('\t{:<10}\t{:<20}'.format(cmd, explanation))
-
-    click.echo('\nInteractive usage: http-prompt')
-    echo_cmds_with_explanations('Commands', ROOT_COMMANDS.items())
-    echo_cmds_with_explanations('Options', OPTION_NAMES.items())
-    echo_cmds_with_explanations('Actions', ACTIONS.items())
-    echo_cmds_with_explanations(
-        'Headers',
-        [
-            (key, ', '.join(HEADER_VALUES[key])) if key in HEADER_VALUES else (key, '')
-            for key in HEADER_NAMES.keys()
-        ]
-    )
-    click.echo()
 
 
 def fuzzyfinder(text, collection):
@@ -196,7 +112,7 @@ class CompletionGenerator(object):
                                       context.headers, HEADER_NAMES)
 
     def existing_option_names(self, context, match):
-        return self._generic_generate(context.headers.keys(),
+        return self._generic_generate(context.options.keys(),
                                       context.options, OPTION_NAMES)
 
     def _generic_generate(self, names, values, descs):
