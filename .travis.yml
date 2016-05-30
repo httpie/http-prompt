@@ -18,8 +18,6 @@ matrix:
     # Stock OSX Python
     - os: osx
       language: generic
-      env:
-        - TOXENV=py27
 
     # Latest Python 2.x from Homebrew
     - os: osx
