@@ -2,6 +2,10 @@ version: "#{build}"
 
 build: false
 
+branches:
+  only:
+    - master
+
 environment:
   matrix:
     # click doesn't work on Python 2.6 and Windows
