@@ -1,0 +1,5 @@
+[run]
+omit = http_prompt/ordereddict.py
+
+[report]
+show_missing = True

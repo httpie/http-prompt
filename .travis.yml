@@ -8,13 +8,60 @@ python:
   - "pypy"
   - "pypy3"
 
+env:
+  global:
+    - NEWEST_PYTHON=3.5
+
+matrix:
+
+  include:
+
+    # Manually defined OS X builds
+    # https://docs.travis-ci.com/user/multi-os/#Python-example-(unsupported-languages)
+
+    # Stock OSX Python
+    - os: osx
+      language: generic
+      env:
+        - TOXENV=py27
+
+    # Latest Python 2.x from Homebrew
+    - os: osx
+      language: generic
+      env:
+        - TOXENV=py27
+        - BREW_INSTALL=python
+
+    # Latest Python 3.x from Homebrew
+    - os: osx
+      language: generic
+      env:
+        - TOXENV=py35
+        - BREW_INSTALL=python3
+
 install:
-  - pip install -e .
-  - pip install -r requirements-test.txt
+  - |
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      if [[ -n "$BREW_INSTALL" ]]; then
+        brew update
+        brew install "$BREW_INSTALL"
+      fi
+      sudo pip install tox
+    else
+      pip install -e .
+      pip install -r requirements-test.txt
+    fi
 
 script:
-  - py.test
+  - |
+    if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
+      PATH="/usr/local/bin:$PATH" tox -e "$TOXENV"
+    else
+      py.test
+    fi
 
 after_success:
-  - pip install coveralls
-  - coveralls
+  - |
+    if [[ $TRAVIS_PYTHON_VERSION == $NEWEST_PYTHON && $TRAVIS_OS_NAME == 'linux' ]]; then
+      pip install python-coveralls && coveralls
+    fi
