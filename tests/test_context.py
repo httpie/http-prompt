@@ -4,17 +4,36 @@ from http_prompt.context import Context
 def test_creation():
     context = Context('http://example.com')
     assert context.url == 'http://example.com'
+    assert context.options == {}
+    assert context.headers == {}
+    assert context.querystring_params == {}
+    assert context.body_params == {}
+    assert not context.should_exit
 
 
 def test_creation_with_longer_url():
     context = Context('http://example.com/a/b/c/index.html')
     assert context.url == 'http://example.com/a/b/c/index.html'
+    assert context.options == {}
+    assert context.headers == {}
+    assert context.querystring_params == {}
+    assert context.body_params == {}
+    assert not context.should_exit
+
+
+def test_eq():
+    c1 = Context('http://localhost')
+    c2 = Context('http://localhost')
+    assert c1 == c2
+
+    c1.options['--verify'] = 'no'
+    assert c1 != c2
 
 
 def test_copy():
     c1 = Context('http://localhost')
     c2 = c1.copy()
-    assert c1.url == c2.url
+    assert c1 == c2
     assert c1 is not c2
 
 

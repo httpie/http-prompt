@@ -10,7 +10,6 @@ from pygments.styles import get_style_by_name
 
 from . import __version__
 from .completer import HttpPromptCompleter
-from .completer import echo_help
 from .context import Context
 from .execution import execute
 from .lexer import HttpPromptLexer
@@ -31,6 +30,7 @@ def fix_incomplete_url(url):
 ))
 @click.argument('url', default='http://localhost')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
+@click.version_option(message='%(version)s')
 def cli(url, http_options):
     click.echo('Version: %s' % __version__)
 
@@ -47,24 +47,17 @@ def cli(url, http_options):
     style = style_from_pygments(get_style_by_name('monokai'))
 
     # Execute default http options.
-    if http_options:
-        execute(' '.join(http_options), context)
+    execute(' '.join(http_options), context)
 
     while True:
         try:
             text = prompt('%s> ' % context.url, completer=completer,
                           lexer=lexer, style=style, history=history)
-            text = text.strip()
         except EOFError:
             break  # Control-D pressed
         else:
-            if text == 'exit':
+            execute(text, context)
+            if context.should_exit:
                 break
-            elif text == '':
-                continue
-            elif text == 'help':
-                echo_help()
-            else:
-                execute(text, context)
 
     click.echo("Goodbye!")
