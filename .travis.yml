@@ -11,7 +11,6 @@ python:
 install:
   - pip install -e .
   - pip install -r requirements-test.txt
-  - which http-prompt
 
 script:
   - py.test
