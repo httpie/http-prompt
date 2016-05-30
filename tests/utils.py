@@ -14,4 +14,9 @@ def get_http_prompt_path():
         return bin_path
 
     # Try 'Scripts' directory (for Windows)
-    return os.path.join(python_dir, 'Scripts', bin_name)
+    bin_path = os.path.join(python_dir, 'Scripts', bin_name)
+    if os.path.exists(bin_path):
+        return bin_path
+
+    raise OSError("could not locate http-prompt executable, "
+                  "Python directory: %s" % python_dir)
