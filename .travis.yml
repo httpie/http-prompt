@@ -65,3 +65,12 @@ after_success:
     if [[ $TRAVIS_PYTHON_VERSION == $NEWEST_PYTHON && $TRAVIS_OS_NAME == 'linux' ]]; then
       pip install python-coveralls && coveralls
     fi
+
+deploy:
+  provider: pypi
+  user: eliang
+  password:
+    secure: "kLpnHTI1y//URpdGp2Cx/7zIdozgzUHwVXU6eOe0Jp/K6DlFLdPDvVODiUl1FY1aOgynMn3SiGQhUZrm1DrvF5g0w8wWXgqa1eJ/eyV1t8L8wUOQe/q2PSpgcjOzHNWuiY9MtZQ4oQEWPR6ITH4rf4G3NWMiJFFJ/qMVfKkMiLnzivmou2jlDS7g0mDVYLYe67IIx8I2ny5/5S0qBb9iaqAQqXP+9ngGQmoBJvC7Q1cj3f1NDPlG5YQmLEbjstyFgs3GsFr0eA+igSfie/U0bEngEpBe0C+FOqQTv6Vht2x+/m/CmwjNHeunEZfzJIzUVIem7zaIYssGSbQXHZi/Pn/Y5h6VMxI+uvE8jw5mRgiJWRYGNwiMYVK954szHVo88wwdQ3VPymDEaA+xyb3VGs6pOtSyB+4JaWsumiuzjF/9fXwpF0bEc5CgM6K8R7KKrk4FF0kgoE2EJVICewuQnrr+iE84X7+vFypTKmAv+23O8qec1lEENby6W0kwZvE88eV9QtYVemNly7ainTCltrbsHpyONrw/V83wNQBT3BRuBe8lPldF2rh6txF8RuOs9wBxeUg+2xCSd40fuTAyfPByf/HfTGSkgj65W4sWWJknpmweVkYeb9lz+gEB4gc3HvaREeugs8xQerCMqteCgbkHYpEmxaXwKA6mILhNilk="
+  on:
+    tags: true
+  distributions: "sdist bdist_wheel"
