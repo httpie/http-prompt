@@ -31,20 +31,40 @@ ACTIONS = OrderedDict([
     ('put', 'PUT request'),
 ])
 
-# TODO: Include more header names
 HEADER_NAMES = OrderedDict([
     ('Accept', 'Header'),
+    ('Accept-Charset', 'Header'),
     ('Accept-Encoding', 'Header'),
+    ('Accept-Language', 'Header'),
+    ('Accept-Datetime', 'Header'),
     ('Authorization', 'Header'),
     ('Cache-Control', 'Header'),
+    ('Connection', 'Header'),
     ('Cookie', 'Header'),
     ('Content-Length', 'Header'),
+    ('Content-MD5', 'Header'),
     ('Content-Type', 'Header'),
+    ('Date', 'Header'),
+    ('Expect', 'Header'),
+    ('Forwarded', 'Header'),
     ('From', 'Header'),
     ('Host', 'Header'),
+    ('If-Match', 'Header'),
+    ('If-Modified-Since', 'Header'),
+    ('If-None-Match', 'Header'),
+    ('If-Range', 'Header'),
+    ('If-Unmodified-Since', 'Header'),
+    ('Max-Forwards', 'Header'),
     ('Origin', 'Header'),
+    ('Pragma', 'Header'),
+    ('Proxy-Authorization', 'Header'),
+    ('Range', 'Header'),
     ('Referer', 'Header'),
+    ('TE', 'Header'),
     ('User-Agent', 'Header'),
+    ('Upgrade', 'Header'),
+    ('Via', 'Header'),
+    ('Warning', 'Header'),
 ])
 
 CONTENT_TYPES = [
