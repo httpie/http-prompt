@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import unittest
 
 import pytest
@@ -268,6 +271,12 @@ class TestMutation(ExecutionTestCase):
             'name': 'John Doe'
         })
 
+    def test_querystring_with_chinese(self):
+        execute("name==王小明", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'name': '王小明'
+        })
+
     def test_simple_body_params(self):
         execute('username=john password=123', self.context)
         self.assertEqual(self.context.body_params, {
@@ -294,6 +303,12 @@ class TestMutation(ExecutionTestCase):
         self.assertEqual(self.context.body_params, {
             'name': 'John Doe',
             'password': '123'
+        })
+
+    def test_body_param_with_spanish(self):
+        execute('name=Jesús', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jesús'
         })
 
     def test_long_option_names(self):

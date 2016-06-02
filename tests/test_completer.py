@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import six
 import unittest
 
@@ -58,3 +61,11 @@ class TestCompleter(unittest.TestCase):
         self.context.options['--form'] = None
         result = self.get_completions('rm -o ')
         self.assertEqual(result[0], '--form')
+
+    def test_querystring_with_chinese(self):
+        result = self.get_completions('name==王')
+        self.assertFalse(result)
+
+    def test_header_with_spanish(self):
+        result = self.get_completions('X-Custom-Header:Jesú')
+        self.assertFalse(result)
