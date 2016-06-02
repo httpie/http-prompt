@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import re
 import six
 
@@ -41,7 +44,8 @@ RULES = compile_rules(RULES)
 def fuzzyfinder(text, collection):
     """https://github.com/amjith/fuzzyfinder"""
     suggestions = []
-    text = str(text) if not isinstance(text, str) else text
+    if not isinstance(text, six.text_type):
+        text = six.u(text, 'utf-8')
     pat = '.*?'.join(map(re.escape, text))
     regex = re.compile(pat, flags=re.IGNORECASE)
     for item in collection:
