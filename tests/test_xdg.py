@@ -1,49 +1,11 @@
 import os
-import shutil
 import stat
-import sys
-import tempfile
-import unittest
 
+from .base import TempAppDirTestCase
 from http_prompt import xdg
 
 
-class TestXDG(unittest.TestCase):
-
-    def setUp(self):
-        # Create a temp dir that will contain data and config directories
-        self.temp_dir = tempfile.mkdtemp()
-
-        if sys.platform == 'win32':
-            self.homes = {
-                # subdir_name: envvar_name
-                'data': 'LOCALAPPDATA',
-                'config': 'LOCALAPPDATA'
-            }
-        else:
-            self.homes = {
-                # subdir_name: envvar_name
-                'data': 'XDG_DATA_HOME',
-                'config': 'XDG_CONFIG_HOME'
-            }
-
-        # Used to restore
-        self.orig_envvars = {}
-
-        for subdir_name, envvar_name in self.homes.items():
-            if envvar_name in os.environ:
-                self.orig_envvars[envvar_name] = os.environ[envvar_name]
-            os.environ[envvar_name] = os.path.join(self.temp_dir, subdir_name)
-
-    def tearDown(self):
-        # Restore envvar values
-        for name in self.homes.values():
-            if name in self.orig_envvars:
-                os.environ[name] = self.orig_envvars[name]
-            else:
-                del os.environ[name]
-
-        shutil.rmtree(self.temp_dir)
+class TestXDG(TempAppDirTestCase):
 
     def test_get_app_data_home(self):
         path = xdg.get_data_dir()
