@@ -1,5 +1,8 @@
 import six
 
+from copy import deepcopy
+
+from . import __version__
 from .utils import smart_quote
 
 
@@ -77,3 +80,11 @@ class Context(object):
 
     def curl_args(self, quote=False):
         raise NotImplementedError('curl is not supported yet')
+
+    def json_obj(self):
+        obj = deepcopy(self.__dict__)
+        obj['__version__'] = __version__
+        return obj
+
+    def load_from_json_obj(self, json_obj):
+        self.__dict__ = deepcopy(json_obj)
