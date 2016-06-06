@@ -1,6 +1,7 @@
 from click.testing import CliRunner
 from mock import patch
 
+from .base import TempAppDirTestCase
 from http_prompt.cli import cli, execute
 
 
@@ -19,53 +20,68 @@ def run_and_exit(args, execute_mock, prompt_mock):
     return result, context
 
 
-def test_without_args():
-    result, context = run_and_exit(['http://localhost'])
-    assert result.exit_code == 0
-    assert context.url == 'http://localhost'
-    assert context.options == {}
-    assert context.body_params == {}
-    assert context.headers == {}
-    assert context.querystring_params == {}
+class TestCli(TempAppDirTestCase):
 
+    def test_without_args(self):
+        result, context = run_and_exit(['http://localhost'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://localhost')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {})
 
-def test_incomplete_url1():
-    result, context = run_and_exit(['://example.com'])
-    assert result.exit_code == 0
-    assert context.url == 'http://example.com'
-    assert context.options == {}
-    assert context.body_params == {}
-    assert context.headers == {}
-    assert context.querystring_params == {}
+    def test_incomplete_url1(self):
+        result, context = run_and_exit(['://example.com'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {})
 
+    def test_incomplete_url2(self):
+        result, context = run_and_exit(['//example.com'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {})
 
-def test_incomplete_url2():
-    result, context = run_and_exit(['//example.com'])
-    assert result.exit_code == 0
-    assert context.url == 'http://example.com'
-    assert context.options == {}
-    assert context.body_params == {}
-    assert context.headers == {}
-    assert context.querystring_params == {}
+    def test_incomplete_url3(self):
+        result, context = run_and_exit(['example.com'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {})
 
+    def test_httpie_oprions(self):
+        url = 'http://example.com'
+        custom_args = '--auth value: name=foo'
+        result, context = run_and_exit([url] + custom_args.split())
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {'--auth': 'value:'})
+        self.assertEqual(context.body_params, {'name': 'foo'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {})
 
-def test_incomplete_url3():
-    result, context = run_and_exit(['example.com'])
-    assert result.exit_code == 0
-    assert context.url == 'http://example.com'
-    assert context.options == {}
-    assert context.body_params == {}
-    assert context.headers == {}
-    assert context.querystring_params == {}
+    def test_persistent_context(self):
+        result, context = run_and_exit(['//example.com', 'name=bob', 'id==10'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': '10'})
 
-
-def test_httpie_options():
-    url = 'http://example.com'
-    custom_args = '--auth value: name=foo'
-    result, context = run_and_exit([url] + custom_args.split())
-    assert result.exit_code == 0
-    assert context.url == url
-    assert context.options == {'--auth': 'value:'}
-    assert context.body_params == {'name': 'foo'}
-    assert context.headers == {}
-    assert context.querystring_params == {}
+        result, context = run_and_exit(['//example.com', 'sex=M'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob', 'sex': 'M'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': '10'})

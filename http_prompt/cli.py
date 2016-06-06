@@ -1,7 +1,9 @@
+import json
 import os
 
 import click
 
+from six.moves.urllib.parse import urlparse
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
@@ -9,6 +11,7 @@ from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 
 from . import __version__
+from . import xdg
 from .completer import HttpPromptCompleter
 from .context import Context
 from .execution import execute
@@ -25,6 +28,26 @@ def fix_incomplete_url(url):
     return url
 
 
+def load_context(context):
+    dir_path = xdg.get_data_dir('context')
+    host = urlparse(context.url).hostname
+    file_path = os.path.join(dir_path, host)
+    if os.path.exists(file_path):
+        with open(file_path) as f:
+            json_obj = json.load(f)
+        context.load_from_json_obj(json_obj)
+        context.should_exit = False
+
+
+def save_context(context):
+    dir_path = xdg.get_data_dir('context')
+    host = urlparse(context.url).hostname
+    file_path = os.path.join(dir_path, host)
+    json_obj = context.json_obj()
+    with open(file_path, 'w') as f:
+        json.dump(json_obj, f, indent=4)
+
+
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
@@ -39,6 +62,7 @@ def cli(url, http_options):
 
     url = fix_incomplete_url(url)
     context = Context(url)
+    load_context(context)
 
     # For prompt-toolkit
     history = InMemoryHistory()
@@ -48,6 +72,7 @@ def cli(url, http_options):
 
     # Execute default http options.
     execute(' '.join(http_options), context)
+    save_context(context)
 
     while True:
         try:
@@ -57,6 +82,7 @@ def cli(url, http_options):
             break  # Control-D pressed
         else:
             execute(text, context)
+            save_context(context)
             if context.should_exit:
                 break
 

@@ -109,3 +109,26 @@ def test_httpie_args_post():
         'email=jane@example.com', "'name=Jane Doe'",
         'Accept:text/html', "'Authorization:ApiKey 1234'",
     ]
+
+
+def test_json_serializing():
+    c = Context('http://example.com/api')
+    c.headers.update({
+        'Authorization': 'ApiKey 1234',
+        'Accept': 'text/html'
+    })
+    c.options['--form'] = None
+    c.body_params.update({
+        'name': 'Jane Doe',
+        'email': 'jane@example.com'
+    })
+
+    json_obj = c.json_obj()
+
+    c2 = c.copy()
+    c2.headers['Accept'] = 'application/json'
+    c2.body_params['name'] = 'Jane Doe'
+    assert c2 != c
+
+    c2.load_from_json_obj(json_obj)
+    assert c2 == c
