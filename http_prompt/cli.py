@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 
 import click
 
@@ -48,6 +49,20 @@ def save_context(context):
         json.dump(json_obj, f, indent=4)
 
 
+def init_config_file(config_path):
+    src_path = os.path.join(os.path.dirname(__file__), 'default_config.py')
+    shutil.copyfile(src_path, config_path)
+
+
+def load_config_file(config_path):
+    with open(config_path) as f:
+        content = f.read()
+    config = {}
+    code = compile(content, config_path, 'exec')
+    exec(code, config)
+    return config
+
+
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
@@ -57,18 +72,34 @@ def save_context(context):
 def cli(url, http_options):
     click.echo('Version: %s' % __version__)
 
-    # Override less options
+    config_path = os.path.join(xdg.get_config_dir(), 'config.py')
+    if not os.path.exists(config_path):
+        init_config_file(config_path)
+        click.echo('Config file not found. Initialized a default one: %s' %
+                   config_path)
+
+    config = load_config_file(config_path)
+
+    # Override pager/less options
+    os.environ['PAGER'] = config['pager']
     os.environ['LESS'] = '-RXF'
 
     url = fix_incomplete_url(url)
     context = Context(url)
     load_context(context)
 
+    if 'output_style' in config:
+        context.options['--style'] = config['output_style']
+
+        if context.options['--style'] == 'monokai':
+            # HTTPie default style is monokai, no need to store
+            del context.options['--style']
+
     # For prompt-toolkit
     history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
-    style = style_from_pygments(get_style_by_name('monokai'))
+    style = style_from_pygments(get_style_by_name(config['command_style']))
 
     # Execute default http options.
     execute(' '.join(http_options), context)
