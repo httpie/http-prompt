@@ -81,7 +81,7 @@ To preview how HTTP Prompt is going to call HTTPie_, do:
     http --auth user:pass --form POST http://localhost/api apikey==abc username=john
 
 You can temporarily override the request parameters by supplying options and
-parameters in ``httpie`` command. The overrides won't affact the later
+parameters in ``httpie`` command. The overrides won't affect the later
 requests.
 
 .. code-block:: bash
