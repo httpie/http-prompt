@@ -2,11 +2,14 @@ import os
 
 import click
 
+from httpie.plugins import FormatterPlugin  # noqa, avoid cyclic import
+from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit import prompt
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
+from pygments.util import ClassNotFound
 
 from . import __version__
 from . import config
@@ -59,8 +62,12 @@ def cli(url, http_options):
     history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
-    style = get_style_by_name(cfg['command_style'])
-    style = style_from_pygments(style)
+    try:
+        style = get_style_by_name(cfg['command_style'])
+    except ClassNotFound:
+        style = style_from_pygments(Solarized256Style)
+    else:
+        style = style_from_pygments(style)
 
     # Execute default HTTPie options
     execute(' '.join(http_options), context)
