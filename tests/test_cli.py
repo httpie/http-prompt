@@ -1,7 +1,10 @@
+import os
+
 from click.testing import CliRunner
 from mock import patch
 
 from .base import TempAppDirTestCase
+from http_prompt import xdg
 from http_prompt.cli import cli, execute
 
 
@@ -85,3 +88,14 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.body_params, {'name': 'bob', 'sex': 'M'})
         self.assertEqual(context.headers, {})
         self.assertEqual(context.querystring_params, {'id': '10'})
+
+    def test_config_file(self):
+        # Config file is not there at the beginning
+        config_path = os.path.join(xdg.get_config_dir(), 'config.py')
+        self.assertFalse(os.path.exists(config_path))
+
+        # After user runs it for the first time, a default config file should
+        # be created
+        result, context = run_and_exit(['//example.com'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertTrue(os.path.exists(config_path))
