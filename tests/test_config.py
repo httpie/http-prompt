@@ -41,7 +41,7 @@ class TestConfig(TempAppDirTestCase):
 
     def test_load_default(self):
         cfg = config.load_default()
-        self.assertEqual(cfg['command_style'], 'monokai')
+        self.assertEqual(cfg['command_style'], 'solarized')
         self.assertFalse(cfg['output_style'])
         self.assertEqual(cfg['pager'], 'less')
 
@@ -64,7 +64,7 @@ class TestConfig(TempAppDirTestCase):
                     "greeting = 'hello!'\n")
 
         cfg = config.load()
-        self.assertEqual(cfg['command_style'], 'monokai')
+        self.assertEqual(cfg['command_style'], 'solarized')
         self.assertFalse(cfg['output_style'])
         self.assertEqual(cfg['pager'], 'more')
         self.assertEqual(cfg['greeting'], 'hello!')
