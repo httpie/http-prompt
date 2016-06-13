@@ -33,3 +33,26 @@ class TestContextIO(TempAppDirTestCase):
             '--verify': 'no',
             '--follow': None
         })
+
+    def test_different_ports(self):
+        c = Context('http://example.com')
+        c.headers['Authorization'] = 'apikey'
+        c.querystring_params.update({
+            'type': 'any',
+            'offset': '100'
+        })
+        c.options.update({
+            '--verify': 'no',
+            '--style': 'default',
+            '--follow': None
+        })
+
+        save_context(c)
+
+        c2 = Context('http://example.com:8000')
+        load_context(c2)
+
+        self.assertFalse(c2.headers)
+        self.assertFalse(c2.querystring_params)
+        self.assertFalse(c2.body_params)
+        self.assertFalse(c2.options)

@@ -12,11 +12,20 @@ from . import xdg
 EXCLUDED_OPTIONS = ['--style']
 
 
+def _url_to_filename(url):
+    r = urlparse(url)
+    host = r.hostname
+    port = r.port
+    if not port:
+        port = 443 if r.scheme == 'https' else 80
+    return host + '.' + str(port)
+
+
 def load_context(context):
     """Load a Context object in place from user data directory."""
     dir_path = xdg.get_data_dir('context')
-    host = urlparse(context.url).hostname
-    file_path = os.path.join(dir_path, host)
+    filename = _url_to_filename(context.url)
+    file_path = os.path.join(dir_path, filename)
     if os.path.exists(file_path):
         with open(file_path) as f:
             json_obj = json.load(f)
@@ -27,8 +36,8 @@ def load_context(context):
 def save_context(context):
     """Save a Context object to user data directory."""
     dir_path = xdg.get_data_dir('context')
-    host = urlparse(context.url).hostname
-    file_path = os.path.join(dir_path, host)
+    filename = _url_to_filename(context.url)
+    file_path = os.path.join(dir_path, filename)
     json_obj = context.json_obj()
 
     options = json_obj['options']
