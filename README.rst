@@ -146,16 +146,44 @@ To exit a session, simply enter:
 
     > exit
 
-Note that all the options are gone once you exit.
+
+Configuration
+-------------
+
+When launched for the first time, HTTP Prompt creates a user config file.
+The config file is ``$XDG_CONFIG_HOME/http-prompt/config.py`` (or
+``%LOCALAPPDATA%/http-prompt/config.py`` on Windows), By default, it's
+``~/.config/http-prompt/config.py`` (or ``~/AppData/Local/http-prompt/config.py``).
+
+``config.py`` is a Python module with all the available options you can
+customize. Don't worry. You don't need to know Python to edit it. Just open it
+up with a text editor and follow the guidance inside.
+
+
+Persistent Context
+------------------
+
+HTTP Prompt keeps a data structure called *Context* to represent your current
+session. Every time you enter a command, HTTP Prompt saves the context to your
+filesystem, enabling you to resume your previous session when you restart
+``http-prompt``.
+
+Categorized by hostnames and ports, context data is stored in the user data
+directory, which is ``$XDG_DATA_HOME/http-prompt`` (or ``%LOCALAPPDATA%/http-prompt``
+on Windows). By default, it's ``~/.local/share/http-prompt`` (or
+``~/AppData/Local/http-prompt`` on Windows).
+
+As context data may contain sensitive data like API keys, you should keep the
+user data directory private. By default, HTTP Prompt sets the modes of
+``$XDG_DATA_HOME/http-prompt`` to ``700`` so that the only person who can read
+it is the owner (you).
 
 
 Roadmap
 -------
 
-* User configuration file, i.e., an RC file
+* More configurable options
 * More HTTP headers for autocomplete
-* More tests, e.g., integration test and testing on Windows
-* More documentation
 * Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
 * Support for cURL command preview
 * Shell command evaluation
