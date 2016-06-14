@@ -87,4 +87,4 @@ class Context(object):
         return obj
 
     def load_from_json_obj(self, json_obj):
-        self.__dict__ = deepcopy(json_obj)
+        self.__dict__.update(deepcopy(json_obj))
