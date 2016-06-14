@@ -113,15 +113,26 @@ def generate_help_text():
     return text
 
 
+class DummyExecutionListener(object):
+
+    def url_changed(self, old_url, context):
+        pass
+
+    def context_changed(self, context):
+        pass
+
+
 class ExecutionVisitor(NodeVisitor):
 
-    def __init__(self, context):
+    def __init__(self, context, listener=None):
         super(ExecutionVisitor, self).__init__()
         self.context = context
 
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
+
+        self.listener = listener if listener else DummyExecutionListener()
 
     def visit_method(self, node, children):
         self.method = node.text
@@ -135,6 +146,10 @@ class ExecutionVisitor(NodeVisitor):
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
+
+        if self.context_override.url != self.context.url:
+            self.listener.url_changed(self.context.url, self.context_override)
+
         return node
 
     def visit_rm(self, node, children):
@@ -259,6 +274,7 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_mutation(self, node, children):
         self.context.update(self.context_override)
+        self.listener.context_changed(self.context)
         return node
 
     def _final_context(self):
@@ -306,7 +322,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
 
-def execute(command, context):
+def execute(command, context, listener=None):
     try:
         root = grammar.parse(command)
     except ParseError as err:
@@ -314,7 +330,7 @@ def execute(command, context):
         part = command[err.pos:err.pos + 10]
         click.secho('Syntax error near "%s"' % part, err=True, fg='red')
     else:
-        visitor = ExecutionVisitor(context)
+        visitor = ExecutionVisitor(context, listener=listener)
         try:
             visitor.visit(root)
         except VisitationError as err:

@@ -1,25 +1,36 @@
 import os
 
 from click.testing import CliRunner
-from mock import patch
+from mock import patch, DEFAULT
 
 from .base import TempAppDirTestCase
 from http_prompt import xdg
 from http_prompt.cli import cli, execute
 
 
-@patch('http_prompt.cli.prompt')
-@patch('http_prompt.cli.execute')
-def run_and_exit(args, execute_mock, prompt_mock):
-    """Run http-prompt executable and exit immediately."""
-    # Emulate a Ctrl+D on first call.
-    prompt_mock.side_effect = EOFError
-    execute_mock.side_effect = execute
+def run_and_exit(cli_args=None, prompt_commands=None):
+    """Run http-prompt executable, execute some prompt commands, and exit."""
+    if cli_args is None:
+        cli_args = []
 
-    runner = CliRunner()
-    result = runner.invoke(cli, args)
+    # Make sure last command is 'exit'
+    if prompt_commands is None:
+        prompt_commands = ['exit']
+    else:
+        prompt_commands += ['exit']
 
-    context = execute_mock.call_args[0][1]
+    with patch.multiple('http_prompt.cli',
+                        prompt=DEFAULT, execute=DEFAULT) as mocks:
+        mocks['execute'].side_effect = execute
+
+        # prompt() is mocked to return the command in 'prompt_commands' in
+        # sequence, i.e., prompt() returns prompt_commands[i-1] when it is
+        # called for the ith time
+        mocks['prompt'].side_effect = prompt_commands
+
+        result = CliRunner().invoke(cli, cli_args)
+        context = mocks['execute'].call_args[0][1]
+
     return result, context
 
 
@@ -99,3 +110,30 @@ class TestCli(TempAppDirTestCase):
         result, context = run_and_exit(['//example.com'])
         self.assertEqual(result.exit_code, 0)
         self.assertTrue(os.path.exists(config_path))
+
+    def test_base_url_changed(self):
+        result, context = run_and_exit(['example.com', 'name=bob', 'id==10'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': '10'})
+
+        # Changing hostname should trigger a context reload
+        result, context = run_and_exit(['localhost'],
+                                       ['cd http://example.com/api'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com/api')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': '10'})
+
+    @patch('http_prompt.cli.prompt')
+    @patch('http_prompt.cli.execute')
+    def test_press_ctrl_d(self, execute_mock, prompt_mock):
+        prompt_mock.side_effect = EOFError
+        execute_mock.side_effect = execute
+        result = CliRunner().invoke(cli, [])
+        self.assertEqual(result.exit_code, 0)

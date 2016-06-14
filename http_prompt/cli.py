@@ -15,7 +15,7 @@ from . import __version__
 from . import config
 from .completer import HttpPromptCompleter
 from .context import Context
-from .contextio import load_context, save_context
+from .contextio import load_context, save_context, url_to_context_filename
 from .execution import execute
 from .lexer import HttpPromptLexer
 
@@ -28,6 +28,19 @@ def fix_incomplete_url(url):
     elif not url.startswith('http://') and not url.startswith('https://'):
         url = 'http://' + url
     return url
+
+
+class ExecutionListener(object):
+
+    def url_changed(self, old_url, context):
+        # Load context from disk if base URL is changed
+        old_filename = url_to_context_filename(old_url)
+        new_filename = url_to_context_filename(context.url)
+        if old_filename != new_filename:
+            load_context(context)
+
+    def context_changed(self, context):
+        save_context(context)
 
 
 @click.command(context_settings=dict(
@@ -69,9 +82,10 @@ def cli(url, http_options):
     else:
         style = style_from_pygments(style)
 
+    listener = ExecutionListener()
+
     # Execute default HTTPie options
-    execute(' '.join(http_options), context)
-    save_context(context)
+    execute(' '.join(http_options), context, listener=listener)
 
     while True:
         try:
@@ -80,8 +94,7 @@ def cli(url, http_options):
         except EOFError:
             break  # Control-D pressed
         else:
-            execute(text, context)
-            save_context(context)
+            execute(text, context, listener=listener)
             if context.should_exit:
                 break
 
