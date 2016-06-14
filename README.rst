@@ -175,8 +175,8 @@ on Windows). By default, it's ``~/.local/share/http-prompt`` (or
 
 As context data may contain sensitive data like API keys, you should keep the
 user data directory private. By default, HTTP Prompt sets the modes of
-``$XDG_DATA_HOME/http-prompt`` to ``700`` so that the only person who can read
-it is the owner (you).
+``$XDG_DATA_HOME/http-prompt`` to ``rwx------`` (i.e., ``700``) so that the
+only person who can read it is the owner (you).
 
 
 Roadmap
