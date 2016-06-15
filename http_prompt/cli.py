@@ -4,7 +4,7 @@ import click
 
 from httpie.plugins import FormatterPlugin  # noqa, avoid cyclic import
 from httpie.output.formatters.colors import Solarized256Style
-from prompt_toolkit import prompt
+from prompt_toolkit import prompt, AbortAction
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
@@ -90,7 +90,8 @@ def cli(url, http_options):
     while True:
         try:
             text = prompt('%s> ' % context.url, completer=completer,
-                          lexer=lexer, style=style, history=history)
+                          lexer=lexer, style=style, history=history,
+                          on_abort=AbortAction.RETRY)
         except EOFError:
             break  # Control-D pressed
         else:
