@@ -18,6 +18,7 @@ from .context import Context
 from .contextio import load_context, save_context, url_to_context_filename
 from .execution import execute
 from .lexer import HttpPromptLexer
+from .utils import smart_quote
 
 
 def fix_incomplete_url(url):
@@ -85,6 +86,7 @@ def cli(url, http_options):
     listener = ExecutionListener()
 
     # Execute default HTTPie options
+    http_options = [smart_quote(a) for a in http_options]
     execute(' '.join(http_options), context, listener=listener)
 
     while True:
