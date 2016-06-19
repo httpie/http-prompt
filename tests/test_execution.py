@@ -250,6 +250,18 @@ class TestMutation(ExecutionTestCase):
             'User-Agent': 'HTTP Prompt'
         })
 
+    def test_header_escaped_chars(self):
+        execute(r'X-Name:John\'s\ Doe', self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Name': "John's Doe"
+        })
+
+    def test_header_value_escaped_quote(self):
+        execute(r"'X-Name:John\'s Doe'", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Name': "John's Doe"
+        })
+
     def test_simple_querystring(self):
         execute('page==1 limit==20', self.context)
         self.assertEqual(self.context.querystring_params, {
@@ -275,6 +287,24 @@ class TestMutation(ExecutionTestCase):
         execute("name==王小明", self.context)
         self.assertEqual(self.context.querystring_params, {
             'name': '王小明'
+        })
+
+    def test_querystring_escaped_chars(self):
+        execute(r'name==John\'s\ Doe', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'name': "John's Doe"
+        })
+
+    def test_querytstring_value_escaped_quote(self):
+        execute(r"'name==John\'s Doe'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'name': "John's Doe"
+        })
+
+    def test_querystring_key_escaped_quote(self):
+        execute(r"'john\'s last name==Doe'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            "john's last name": 'Doe'
         })
 
     def test_simple_body_params(self):
@@ -309,6 +339,24 @@ class TestMutation(ExecutionTestCase):
         execute('name=Jesús', self.context)
         self.assertEqual(self.context.body_params, {
             'name': 'Jesús'
+        })
+
+    def test_body_param_escaped_chars(self):
+        execute(r'name=John\'s\ Doe', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': "John's Doe"
+        })
+
+    def test_body_param_value_escaped_quote(self):
+        execute(r"'name=John\'s Doe'", self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': "John's Doe"
+        })
+
+    def test_body_param_key_escaped_quote(self):
+        execute(r"'john\'s last name=Doe'", self.context)
+        self.assertEqual(self.context.body_params, {
+            "john's last name": 'Doe'
         })
 
     def test_long_option_names(self):
