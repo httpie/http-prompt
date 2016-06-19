@@ -130,6 +130,16 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.headers, {})
         self.assertEqual(context.querystring_params, {'id': '10'})
 
+    def test_cli_arguments_with_spaces(self):
+        result, context = run_and_exit(['example.com', "name=John Doe",
+                                        "Authorization:Bearer API KEY"])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.querystring_params, {})
+        self.assertEqual(context.body_params, {'name': 'John Doe'})
+        self.assertEqual(context.headers, {'Authorization': 'Bearer API KEY'})
+
     @patch('http_prompt.cli.prompt')
     @patch('http_prompt.cli.execute')
     def test_press_ctrl_d(self, execute_mock, prompt_mock):
