@@ -226,10 +226,10 @@ class ExecutionVisitor(NodeVisitor):
         return unescape(node.text)
 
     def visit_squoted_mutkey(self, node, children):
-        return node.text
+        return unescape(node.text)
 
     def visit_dquoted_mutkey(self, node, children):
-        return node.text
+        return unescape(node.text)
 
     def visit_mutop(self, node, children):
         return node.text
@@ -238,10 +238,10 @@ class ExecutionVisitor(NodeVisitor):
         return unescape(node.text)
 
     def visit_squoted_mutval(self, node, children):
-        return node.text
+        return unescape(node.text)
 
     def visit_dquoted_mutval(self, node, children):
-        return node.text
+        return unescape(node.text)
 
     def visit_flag_option_mut(self, node, children):
         _, key, _ = children
