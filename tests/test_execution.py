@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import sys
 import unittest
 
 import pytest
@@ -525,3 +526,133 @@ class TestCommandPreview(ExecutionTestCase):
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.headers)
+
+
+class TestShellCode(ExecutionTestCase):
+
+    def test_unquoted_option(self):
+        execute("--auth `echo user:pass`", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_unquoted_option(self):
+        execute("--auth user:`echo pass`", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_squoted_option(self):
+        execute("--auth='user:`echo pass`'", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_dquoted_option(self):
+        execute('--auth="user:`echo pass`"', self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_unquoted_header(self):
+        execute("`echo 'X-Greeting'`:`echo 'hello world'`", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello world'
+        })
+
+    def test_full_squoted_header(self):
+        execute("'`echo X-Greeting`:`echo hello`'", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_full_dquoted_header(self):
+        execute('"`echo X-Greeting`:`echo hello`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_value_squoted_header(self):
+        execute("`echo X-Greeting`:'`echo hello`'", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_value_dquoted_header(self):
+        execute('`echo X-Greeting`:"`echo hello`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_partial_value_dquoted_header(self):
+        execute('Authorization:"Bearer `echo OAUTH TOKEN`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'Bearer OAUTH TOKEN'
+        })
+
+    def test_partial_full_dquoted_header(self):
+        execute('"Authorization:Bearer `echo OAUTH TOKEN`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'Bearer OAUTH TOKEN'
+        })
+
+    def test_unquoted_querystring(self):
+        execute("`echo greeting`==`echo 'hello world'`", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': 'hello world'
+        })
+
+    def test_full_squoted_querystring(self):
+        execute("'`echo greeting`==`echo hello`'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': 'hello'
+        })
+
+    def test_value_squoted_querystring(self):
+        execute("`echo greeting`=='`echo hello`'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': 'hello'
+        })
+
+    def test_value_dquoted_querystring(self):
+        execute('`echo greeting`=="`echo hello`"', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': 'hello'
+        })
+
+    def test_unquoted_body_param(self):
+        execute("`echo greeting`=`echo 'hello world'`", self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello world'
+        })
+
+    def test_full_squoted_body_param(self):
+        execute("'`echo greeting`=`echo hello`'", self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_value_squoted_body_param(self):
+        execute("`echo greeting`='`echo hello`'", self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_full_dquoted_body_param(self):
+        execute('"`echo greeting`=`echo hello`"', self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_bad_command(self):
+        execute("name=`bad command test`", self.context)
+        self.assertEqual(self.context.body_params, {})
+
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="grep is not available on Windows")
+    def test_pipe_and_grep(self):
+        execute("greeting=`echo 'hello world\nhihi\n' | grep hello`",
+                self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello world'
+        })

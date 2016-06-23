@@ -1,14 +1,16 @@
 import re
+import subprocess
 
 import click
-import six
+
+from subprocess import CalledProcessError, PIPE
 
 from httpie.context import Environment
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from six import BytesIO
+from six import BytesIO, text_type
 from six.moves.urllib.parse import urljoin
 
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
@@ -40,15 +42,15 @@ grammar = Grammar(r"""
     mutop = ":" / "==" / "="
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
-    unquoted_mutkey_item = unquoted_mutkey_char / escapeseq
+    unquoted_mutkey_item = code_block / unquoted_mutkey_char / escapeseq
     unquoted_mutkey_char = ~r"[^\s'\"\\=:]"
     squoted_mutkey = squoted_mutkey_item+
     squoted_mutval = squoted_stringitem*
-    squoted_mutkey_item = squoted_mutkey_char / escapeseq
+    squoted_mutkey_item = code_block / squoted_mutkey_char / escapeseq
     squoted_mutkey_char = ~r"[^\r\n'\\=:]"
     dquoted_mutkey = dquoted_mutkey_item+
     dquoted_mutval = dquoted_stringitem*
-    dquoted_mutkey_item = dquoted_mutkey_char / escapeseq
+    dquoted_mutkey_item = code_block / dquoted_mutkey_char / escapeseq
     dquoted_mutkey_char = ~r'[^\r\n"\\=:]'
 
     option_mut = flag_option_mut / value_option_mut
@@ -76,14 +78,17 @@ grammar = Grammar(r"""
     quoted_string = ('"' dquoted_stringitem* '"') /
                     ("'" squoted_stringitem* "'")
     unquoted_string = unquoted_stringitem+
-    dquoted_stringitem = dquoted_stringchar / escapeseq
-    squoted_stringitem = squoted_stringchar / escapeseq
-    unquoted_stringitem = unquoted_stringchar / escapeseq
+    dquoted_stringitem = code_block / dquoted_stringchar / escapeseq
+    squoted_stringitem = code_block / squoted_stringchar / escapeseq
+    unquoted_stringitem = code_block / unquoted_stringchar / escapeseq
     dquoted_stringchar = ~r'[^\r\n"\\]'
     squoted_stringchar = ~r"[^\r\n'\\]"
     unquoted_stringchar = ~r"[^\s'\"\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
+
+    code_block = "`" shell_code "`"
+    shell_code = ~r"[^`]*"
 """)
 
 
@@ -123,6 +128,8 @@ class DummyExecutionListener(object):
 
 
 class ExecutionVisitor(NodeVisitor):
+
+    unwrapped_exceptions = (CalledProcessError,)
 
     def __init__(self, context, listener=None):
         super(ExecutionVisitor, self).__init__()
@@ -222,26 +229,18 @@ class ExecutionVisitor(NodeVisitor):
         _, key, op, _, val, _, _ = children
         return self._mutate(node, key, op, val)
 
-    def visit_unquoted_mutkey(self, node, children):
-        return unescape(node.text)
+    def _visit_mut_key_or_val(self, node, children):
+        return unescape(''.join([c for c in children]))
 
-    def visit_squoted_mutkey(self, node, children):
-        return unescape(node.text)
-
-    def visit_dquoted_mutkey(self, node, children):
-        return unescape(node.text)
+    visit_unquoted_mutkey = _visit_mut_key_or_val
+    visit_unquoted_mutval = _visit_mut_key_or_val
+    visit_squoted_mutkey = _visit_mut_key_or_val
+    visit_squoted_mutval = _visit_mut_key_or_val
+    visit_dquoted_mutkey = _visit_mut_key_or_val
+    visit_dquoted_mutval = _visit_mut_key_or_val
 
     def visit_mutop(self, node, children):
         return node.text
-
-    def visit_unquoted_mutval(self, node, children):
-        return unescape(node.text)
-
-    def visit_squoted_mutval(self, node, children):
-        return unescape(node.text)
-
-    def visit_dquoted_mutval(self, node, children):
-        return unescape(node.text)
 
     def visit_flag_option_mut(self, node, children):
         _, key, _ = children
@@ -262,11 +261,23 @@ class ExecutionVisitor(NodeVisitor):
     def visit_string(self, node, children):
         return children[0]
 
-    def visit_unquoted_string(self, node, children):
-        return unescape(node.text)
+    visit_unquoted_string = _visit_mut_key_or_val
 
     def visit_quoted_string(self, node, children):
-        return node.text[1:-1]
+        return self._visit_mut_key_or_val(node, children[0][1])
+
+    def _visit_stringitem(self, node, children):
+        child = children[0]
+        if hasattr(child, 'text'):
+            return child.text
+        return child
+
+    visit_unquoted_mutkey_item = _visit_stringitem
+    visit_unquoted_stringitem = _visit_stringitem
+    visit_squoted_mutkey_item = _visit_stringitem
+    visit_squoted_stringitem = _visit_stringitem
+    visit_dquoted_mutkey_item = _visit_stringitem
+    visit_dquoted_stringitem = _visit_stringitem
 
     def visit_tool(self, node, children):
         self.tool = node.text
@@ -306,13 +317,23 @@ class ExecutionVisitor(NodeVisitor):
             # XXX: Work around a bug of click.echo_via_pager(). When you pass
             # a bytestring to echo_via_pager(), it converts the bytestring with
             # str(b'abc'), which makes it "b'abc'".
-            if six.PY2:
-                content = unicode(content, 'utf-8')  # noqa
-            else:
-                content = str(content, 'utf-8')
+            # TODO: What if content is not utf-8 encoded?
+            content = text_type(content, 'utf-8')
             click.echo_via_pager(content)
 
         return node
+
+    def visit_code_block(self, node, children):
+        return children[1]
+
+    def visit_shell_code(self, node, children):
+        p = subprocess.Popen(node.text, shell=True, stdout=PIPE, stderr=PIPE)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            exc = CalledProcessError(p.returncode, node.text)
+            exc.output = text_type(err or out, 'utf-8').rstrip()
+            raise exc
+        return text_type(out, 'utf-8').rstrip()
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:
@@ -345,3 +366,5 @@ def execute(command, context, listener=None):
             else:
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')
+        except CalledProcessError as err:
+            click.secho(err.output + ' (exit status %d)' % err.returncode, fg='red')
