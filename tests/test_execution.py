@@ -648,11 +648,27 @@ class TestShellCode(ExecutionTestCase):
         execute("name=`bad command test`", self.context)
         self.assertEqual(self.context.body_params, {})
 
-    @pytest.mark.skipif(sys.platform == 'win32',
-                        reason="grep is not available on Windows")
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix-only commands")
     def test_pipe_and_grep(self):
         execute("greeting=`echo 'hello world\nhihi\n' | grep hello`",
                 self.context)
         self.assertEqual(self.context.body_params, {
             'greeting': 'hello world'
+        })
+
+    @pytest.mark.skip(reason="not implemented yet")
+    def test_set_env_unix(self):
+        execute('`FIRST_NAME=John LAST_NAME=Doe`', self.context)
+        execute('name=`echo "$FIRST_NAME $LAST_NAME"`', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe'
+        })
+
+    @pytest.mark.skip(reason="not implemented yet")
+    def test_set_env_windows(self):
+        execute('`set FIRST_NAME=John`', self.context)
+        execute('`set LAST_NAME=Doe`', self.context)
+        execute('name=`echo %FIRST_NAME% %LAST_NAME%`', self.context)
+        self.assertEqual(self.context.body_params, {
+            'name': 'John Doe'
         })
