@@ -173,4 +173,15 @@ class TestLexerPreview(LexerTestCase):
             (Name, '--form')
         ])
 
-# TODO: Add more tests...
+
+class TestShellCode(LexerTestCase):
+
+    def test_unquoted_querystring(self):
+        self.assertEqual(self.get_tokens('`echo name`==john'), [
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (Text, 'name'),
+            (Text, '`'),
+            (Operator, '=='),
+            (String, 'john')
+        ])

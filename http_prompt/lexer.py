@@ -1,4 +1,5 @@
-from pygments.lexer import RegexLexer, bygroups, words
+from pygments.lexer import RegexLexer, bygroups, words, using
+from pygments.lexers import BashLexer
 
 from pygments.token import Text, String, Keyword, Name, Operator
 
@@ -59,22 +60,24 @@ class HttpPromptLexer(RegexLexer):
             (r'$', Text, 'end'),
             (r'\s+', Text),
 
-            # Flag options, such as `--form`, `--json`
+            # Flag options, such as (--form) and (--json)
             (words(FLAG_OPTIONS, suffix=r'\b'), Name),
 
-            # Options with values, such as `--style=default`, `--pretty all`
+            # Options with values, such as (--style=default) and (--pretty all)
             (words(VALUE_OPTIONS, suffix=r'\b'), Name, 'option_op'),
 
+            (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
+
             # Unquoted or value-quoted request mutation,
-            # such as `name="John Doe"`, `name=John\ Doe`
-            (r'((?:[^\s\'"\\=:]|(?:\\.))+)(:|==|=)',
+            # such as (name="John Doe") and (name=John\ Doe)
+            (r'((?:[^\s\'"\\=:]|(?:\\.))*)(:|==|=)',
              bygroups(Name, Operator), 'unquoted_mut'),
 
-            # Full single-quoted request mutation, such as `'name=John Doe'`
+            # Full single-quoted request mutation, such as ('name=John Doe')
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(:|==|=)",
              bygroups(Text, Name, Operator), 'squoted_mut'),
 
-            # Full double-quoted request mutation, such as `"name=John Doe"`
+            # Full double-quoted request mutation, such as ("name=John Doe")
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(:|==|=)',
              bygroups(Text, Name, Operator), 'dquoted_mut')
         ],
