@@ -90,7 +90,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.options, {})
         self.assertEqual(context.body_params, {'name': 'bob'})
         self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': '10'})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
 
         result, context = run_and_exit(['//example.com', 'sex=M'])
         self.assertEqual(result.exit_code, 0)
@@ -98,7 +98,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.options, {})
         self.assertEqual(context.body_params, {'name': 'bob', 'sex': 'M'})
         self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': '10'})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
 
     def test_config_file(self):
         # Config file is not there at the beginning
@@ -118,7 +118,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.options, {})
         self.assertEqual(context.body_params, {'name': 'bob'})
         self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': '10'})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
 
         # Changing hostname should trigger a context reload
         result, context = run_and_exit(['localhost'],
@@ -128,7 +128,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.options, {})
         self.assertEqual(context.body_params, {'name': 'bob'})
         self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': '10'})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
 
     def test_cli_arguments_with_spaces(self):
         result, context = run_and_exit(['example.com', "name=John Doe",
