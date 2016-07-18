@@ -265,46 +265,46 @@ class TestMutation(ExecutionTestCase):
     def test_simple_querystring(self):
         execute('page==1 limit==20', self.context)
         self.assertEqual(self.context.querystring_params, {
-            'page': '1',
-            'limit': '20'
+            'page': ['1'],
+            'limit': ['20']
         })
 
     def test_querystring_with_double_quotes(self):
         execute('page==1 name=="John Doe"', self.context)
         self.assertEqual(self.context.querystring_params, {
-            'page': '1',
-            'name': 'John Doe'
+            'page': ['1'],
+            'name': ['John Doe']
         })
 
     def test_querystring_with_single_quotes(self):
         execute("page==1 name=='John Doe'", self.context)
         self.assertEqual(self.context.querystring_params, {
-            'page': '1',
-            'name': 'John Doe'
+            'page': ['1'],
+            'name': ['John Doe']
         })
 
     def test_querystring_with_chinese(self):
         execute("name==王小明", self.context)
         self.assertEqual(self.context.querystring_params, {
-            'name': '王小明'
+            'name': ['王小明']
         })
 
     def test_querystring_escaped_chars(self):
         execute(r'name==John\'s\ Doe', self.context)
         self.assertEqual(self.context.querystring_params, {
-            'name': "John's Doe"
+            'name': ["John's Doe"]
         })
 
     def test_querytstring_value_escaped_quote(self):
         execute(r"'name==John\'s Doe'", self.context)
         self.assertEqual(self.context.querystring_params, {
-            'name': "John's Doe"
+            'name': ["John's Doe"]
         })
 
     def test_querystring_key_escaped_quote(self):
         execute(r"'john\'s last name==Doe'", self.context)
         self.assertEqual(self.context.querystring_params, {
-            "john's last name": 'Doe'
+            "john's last name": ['Doe']
         })
 
     def test_simple_body_params(self):
@@ -404,6 +404,17 @@ class TestMutation(ExecutionTestCase):
             'password': '1234 5678'
         })
 
+    def test_multi_querystring(self):
+        execute('name==john name==doe', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'name': ['john', 'doe']
+        })
+
+        execute('name==jane', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'name': ['jane']
+        })
+
 
 class TestHttpAction(ExecutionTestCase):
 
@@ -414,6 +425,11 @@ class TestHttpAction(ExecutionTestCase):
     def test_get_uppercase(self):
         execute('GET', self.context)
         self.assert_httpie_main_called_with(['GET', 'http://localhost'])
+
+    def test_get_multi_querystring(self):
+        execute('get foo==1 foo==2 foo==3', self.context)
+        self.assert_httpie_main_called_with([
+            'GET', 'http://localhost', 'foo==1', 'foo==2', 'foo==3'])
 
     def test_post(self):
         execute('post page==1', self.context)
@@ -525,3 +541,10 @@ class TestCommandPreview(ExecutionTestCase):
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.headers)
+
+    def test_httpie_with_multi_querystring(self):
+        execute('httpie get foo==1 foo==2 foo==3', self.context)
+        self.click.echo.assert_called_with(
+            'http GET http://localhost foo==1 foo==2 foo==3')
+        self.assertEqual(self.context.url, 'http://localhost')
+        self.assertFalse(self.context.querystring_params)

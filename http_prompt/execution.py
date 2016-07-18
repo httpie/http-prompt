@@ -194,12 +194,17 @@ class ExecutionVisitor(NodeVisitor):
 
     def _mutate(self, node, key, op, val):
         if op == ':':
-            target = self.context_override.headers
-        elif op == '==':
-            target = self.context_override.querystring_params
+            self.context_override.headers[key] = val
         elif op == '=':
-            target = self.context_override.body_params
-        target[key] = val
+            self.context_override.body_params[key] = val
+        elif op == '==':
+            # You can have multiple querystring params with the same name,
+            # so we use a list to store multiple values (#20)
+            params = self.context_override.querystring_params
+            if key not in params:
+                params[key] = [val]
+            else:
+                params[key].append(val)
         return node
 
     def visit_unquoted_mut(self, node, children):
