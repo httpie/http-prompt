@@ -366,6 +366,15 @@ class TestMutation(ExecutionTestCase):
             '--auth': 'user:pass'
         })
 
+    def test_long_option_names_with_its_prefix(self):
+        execute('--auth-type basic --auth user:pass --session user --session-read-only user', self.context)
+        self.assertEqual(self.context.options, {
+            '--auth-type': 'basic',
+            '--auth': 'user:pass',
+            '--session-read-only': 'user',
+            '--session': 'user'
+        })
+
     def test_long_short_option_names_mixed(self):
         execute('--style=default -j --stream', self.context)
         self.assertEqual(self.context.options, {

@@ -60,8 +60,8 @@ grammar = Grammar(r"""
                    "--version" / "--traceback" / "--debug"
     value_option_mut = _ value_optname ~r"(\s+|=)" string _
     value_optname = "--pretty" / "--style" / "-s" / "--print" / "-p" /
-                    "--output" / "-o" / "--session" / "--session-read-only" /
-                    "--auth" / "-a" / "--auth-type" / "--proxy" / "--verify" /
+                    "--output" / "-o" / "--session-read-only" / "--session" /
+                    "--auth-type" / "--auth" / "-a" / "--proxy" / "--verify" /
                     "--cert" / "--cert-key" / "--timeout"
 
     cd = _ "cd" _ string _
