@@ -13,3 +13,9 @@ output_style = None
 # The tool used to paginate output. Available values: 'less' and 'more'.
 # Note that 'more' does not support ANSI colors.
 pager = 'less'
+
+# What to do when a response has a 'Set-Cookie' header? Available values:
+# 'auto': set the cookie automatically and silently
+# 'ask': ask the user if they want to set the cookie
+# 'off': do nothing with the 'Set-Cookie' header
+set_cookies = 'auto'

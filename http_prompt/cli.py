@@ -11,6 +11,7 @@ from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
+from six.moves.http_cookies import SimpleCookie
 
 from . import __version__
 from . import config
@@ -32,7 +33,17 @@ def fix_incomplete_url(url):
     return url
 
 
+def update_cookies(base_value, cookies):
+    cookie = SimpleCookie(base_value)
+    for k, v in cookies.items():
+        cookie[k] = v
+    return cookie.output(header='', sep=';').lstrip()
+
+
 class ExecutionListener(object):
+
+    def __init__(self, cfg):
+        self.cfg = cfg
 
     def url_changed(self, old_url, context):
         # Load context from disk if base URL is changed
@@ -43,6 +54,19 @@ class ExecutionListener(object):
 
     def context_changed(self, context):
         save_context(context)
+
+    def response_returned(self, context, response):
+        if not response.cookies:
+            return
+
+        cookie_pref = self.cfg.get('set_cookies') or 'auto'
+        if cookie_pref == 'auto' or (
+                cookie_pref == 'ask' and
+                click.confirm("Cookies incoming! Do you want to set them?")):
+            existing_cookie = context.headers.get('Cookie')
+            new_cookie = update_cookies(existing_cookie, response.cookies)
+            context.headers['Cookie'] = new_cookie
+            click.secho('Cookies set: %s' % new_cookie)
 
 
 @click.command(context_settings=dict(
@@ -84,7 +108,7 @@ def cli(url, http_options):
     else:
         style = style_from_pygments(style)
 
-    listener = ExecutionListener()
+    listener = ExecutionListener(cfg)
 
     # Execute default HTTPie options
     http_options = [smart_quote(a) for a in http_options]

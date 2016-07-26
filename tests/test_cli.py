@@ -1,11 +1,14 @@
 import os
+import unittest
 
 from click.testing import CliRunner
 from mock import patch, DEFAULT
+from requests.models import Response
 
 from .base import TempAppDirTestCase
 from http_prompt import xdg
-from http_prompt.cli import cli, execute
+from http_prompt.context import Context
+from http_prompt.cli import cli, execute, ExecutionListener
 
 
 def run_and_exit(cli_args=None, prompt_commands=None):
@@ -147,3 +150,52 @@ class TestCli(TempAppDirTestCase):
         execute_mock.side_effect = execute
         result = CliRunner().invoke(cli, [])
         self.assertEqual(result.exit_code, 0)
+
+
+class TestExecutionListenerSetCookies(unittest.TestCase):
+
+    def setUp(self):
+        self.listener = ExecutionListener({})
+
+        self.response = Response()
+        self.response.cookies.update({
+            'username': 'john',
+            'sessionid': 'abcd'
+        })
+
+        self.context = Context('http://localhost')
+        self.context.headers['Cookie'] = 'name="John Doe"; sessionid=xyz'
+
+    def test_auto(self):
+        self.listener.cfg['set_cookies'] = 'auto'
+        self.listener.response_returned(self.context, self.response)
+
+        self.assertEqual(self.context.headers['Cookie'],
+                         'name="John Doe"; sessionid=abcd; username=john')
+
+    @patch('http_prompt.cli.click.confirm')
+    def test_ask_and_yes(self, confirm_mock):
+        confirm_mock.return_value = True
+
+        self.listener.cfg['set_cookies'] = 'ask'
+        self.listener.response_returned(self.context, self.response)
+
+        self.assertEqual(self.context.headers['Cookie'],
+                         'name="John Doe"; sessionid=abcd; username=john')
+
+    @patch('http_prompt.cli.click.confirm')
+    def test_ask_and_no(self, confirm_mock):
+        confirm_mock.return_value = False
+
+        self.listener.cfg['set_cookies'] = 'ask'
+        self.listener.response_returned(self.context, self.response)
+
+        self.assertEqual(self.context.headers['Cookie'],
+                         'name="John Doe"; sessionid=xyz')
+
+    def test_off(self):
+        self.listener.cfg['set_cookies'] = 'off'
+        self.listener.response_returned(self.context, self.response)
+
+        self.assertEqual(self.context.headers['Cookie'],
+                         'name="John Doe"; sessionid=xyz')
