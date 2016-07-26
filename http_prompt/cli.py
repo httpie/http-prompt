@@ -56,16 +56,14 @@ class ExecutionListener(object):
         save_context(context)
 
     def response_returned(self, context, response):
-        cookies = response.cookies
-        if not cookies:
+        if not response.cookies:
             return
 
-        cookie_handling = self.cfg.get('set_cookies') or 'auto'
-        existing_cookie = context.headers.get('Cookie')
-        new_cookie = None
-        if cookie_handling == 'auto' or (
-                cookie_handling == 'ask' and
+        cookie_pref = self.cfg.get('set_cookies') or 'auto'
+        if cookie_pref == 'auto' or (
+                cookie_pref == 'ask' and
                 click.confirm("Cookies incoming! Do you want to set them?")):
+            existing_cookie = context.headers.get('Cookie')
             new_cookie = update_cookies(existing_cookie, response.cookies)
             context.headers['Cookie'] = new_cookie
             click.secho('Cookies set: %s' % new_cookie)
