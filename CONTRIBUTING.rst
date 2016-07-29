@@ -74,7 +74,7 @@ create a virtualenv for HTTP Prompt, do::
 
     $ pyenv virtualenv 3.5.1 http-prompt
 
-The command means: create a virtualenv named "http-prompt" from based on Python
+The command means: create a virtualenv named "http-prompt" based on Python
 3.5.1. The virtualenv can be found at ``~/.pyenv/versions/3.5.1/envs/http-prompt``.
 
 To activate the virtualenv, do::
@@ -82,7 +82,7 @@ To activate the virtualenv, do::
     $ pyenv activate http-prompt
 
 This will switch your Python environment from the system-wide Python to the
-virtualenv (named "http-prompt") Python.
+virtualenv's (named "http-prompt") Python.
 
 To go back to the system-wide Python, you have to deactivate the virtualenv::
 
@@ -94,7 +94,7 @@ Refer to pyenv_ and pyenv-virtualenv_ if anything else is unclear.
 Installing Dependent Packages
 -----------------------------
 
-Make sure you activated your virtualenv first. It is also recommended to use
+Make sure you activate your virtualenv first. It is also recommended to use
 the latest version of pip. You can upgrade it with::
 
     $ pip install -U pip
@@ -106,7 +106,7 @@ Install HTTP Prompt with its dependent packages::
 
 ``pip install -e .`` means install the package in editable mode (or developer
 mode). This allows you to edit code directly in ``~/Projects/http-prompt``
-without reinstalling the package.  Without the ``-e`` option, the package will
+without reinstalling the package. Without the ``-e`` option, the package will
 be installed to Python's ``site-packages`` directory, which is not convenient
 for developing.
 
@@ -114,8 +114,8 @@ for developing.
 Installing Test Dependent Packages
 ----------------------------------
 
-Test tools are placed in a separate file named ``requirements-test.txt``. To
-install them, do::
+Test requirements are placed in a separate file named ``requirements-test.txt``.
+To install them, do::
 
     $ cd ~/Projects/http-prompt
     $ pip install -r requirements-test.txt
@@ -128,7 +128,7 @@ Code Style
 ~~~~~~~~~~
 
 Always lint your code with Flake8_. You can set it up in your code editor or
-simply use `flake8` in the command line.
+simply use ``flake8`` in the command line.
 
 `The Hitchhiker’s Guide to Python`_ provides the best Python coding practices.
 I recommend anyone who wants to write good Python code to read it.
@@ -143,9 +143,9 @@ agree upon.
 Python 2 and 3 Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-HTTP Prompt is compatible with Python 2 and 3. When you code, keep in mind that
-you're coding for Python 2 and 3. You can use Tox_ (see below) to make sure the
-code is runnable on both Python 2 and 3.
+HTTP Prompt is compatible with Python 2 and 3. Keep in mind that you're coding
+for Python 2 and 3 at the same time. You can use Tox_ (see below) to make sure
+the code is runnable on both Python 2 and 3.
 
 
 Running Tests
@@ -207,11 +207,11 @@ listed above.
 Code Review
 -----------
 
-Once you made changes and the tests pass, push your modified code to your
+Once you made changes and all the tests pass, push your modified code to your
 GitHub account. Submit a pull request (PR) on GitHub for me to review. If the
 patch is good, I'll merge it to the master branch and ship the new code in the
 next release. If the patch needs improvements, I'll give you feedback so you
-can modify accordingly and resubmit to the PR.
+can modify accordingly and resubmit it to the PR.
 
 
 .. _Flake8: http://flake8.pycqa.org/en/latest/index.html
