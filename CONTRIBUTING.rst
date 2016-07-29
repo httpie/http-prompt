@@ -53,7 +53,7 @@ Working with virtualenv
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 *virtualenv* is the de facto standard tool when developing a Python project.
-Instead of pollute your system-wide Python installation with different Python
+Instead of polluting your system-wide Python installation with different Python
 projects, virtualenv creates an isolated Python environment exclusively for a
 Python project.
 
