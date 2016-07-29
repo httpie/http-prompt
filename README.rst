@@ -191,6 +191,12 @@ Roadmap
 * HTTP/2 support
 
 
+Contributing
+------------
+
+See CONTRIBUTING.rst_.
+
+
 Thanks
 ------
 
@@ -198,6 +204,7 @@ Thanks
 * prompt_toolkit_: for simplifying the work of building an interactive CLI
 * Parsimonious_: for the PEG parser used by this project
 * pgcli_: for the inspiration of this project
+* Contributors_: for improving this project
 
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
@@ -212,6 +219,8 @@ Thanks
 .. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
     :target: https://coveralls.io/github/eliangcs/http-prompt?branch=master
 
+.. _CONTRIBUTING.rst: https://github.com/eliangcs/http-prompt/blob/master/CONTRIBUTING.rst
+.. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
 .. _HTTPie: https://github.com/jkbrzt/httpie
 .. _Parsimonious: https://github.com/erikrose/parsimonious
 .. _pgcli: https://github.com/dbcli/pgcli
