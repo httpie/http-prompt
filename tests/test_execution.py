@@ -589,10 +589,15 @@ class TestShellCode(ExecutionTestCase):
 
     def test_unquoted_header(self):
         execute("`echo 'X-Greeting'`:`echo 'hello world'`", self.context)
-        expected = ("'hello world'"
-                    if sys.platform == 'win32' else 'hello world')
+        if sys.platform == 'win32':
+            expected_key = "'X-Greeting'"
+            expected_value = "'hello world'"
+        else:
+            expected_key = 'X-Greeting'
+            expected_value = 'hello world'
+
         self.assertEqual(self.context.headers, {
-            'X-Greeting': expected
+            expected_key: expected_value
         })
 
     def test_full_squoted_header(self):
