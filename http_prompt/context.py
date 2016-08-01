@@ -72,9 +72,14 @@ class Context(object):
         ]
 
         for op, item_dict in operators_and_items:
-            for k, v in sorted(six.iteritems(item_dict)):
-                arg = quote_arg('%s%s%s' % (k, op, v))
-                args.append(arg)
+            for k, value in sorted(six.iteritems(item_dict)):
+                if isinstance(value, (list, tuple)):
+                    for v in value:
+                        arg = quote_arg('%s%s%s' % (k, op, v))
+                        args.append(arg)
+                else:
+                    arg = quote_arg('%s%s%s' % (k, op, value))
+                    args.append(arg)
 
         return args
 

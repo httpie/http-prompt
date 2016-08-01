@@ -1,5 +1,6 @@
 import re
 import subprocess
+import sys
 
 import click
 
@@ -62,8 +63,8 @@ grammar = Grammar(r"""
                    "--version" / "--traceback" / "--debug"
     value_option_mut = _ value_optname ~r"(\s+|=)" string _
     value_optname = "--pretty" / "--style" / "-s" / "--print" / "-p" /
-                    "--output" / "-o" / "--session" / "--session-read-only" /
-                    "--auth" / "-a" / "--auth-type" / "--proxy" / "--verify" /
+                    "--output" / "-o" / "--session-read-only" / "--session" /
+                    "--auth-type" / "--auth" / "-a" / "--proxy" / "--verify" /
                     "--cert" / "--cert-key" / "--timeout"
 
     cd = _ "cd" _ string _
@@ -126,6 +127,9 @@ class DummyExecutionListener(object):
     def context_changed(self, context):
         pass
 
+    def response_returned(self, context, response):
+        pass
+
 
 class ExecutionVisitor(NodeVisitor):
 
@@ -140,6 +144,7 @@ class ExecutionVisitor(NodeVisitor):
         self.tool = None
 
         self.listener = listener if listener else DummyExecutionListener()
+        self.last_response = None
 
     def visit_method(self, node, children):
         self.method = node.text
@@ -201,12 +206,17 @@ class ExecutionVisitor(NodeVisitor):
 
     def _mutate(self, node, key, op, val):
         if op == ':':
-            target = self.context_override.headers
-        elif op == '==':
-            target = self.context_override.querystring_params
+            self.context_override.headers[key] = val
         elif op == '=':
-            target = self.context_override.body_params
-        target[key] = val
+            self.context_override.body_params[key] = val
+        elif op == '==':
+            # You can have multiple querystring params with the same name,
+            # so we use a list to store multiple values (#20)
+            params = self.context_override.querystring_params
+            if key not in params:
+                params[key] = [val]
+            else:
+                params[key].append(val)
         return node
 
     def visit_unquoted_mut(self, node, children):
@@ -293,6 +303,14 @@ class ExecutionVisitor(NodeVisitor):
         context.update(self.context_override)
         return context
 
+    def _trace_get_response(self, frame, event, arg):
+        func_name = frame.f_code.co_name
+        if func_name == 'get_response':
+            if event == 'call':
+                return self._trace_get_response
+            elif event == 'return':
+                self.last_response = arg
+
     def visit_immutation(self, node, children):
         context = self._final_context()
         child_type = children[0].expr_name
@@ -309,7 +327,19 @@ class ExecutionVisitor(NodeVisitor):
             output = BytesIO()
             try:
                 env = Environment(stdout=output, is_windows=False)
-                httpie_main(context.httpie_args(self.method), env=env)
+
+                # XXX: httpie_main() doesn't provide an API for us to get the
+                # HTTP response object, so we use this super dirty hack -
+                # sys.settrace() to intercept get_response() that is called in
+                # httpie_main() internally. The HTTP response intercepted is
+                # assigned to self.last_response, which may be useful for
+                # self.listener.
+                sys.settrace(self._trace_get_response)
+                try:
+                    httpie_main(context.httpie_args(self.method), env=env)
+                finally:
+                    sys.settrace(None)
+
                 content = output.getvalue()
             finally:
                 output.close()
@@ -320,6 +350,10 @@ class ExecutionVisitor(NodeVisitor):
             # TODO: What if content is not utf-8 encoded?
             content = text_type(content, 'utf-8')
             click.echo_via_pager(content)
+
+            if self.last_response:
+                self.listener.response_returned(self.context,
+                                                self.last_response)
 
         return node
 
@@ -367,4 +401,5 @@ def execute(command, context, listener=None):
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')
         except CalledProcessError as err:
-            click.secho(err.output + ' (exit status %d)' % err.returncode, fg='red')
+            click.secho(err.output + ' (exit status %d)' % err.returncode,
+                        fg='red')
