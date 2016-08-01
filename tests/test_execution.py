@@ -589,8 +589,10 @@ class TestShellCode(ExecutionTestCase):
 
     def test_unquoted_header(self):
         execute("`echo 'X-Greeting'`:`echo 'hello world'`", self.context)
+        expected = ("'hello world'"
+                    if sys.platform == 'win32' else 'hello world')
         self.assertEqual(self.context.headers, {
-            'X-Greeting': 'hello world'
+            'X-Greeting': expected
         })
 
     def test_full_squoted_header(self):
@@ -631,8 +633,10 @@ class TestShellCode(ExecutionTestCase):
 
     def test_unquoted_querystring(self):
         execute("`echo greeting`==`echo 'hello world'`", self.context)
+        expected = ("'hello world'"
+                    if sys.platform == 'win32' else 'hello world')
         self.assertEqual(self.context.querystring_params, {
-            'greeting': ['hello world']
+            'greeting': [expected]
         })
 
     def test_full_squoted_querystring(self):
@@ -655,8 +659,10 @@ class TestShellCode(ExecutionTestCase):
 
     def test_unquoted_body_param(self):
         execute("`echo greeting`=`echo 'hello world'`", self.context)
+        expected = ("'hello world'"
+                    if sys.platform == 'win32' else 'hello world')
         self.assertEqual(self.context.body_params, {
-            'greeting': 'hello world'
+            'greeting': expected
         })
 
     def test_full_squoted_body_param(self):
