@@ -689,7 +689,7 @@ class TestShellCode(ExecutionTestCase):
             'greeting': 'hello world'
         })
 
-    @pytest.mark.skip(reason="not implemented yet")
+    @pytest.mark.xfail
     def test_set_env_unix(self):
         execute('`FIRST_NAME=John LAST_NAME=Doe`', self.context)
         execute('name=`echo "$FIRST_NAME $LAST_NAME"`', self.context)
@@ -697,7 +697,7 @@ class TestShellCode(ExecutionTestCase):
             'name': 'John Doe'
         })
 
-    @pytest.mark.skip(reason="not implemented yet")
+    @pytest.mark.xfail
     def test_set_env_windows(self):
         execute('`set FIRST_NAME=John`', self.context)
         execute('`set LAST_NAME=Doe`', self.context)
