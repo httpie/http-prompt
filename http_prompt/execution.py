@@ -11,17 +11,21 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six import BytesIO
 from six.moves.urllib.parse import urljoin
+# from pprint import pprint
+# import inspect
 
+from .outputmethod import OutputMethod
+from .commandoutput import put as command_ouput
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
-from .utils import unescape
+from .utils import unescape, unquote
 
 
 grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / help / exit / _
+    immutation = preview / action / help / exit / env / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -30,7 +34,9 @@ grammar = Grammar(r"""
     urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
     help = _ "help" _
     exit = _ "exit" _
+    env  = _ "env" _ (redir_out)?
 
+    redir_out = ">" _ string _
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
     value_quoted_mut = value_squoted_mut / value_dquoted_mut
@@ -135,6 +141,8 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
+        self.output_methods = [OutputMethod.echo]
+        self.output_file_path = None
 
         self.listener = listener if listener else DummyExecutionListener()
         self.last_response = None
@@ -186,6 +194,20 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_help(self, node, children):
         click.echo_via_pager(generate_help_text())
+        return node
+
+    def visit_redir_out(self, node, children):
+        path = node.text.strip()
+        self.output_file_path = unquote(path[2:])
+        self.output_methods = [OutputMethod.write_file]
+        return node
+
+    def visit_env(self, node, children):
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.httpie_data_args(quote=True)
+        command_ouput('\n'.join(args), self.output_methods, self.output_file_path)
         return node
 
     def visit_exit(self, node, children):
@@ -366,6 +388,9 @@ def execute(command, context, listener=None):
     else:
         visitor = ExecutionVisitor(context, listener=listener)
         try:
+            # print('PARSEDDD')
+            # pprint (visitor.__dict__)
+            # pprint(inspect.getsourcelines(visitor.visit));
             visitor.visit(root)
         except VisitationError as err:
             exc_class = err.original_class
