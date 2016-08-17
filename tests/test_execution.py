@@ -53,6 +53,21 @@ class TestExecution_noop(ExecutionTestCase):
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.should_exit)
 
+class TestExecution_env(ExecutionTestCase):
+
+    def test_env(self):
+        execute('name=value', self.context)
+        execute('name2=value2', self.context)
+        execute('env', self.context)
+        env_text = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertTrue(env_text.startswith('name=value\nname2=value2'))
+
+    def test_env_with_spaces(self):
+        execute('name=value', self.context)
+        execute('name2=value2', self.context)
+        execute('  env   ', self.context)
+        env_text = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertTrue(env_text.startswith('name=value\nname2=value2'))
 
 class TestExecution_help(ExecutionTestCase):
 
