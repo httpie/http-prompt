@@ -15,7 +15,7 @@ from six.moves.urllib.parse import urljoin
 # import inspect
 
 from .outputmethod import OutputMethod
-from .commandoutput import put as command_ouput
+from .commandio import put as command_ouput
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
 from .utils import unescape, unquote
