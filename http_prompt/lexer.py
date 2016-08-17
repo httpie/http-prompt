@@ -44,6 +44,7 @@ class HttpPromptLexer(RegexLexer):
              bygroups(Keyword, Text), 'urlpath'),
             (r'exit\s*', Keyword, 'end'),
             (r'help\s*', Keyword, 'end'),
+            (r'env\s*', Keyword, 'redir_out'),
             (r'', Text, 'concat_mut')
         ],
 
@@ -83,6 +84,12 @@ class HttpPromptLexer(RegexLexer):
             (r'(\s+|=)', Operator, 'option_value'),
         ],
         'option_value': string_rules('#pop:2'),
+        'file_path': [
+            (r'(/)?([^/\0]+(/)?)+', String),
+        ],
+        'redir_out': [
+            (r'>>|>', Operator, 'file_path'),
+        ],
 
         'unquoted_mut': string_rules('#pop'),
         'squoted_mut': [

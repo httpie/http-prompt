@@ -17,10 +17,11 @@ def put(data, methods=[OutputMethod.echo], path=None):
     if OutputMethod.write_file in methods:
         save_file(data, path, 'w', is_json_data, json_indent)
     elif OutputMethod.append_file in methods:
+        data += '\n'
         save_file(data, path, 'a', is_json_data, json_indent)
 
 def save_file(data, path, file_op, is_json_data, json_indent):
-    with open(path, file_op) as f:
+    with open(path.strip(), file_op) as f:
         if is_json_data:
             json.dump(data, f, json_indent)
         else:

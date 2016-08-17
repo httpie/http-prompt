@@ -11,6 +11,7 @@ from . import options as opt
 
 ROOT_COMMANDS = OrderedDict([
     ('cd', 'Change URL/path'),
+    ('env', 'Get current environment setup'),
     ('curl', 'Preview curl command'),
     ('exit', 'Exit HTTP Prompt'),
     ('help', 'List commands, actions, and HTTPie options'),

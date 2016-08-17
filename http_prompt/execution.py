@@ -36,7 +36,9 @@ grammar = Grammar(r"""
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
 
-    redir_out = ">" _ string _
+    redir_out = _ (redir_append_file / redir_file) _ string _
+    redir_file = _ ">" _
+    redir_append_file = _ ">>" _
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
     value_quoted_mut = value_squoted_mut / value_dquoted_mut
@@ -196,10 +198,18 @@ class ExecutionVisitor(NodeVisitor):
         click.echo_via_pager(generate_help_text())
         return node
 
+    def visit_redir_file(self, node, children):
+        self.output_methods = [OutputMethod.write_file]
+        return node
+
+    def visit_redir_append_file(self, node, children):
+        self.output_methods = [OutputMethod.append_file]
+        return node
+
     def visit_redir_out(self, node, children):
         path = node.text.strip()
         self.output_file_path = unquote(path[2:])
-        self.output_methods = [OutputMethod.write_file]
+
         return node
 
     def visit_env(self, node, children):
@@ -333,7 +343,7 @@ class ExecutionVisitor(NodeVisitor):
             else:
                 assert self.tool == 'curl'
                 command = ['curl'] + context.curl_args(self.method, quote=True)
-            click.echo(' '.join(command))
+            command_ouput(' '.join(command), self.output_methods, self.output_file_path)
         elif child_type == 'action':
             output = BytesIO()
             try:
