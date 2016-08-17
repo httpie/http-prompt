@@ -9,9 +9,9 @@ def put(data, methods=[OutputMethod.echo], path=None):
 
     if OutputMethod.echo in methods:
         if is_json_data:
-            click.echo(json.dump(data, json_indent, sort_keys=True))
+            click.echo_via_pager(json.dump(data, json_indent, sort_keys=True))
         else:
-            click.echo(data)
+            click.echo_via_pager(data)
 
 
     if OutputMethod.write_file in methods:

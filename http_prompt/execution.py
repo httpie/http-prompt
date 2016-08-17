@@ -29,9 +29,9 @@ grammar = Grammar(r"""
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
-    preview = _ tool _ (method _)? (urlpath _)? concat_mut*
-    action = _ method _ (urlpath _)? concat_mut*
-    urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
+    preview = _ tool _ (method _)? (urlpath _)? concat_mut* redir_out? _
+    action = _ method _ (urlpath _)? concat_mut* redir_out? _
+    urlpath = (~r"https?://" unquoted_string) / (!concat_mut !redir_out string)
     help = _ "help" _
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
@@ -372,7 +372,8 @@ class ExecutionVisitor(NodeVisitor):
                 content = unicode(content, 'utf-8')  # noqa
             else:
                 content = str(content, 'utf-8')
-            click.echo_via_pager(content)
+            command_ouput(content, self.output_methods, self.output_file_path)
+            # click.echo_via_pager(content)
 
             if self.last_response:
                 self.listener.response_returned(self.context,
