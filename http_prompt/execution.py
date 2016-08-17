@@ -195,7 +195,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_help(self, node, children):
-        click.echo_via_pager(generate_help_text())
+        command_ouput(generate_help_text(), self.output_methods, self.output_file_path)
         return node
 
     def visit_redir_file(self, node, children):

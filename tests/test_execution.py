@@ -17,7 +17,8 @@ class ExecutionTestCase(unittest.TestCase):
     def setUp(self):
         self.patchers = [
             ('httpie_main', patch('http_prompt.execution.httpie_main')),
-            ('click', patch('http_prompt.execution.click')),
+            ('commandio_click', patch('http_prompt.commandio.click')),
+            ('execution_click', patch('http_prompt.execution.click')),
         ]
         for attr_name, patcher in self.patchers:
             setattr(self, attr_name, patcher.start())
@@ -57,12 +58,12 @@ class TestExecution_help(ExecutionTestCase):
 
     def test_help(self):
         execute('help', self.context)
-        help_text = self.click.echo_via_pager.call_args[0][0]
+        help_text = self.commandio_click.echo_via_pager.call_args[0][0]
         self.assertTrue(help_text.startswith('Commands:\n\tcd'))
 
     def test_help_with_spaces(self):
         execute('  help   ', self.context)
-        help_text = self.click.echo_via_pager.call_args[0][0]
+        help_text = self.commandio_click.echo_via_pager.call_args[0][0]
         self.assertTrue(help_text.startswith('Commands:\n\tcd'))
 
 
@@ -178,13 +179,13 @@ class TestExecution_rm(ExecutionTestCase):
 
     def test_non_existing_key(self):
         execute('rm -q abcd', self.context)
-        err_msg = self.click.secho.call_args[0][0]
+        err_msg = self.execution_click.secho.call_args[0][0]
         self.assertEqual(err_msg, "Key 'abcd' not found")
 
     @pytest.mark.skipif(not six.PY2, reason='a bug on Python 2')
     def test_non_existing_key_unicode(self):  # See #25
         execute(u'rm -q abcd', self.context)
-        err_msg = self.click.secho.call_args[0][0]
+        err_msg = self.commandio_click.secho.call_args[0][0]
         self.assertEqual(err_msg, "Key 'abcd' not found")
 
     def test_reset(self):
@@ -511,23 +512,23 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.click.echo.assert_called_with('http http://localhost')
+        self.commandio_click.echo_via_pager.assert_called_with('http http://localhost')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             'http POST http://localhost name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             'http POST http://localhost/api name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
         execute('httpie post http://httpbin.org/post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             'http POST http://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -535,7 +536,7 @@ class TestCommandPreview(ExecutionTestCase):
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             'http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -544,7 +545,7 @@ class TestCommandPreview(ExecutionTestCase):
         execute(r'httpie post http://httpbin.org/post name="john doe" '
                 r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
                 self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
             "'name=john doe' 'Authorization:ApiKey 1234'")
         self.assertEqual(self.context.url, 'http://localhost')
@@ -554,7 +555,7 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.click.echo.assert_called_with(
+        self.commandio_click.echo_via_pager.assert_called_with(
             'http GET http://localhost foo==1 foo==2 foo==3')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
