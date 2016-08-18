@@ -3,6 +3,12 @@ import json
 from .utils import is_json
 from .outputmethod import OutputMethod
 
+def read_file(path):
+    content = None
+    with open(path.strip(), 'r') as f:
+            content = f.read()
+    return content
+
 def put(data, methods=[OutputMethod.echo], path=None):
     is_json_data = is_json(data)
     json_indent = 4

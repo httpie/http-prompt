@@ -45,6 +45,8 @@ class HttpPromptLexer(RegexLexer):
             (r'exit\s*', Keyword, 'end'),
             (r'help\s*', Keyword, 'end'),
             (r'env\s*', Keyword, 'redir_out'),
+            (r'source\s*', Keyword, 'file_path'),
+            (r'exec\s*', Keyword, 'file_path'),
             (r'', Text, 'concat_mut')
         ],
 

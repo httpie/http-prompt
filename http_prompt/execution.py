@@ -15,7 +15,7 @@ from six.moves.urllib.parse import urljoin
 # import inspect
 
 from .outputmethod import OutputMethod
-from .commandio import put as command_ouput
+from .commandio import put as command_ouput, read_file
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
 from .utils import unescape, unquote
@@ -25,7 +25,7 @@ grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / help / exit / env / _
+    immutation = preview / action / help / exit / env / exec / source / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -35,6 +35,8 @@ grammar = Grammar(r"""
     help = _ "help" _
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
+    source = _ "source" _ string _
+    exec = _ "exec" _ string _
 
     redir_out = _ (redir_append_file / redir_file) _ string _
     redir_file = _ ">" _
@@ -210,6 +212,41 @@ class ExecutionVisitor(NodeVisitor):
         path = node.text.strip()
         self.output_file_path = unquote(path[2:])
 
+        return node
+
+    def visit_exec(self, node, children):
+        #exclude "exec" keyword
+        path = node.text[4:].strip()
+
+        commands = read_file(path).splitlines()
+        #wipe out current context state before we load a new one
+        commands.insert(0, 'rm *')
+        commands = iter(commands)
+
+        for command in commands:
+            execute(command, self.context, self.listener)
+
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.literal_args(quote=True)
+        command_ouput(args, self.output_methods, self.output_file_path)
+        return node
+
+    def visit_source(self, node, children):
+        #exclude "source" keyword
+        path = node.text[6:].strip()
+
+        commands = iter(read_file(path).splitlines())
+
+        for command in commands:
+            execute(command, self.context, self.listener)
+
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.literal_args(quote=True)
+        command_ouput(args, self.output_methods, self.output_file_path)
         return node
 
     def visit_env(self, node, children):
@@ -399,9 +436,6 @@ def execute(command, context, listener=None):
     else:
         visitor = ExecutionVisitor(context, listener=listener)
         try:
-            # print('PARSEDDD')
-            # pprint (visitor.__dict__)
-            # pprint(inspect.getsourcelines(visitor.visit));
             visitor.visit(root)
         except VisitationError as err:
             exc_class = err.original_class
