@@ -91,6 +91,22 @@ class Context(object):
 
         return args
 
+    def literal_args(self, quote=False):
+        args = ''
+
+        for k, v in sorted(six.iteritems(self.options)):
+            opt = k
+            if v is not None:
+                opt += ' ' + smart_quote(v)
+            args += opt + '\n'
+
+        args += 'cd ' + self.url + '\n'
+
+        data_args = '\n'.join(self.httpie_data_args(quote))
+        args += data_args
+
+        return args
+
     def curl_args(self, quote=False):
         raise NotImplementedError('curl is not supported yet')
 

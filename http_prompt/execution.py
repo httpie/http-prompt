@@ -216,8 +216,8 @@ class ExecutionVisitor(NodeVisitor):
         self.context = self._final_context()
         context = self._final_context()
 
-        args = context.httpie_data_args(quote=True)
-        command_ouput('\n'.join(args), self.output_methods, self.output_file_path)
+        args = context.literal_args(quote=True)
+        command_ouput(args, self.output_methods, self.output_file_path)
         return node
 
     def visit_exit(self, node, children):
