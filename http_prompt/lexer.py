@@ -1,4 +1,4 @@
-from pygments.lexer import RegexLexer, bygroups, words, include
+from pygments.lexer import RegexLexer, bygroups, words, include, combined
 
 from pygments.token import Text, String, Keyword, Name, Operator
 
@@ -41,7 +41,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'urlpath'),
+             bygroups(Keyword, Text), 'action'),
             (r'exit\s*', Keyword, 'end'),
             (r'help\s*', Keyword, 'end'),
             (r'env\s*', Keyword, 'redir_out'),
@@ -90,7 +90,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(/)?([^/\0]+(/)?)+', String),
         ],
         'redir_out': [
-            (r'(?i)(>>|>|\|\s*tee\s*(--append|-a)?)(\s*)', Operator, 'file_path')
+            (r'(?i)(>>|>|\|\s*tee)\s*(--append|-a)?(\s*)', Keyword, 'file_path')
         ],
 
         'unquoted_mut': string_rules('#pop'),
@@ -103,6 +103,9 @@ class HttpPromptLexer(RegexLexer):
             (r'([^\r\n"\\]|(\\.))+', String, '#pop')
         ],
 
+        'action': [
+            include('urlpath')
+        ],
         'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), ('urlpath', 'redir_out')),
@@ -110,29 +113,29 @@ class HttpPromptLexer(RegexLexer):
             (r'', Text, 'urlpath')
         ],
         'urlpath': [
-            (r'https?://([^\s"\'\\]|(\\.))+', String, 'concat_mut'),
+            (r'https?://([^\s"\'\\]|(\\.))+', String, combined('concat_mut', 'redir_out')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)', bygroups(Text, String)),
 
             (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
 
             (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)", bygroups(Text, String)),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)', bygroups(Text, String)),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, 'concat_mut'),
+            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, combined('concat_mut', 'redir_out')),
             (r'', Text, 'concat_mut')
         ],
 
