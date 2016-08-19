@@ -108,7 +108,7 @@ class HttpPromptLexer(RegexLexer):
         ],
         'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), ('urlpath', 'redir_out')),
+             bygroups(Keyword, Text), combined('urlpath', 'redir_out')),
             include('redir_out'),
             (r'', Text, 'urlpath')
         ],
@@ -136,7 +136,7 @@ class HttpPromptLexer(RegexLexer):
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
             (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, combined('concat_mut', 'redir_out')),
-            (r'', Text, 'concat_mut')
+            (r'', Text, combined('concat_mut', 'redir_out'))
         ],
 
         'end': [
