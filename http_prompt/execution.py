@@ -39,8 +39,13 @@ grammar = Grammar(r"""
     exec = _ "exec" _ string _
 
     redir_out = _ (redir_append_file / redir_file) _ string _
-    redir_file = _ ">" _
-    redir_append_file = _ ">>" _
+    redir_file = _ (">" / tee_without_opt) _
+    redir_append_file = _ (">>" / tee_append) _
+    tee = _ (~r"\|\s*tee\s*") _
+    tee_opt = ("-a" / "--append")
+    tee_append = _ tee _ tee_opt _
+    tee_without_opt = _ tee _ !tee_opt
+
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
     value_quoted_mut = value_squoted_mut / value_dquoted_mut
@@ -142,7 +147,7 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
-        self.output_methods = [OutputMethod.echo]
+        self.output_methods = []
         self.output_file_path = None
 
         self.listener = listener if listener else DummyExecutionListener()
@@ -195,16 +200,21 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_redir_file(self, node, children):
-        self.output_methods = [OutputMethod.write_file]
+        self.output_methods.append(OutputMethod.write_file)
         return node
 
     def visit_redir_append_file(self, node, children):
-        self.output_methods = [OutputMethod.append_file]
+        self.output_methods.append(OutputMethod.append_file)
+        return node
+
+    def visit_tee(self, node, children):
+        self.output_methods.append(OutputMethod.echo)
         return node
 
     def visit_redir_out(self, node, children):
         path = node.text.strip()
-        self.output_file_path = unquote(path[2:])
+        path = re.search(r"(>>|>|\|\s*tee\s*(-a|--append)?)(.*)",path).groups()
+        self.output_file_path = unquote(path[-1])
 
         return node
 

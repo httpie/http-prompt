@@ -90,7 +90,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(/)?([^/\0]+(/)?)+', String, '#pop'),
         ],
         'redir_out': [
-            (r'(?i)(>>|>)(\s*)', Operator, 'file_path'),
+            (r'(?i)(>>|>|\|\s*tee\s*(--append|-a)?)(\s*)', Operator, 'file_path'),
         ],
 
         'unquoted_mut': string_rules('#pop'),

@@ -14,7 +14,7 @@ def put(data, methods=[OutputMethod.echo], path=None):
     is_json_data = is_json(data)
     json_indent = 4
 
-    if OutputMethod.echo in methods:
+    if OutputMethod.echo in methods or len(methods) == 0:
         if is_json_data:
             click.echo_via_pager(json.dump(data, json_indent, sort_keys=True))
         else:
