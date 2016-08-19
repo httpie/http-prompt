@@ -12,6 +12,8 @@ from . import options as opt
 ROOT_COMMANDS = OrderedDict([
     ('cd', 'Change URL/path'),
     ('env', 'Get current environment setup'),
+    ('source', 'Loads saved environment from a file. The command pollutes the current environment.'),
+    ('exec', 'Loads saved environment from a file. The command resets the current environment.'),
     ('curl', 'Preview curl command'),
     ('exit', 'Exit HTTP Prompt'),
     ('help', 'List commands, actions, and HTTPie options'),
