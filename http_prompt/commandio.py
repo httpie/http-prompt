@@ -5,6 +5,7 @@ from .outputmethod import OutputMethod
 
 def read_file(path):
     content = None
+
     with open(path.strip(), 'r') as f:
             content = f.read()
     return content

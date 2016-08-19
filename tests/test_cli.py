@@ -114,25 +114,6 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(result.exit_code, 0)
         self.assertTrue(os.path.exists(config_path))
 
-    def test_base_url_changed(self):
-        result, context = run_and_exit(['example.com', 'name=bob', 'id==10'])
-        self.assertEqual(result.exit_code, 0)
-        self.assertEqual(context.url, 'http://example.com')
-        self.assertEqual(context.options, {})
-        self.assertEqual(context.body_params, {'name': 'bob'})
-        self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': ['10']})
-
-        # Changing hostname should trigger a context reload
-        result, context = run_and_exit(['localhost'],
-                                       ['cd http://example.com/api'])
-        self.assertEqual(result.exit_code, 0)
-        self.assertEqual(context.url, 'http://example.com/api')
-        self.assertEqual(context.options, {})
-        self.assertEqual(context.body_params, {'name': 'bob'})
-        self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': ['10']})
-
     def test_cli_arguments_with_spaces(self):
         result, context = run_and_exit(['example.com', "name=John Doe",
                                         "Authorization:Bearer API KEY"])

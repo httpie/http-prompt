@@ -126,9 +126,6 @@ def generate_help_text():
 
 class DummyExecutionListener(object):
 
-    def url_changed(self, old_url, context):
-        pass
-
     def context_changed(self, context):
         pass
 
@@ -163,9 +160,6 @@ class ExecutionVisitor(NodeVisitor):
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
-
-        if self.context_override.url != self.context.url:
-            self.listener.url_changed(self.context.url, self.context_override)
 
         return node
 
@@ -446,6 +440,10 @@ def execute(command, context, listener=None):
                 key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
+            elif exc_class is FileNotFoundError:
+                key = re.search(r"FileNotFoundError:\s*[Errno 2]\s*(.+).*", str(err)).group(1)
+                click.secho(key, err=True, fg='red')
+
             else:
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')
