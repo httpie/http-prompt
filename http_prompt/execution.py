@@ -38,7 +38,8 @@ grammar = Grammar(r"""
     source = _ "source" _ string _
     exec = _ "exec" _ string _
 
-    redir_out = _ (redir_append_file / redir_file) _ string _
+    redir_out = _ (redir_append_file / redir_file) redir_filepath
+    redir_filepath = _ string _
     redir_file = _ (">" / tee_without_opt) _
     redir_append_file = _ (">>" / tee_append) _
     tee = _ (~r"\|\s*tee\s*") _
@@ -211,11 +212,9 @@ class ExecutionVisitor(NodeVisitor):
         self.output_methods.append(OutputMethod.echo)
         return node
 
-    def visit_redir_out(self, node, children):
+    def visit_redir_filepath(self, node, children):
         path = node.text.strip()
-        path = re.search(r"(>>|>|\|\s*tee\s*(-a|--append)?)(.*)",path).groups()
-        self.output_file_path = unquote(path[-1])
-
+        self.output_file_path = unquote(path)
         return node
 
     def visit_exec(self, node, children):
