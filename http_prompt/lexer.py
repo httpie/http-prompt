@@ -1,4 +1,4 @@
-from pygments.lexer import RegexLexer, bygroups, words
+from pygments.lexer import RegexLexer, bygroups, words, include
 
 from pygments.token import Text, String, Keyword, Name, Operator
 
@@ -39,7 +39,7 @@ class HttpPromptLexer(RegexLexer):
             (r'\s+', Text),
             (r'(cd)(\s*)', bygroups(Keyword, Text), 'cd'),
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
-            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), ('redir_out', 'preview_action')),
+            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), 'urlpath'),
             (r'exit\s*', Keyword, 'end'),
@@ -87,10 +87,10 @@ class HttpPromptLexer(RegexLexer):
         ],
         'option_value': string_rules('#pop:2'),
         'file_path': [
-            (r'(/)?([^/\0]+(/)?)+', String, '#pop'),
+            (r'(/)?([^/\0]+(/)?)+', String),
         ],
         'redir_out': [
-            (r'(?i)(>>|>|\|\s*tee\s*(--append|-a)?)(\s*)', Operator, 'file_path'),
+            (r'(?i)(>>|>|\|\s*tee\s*(--append|-a)?)(\s*)', Operator, 'file_path')
         ],
 
         'unquoted_mut': string_rules('#pop'),
@@ -105,7 +105,8 @@ class HttpPromptLexer(RegexLexer):
 
         'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'urlpath'),
+             bygroups(Keyword, Text), ('urlpath', 'redir_out')),
+            include('redir_out'),
             (r'', Text, 'urlpath')
         ],
         'urlpath': [
