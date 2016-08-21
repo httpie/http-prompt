@@ -134,6 +134,25 @@ HTTPie_ option:
     > rm -b username
     > rm -o --auth
 
+
+To save the session:
+
+.. code-block:: bash
+
+    > env > /path/to/file
+
+To load saved session:
+
+.. code-block:: bash
+
+    > source /path/to/file # Note that the source command merges the current session with the session data being loaded
+
+or
+
+.. code-block:: bash
+
+    > exec /path/to/file # the exec command clears the current session before saved session is loaded
+
 To reset the session, i.e., clear all parameters and options:
 
 .. code-block:: bash
@@ -146,6 +165,18 @@ To exit a session, simply enter:
 
     > exit
 
+
+Making use of output redirection feature
+-----------------------------------------
+Currently, few supported constructs are available: 
+
+.. code-block:: bash
+
+    > command > /path/to/file # writes output of the command to the file
+    > command >> /path/to/file # appends output of the command to the file (or created a new file if it does not exist)
+    > command | tee [-a,--append] /path/to/file # writes or appends output of the command to the file and simultaneously prints the output data to the console
+
+where the ``command`` is one of the following: ``env``, ``httpie``, ``curl``, ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
 
 Configuration
 -------------
