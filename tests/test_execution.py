@@ -200,7 +200,7 @@ class TestExecution_rm(ExecutionTestCase):
     @pytest.mark.skipif(not six.PY2, reason='a bug on Python 2')
     def test_non_existing_key_unicode(self):  # See #25
         execute(u'rm -q abcd', self.context)
-        err_msg = self.commandio_click.secho.call_args[0][0]
+        err_msg = self.execution_click.secho.call_args[0][0]
         self.assertEqual(err_msg, "Key 'abcd' not found")
 
     def test_reset(self):
