@@ -9,14 +9,16 @@ import six
 from mock import patch
 
 from http_prompt.context import Context
+from http_prompt.commandio import save_file, read_file
 from http_prompt.execution import execute
+from http_prompt.xdg import get_tmp_dir
 
 
 class ExecutionTestCase(unittest.TestCase):
 
     def setUp(self):
         self.patchers = [
-            ('httpie_main', patch('http_prompt.execution.httpie_main')),
+            ('httpie_main', patch('http_prompt.httpiewrapper.httpie_main')),
             ('commandio_click', patch('http_prompt.commandio.click')),
             ('execution_click', patch('http_prompt.execution.click')),
         ]
@@ -31,6 +33,10 @@ class ExecutionTestCase(unittest.TestCase):
 
     def assert_httpie_main_called_with(self, args):
         self.assertEqual(self.httpie_main.call_args[0][0], args)
+
+    def mockHttpieMain(self):
+        patcher = patch('http_prompt.execution.httpie_main')
+        return (patcher, patcher.start())
 
 
 class TestExecution_noop(ExecutionTestCase):
@@ -68,6 +74,197 @@ class TestExecution_env(ExecutionTestCase):
         execute('  env   ', self.context)
         env_text = self.commandio_click.echo_via_pager.call_args[0][0]
         self.assertTrue(env_text.startswith('cd http://localhost\nname=value\nname2=value2'))
+
+class TestExecution_source(ExecutionTestCase):
+
+    def test_source(self):
+
+        filepath = get_tmp_dir() + '/dummy_http-prompt_context'
+        dummy_context_url = 'http://127.0.0.1:3000'
+
+        dummy_context = Context(dummy_context_url)
+        dummy_context.load_from_json_obj({
+            "body_params": {
+                "foo": "bar"
+            },
+            "querystring_params": {
+                "bar": [
+                    "baz"
+                ]
+            },
+            "__version__": "0.5.0",
+            "headers": {
+                "Accept": "application/json"
+            }
+        })
+        save_file(dummy_context.literal_args(quote=True), filepath)
+
+        execute('inherited=value', self.context)
+        execute('source ' + filepath, self.context)
+
+        self.assertEqual(self.context.url, dummy_context_url)
+        self.assertEqual(self.context.body_params, {"foo": "bar", "inherited": "value"})
+        self.assertEqual(self.context.querystring_params, {"bar": ["baz"]})
+        self.assertEqual(self.context.headers, {"Accept": "application/json"})
+
+class TestExecution_exec(ExecutionTestCase):
+
+    def test_exec(self):
+        filepath = get_tmp_dir() + '/test_dummy_http-prompt_context'
+        dummy_context_url = 'http://127.0.0.1:3000'
+
+        dummy_context = Context(dummy_context_url)
+        dummy_context.load_from_json_obj({
+            "body_params": {
+                "foo": "bar"
+            },
+            "querystring_params": {
+                "bar": [
+                    "baz"
+                ]
+            },
+            "__version__": "0.5.0",
+            "headers": {
+                "Accept": "application/json"
+            }
+        })
+        save_file(dummy_context.literal_args(quote=True), filepath)
+
+        execute('inherited=value', self.context)
+        execute('Origin:some-value', self.context)
+        execute('exec ' + filepath, self.context)
+
+        self.assertEqual(self.context.url, dummy_context_url)
+        self.assertEqual(self.context.body_params, {"foo": "bar"})
+        self.assertEqual(self.context.querystring_params, {"bar": ["baz"]})
+        self.assertEqual(self.context.headers, {"Accept": "application/json"})
+
+class TestExecution_unix_pipelines(ExecutionTestCase):
+
+    def setUp(self):
+        super(TestExecution_unix_pipelines, self).setUp()
+        self.test_filepath = get_tmp_dir() + '/test_unix_pipelines'
+
+        self.cmds = ['cd https://api.github.com',
+                'bar==baz',
+                'foo=bar',
+                'Accept:application/json']
+
+
+        execute(self.cmds[0], self.context)
+        execute(self.cmds[1], self.context)
+        execute(self.cmds[2], self.context)
+        execute(self.cmds[3], self.context)
+
+    def test_env_output_redirection(self):
+
+        #helper fn
+        def cmdAssertEqual():
+            loaded_commands = iter(read_file(self.test_filepath).splitlines())
+            index = 0
+            for cmd in loaded_commands:
+                self.assertEqual(cmd, self.cmds[index])
+                if index == len(self.cmds) -1:
+                    index = 0
+                else:
+                    index += 1
+
+        #Test command output redirection - write file operation
+        execute('env > ' + self.test_filepath, self.context)
+
+        cmdAssertEqual()
+
+        #Test command output redirection - append file operation
+        execute('env >> ' + self.test_filepath, self.context)
+
+        #Test command output redirection
+        # tee write file operation and echo to a console
+        execute('env | tee ' + self.test_filepath, self.context)
+
+        cmdAssertEqual()
+        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertEqual(console_output, '\n'.join(self.cmds))
+
+        #Test command output redirection
+        # tee append file operation and echo to a console
+        execute('env | tee -a ' + self.test_filepath, self.context)
+
+        cmdAssertEqual()
+        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertEqual(console_output, '\n'.join(self.cmds))
+
+    def test_preview_cmd_output_redirection(self):
+
+        #Test command output redirection - write file operation
+        #case 1
+        execute('httpie > ' + self.test_filepath, self.context)
+
+        file_contents = read_file(self.test_filepath)
+        self.assertEqual(file_contents, 'http https://api.github.com bar==baz foo=bar Accept:application/json')
+
+        #case 2
+        execute('httpie post > ' + self.test_filepath, self.context)
+
+        file_contents = read_file(self.test_filepath)
+        self.assertEqual(file_contents, 'http POST https://api.github.com bar==baz foo=bar Accept:application/json')
+
+        #case 3
+        execute('httpie post /suburl > ' + self.test_filepath, self.context)
+
+        file_contents = read_file(self.test_filepath)
+        self.assertEqual(file_contents, 'http POST https://api.github.com/suburl bar==baz foo=bar Accept:application/json')
+
+        #case 4
+        execute('httpie post /suburl some=data > ' + self.test_filepath, self.context)
+
+        file_contents = read_file(self.test_filepath)
+        self.assertEqual(file_contents, 'http POST https://api.github.com/suburl bar==baz foo=bar some=data Accept:application/json')
+
+    def test_action_cmd_output_redirection(self):
+
+        response = 'whatever'
+
+        patcher,mock = self.mockHttpieMain()
+
+        mock.return_value = response
+
+        #helper fn
+        def assertFileContentsEqualsExpected(cmd, expected_data):
+            try:
+                execute(cmd, self.context)
+                file_contents = read_file(self.test_filepath)
+                self.assertEqual(file_contents, expected_data)
+            except(Exception) as e:
+                patcher.stop()
+                raise e
+
+        #Test command output redirection - write file operation
+        #case 1
+        assertFileContentsEqualsExpected('get > ' + self.test_filepath, response)
+
+        #case 2
+        assertFileContentsEqualsExpected('get /some/suburl > ' + self.test_filepath, response)
+
+        #case 3
+        assertFileContentsEqualsExpected('get /some/suburl some=data > ' + self.test_filepath, response)
+
+        #case 4
+        assertFileContentsEqualsExpected('get >> ' + self.test_filepath, response + '\n' + response)
+
+        #case 5
+        assertFileContentsEqualsExpected('get /some/suburl | tee ' + self.test_filepath, response)
+
+        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertEqual(console_output, response)
+
+        # case 6
+        assertFileContentsEqualsExpected('get /some/suburl | tee --append ' + self.test_filepath, response + '\n' + response)
+
+        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertEqual(console_output, response)
+
+        patcher.stop()
+
 
 class TestExecution_help(ExecutionTestCase):
 

@@ -19,11 +19,10 @@ def put(data, methods=[OutputMethod.echo], path=None):
     if OutputMethod.write_file in methods:
         save_file(data, path, 'w')
     elif OutputMethod.append_file in methods:
-        data += '\n'
+        data = '\n' + data
         save_file(data, path, 'a')
 
-
-def save_file(data, path, file_op):
+def save_file(data, path, file_op='w'):
     data =  strip_color_codes(data)
     with open(path.strip(), file_op) as f:
         f.write(data)

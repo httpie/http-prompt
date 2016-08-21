@@ -1,19 +1,15 @@
 import re
-import sys
 
 import click
-import six
 
-from httpie.context import Environment
-from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from six import BytesIO
 from six.moves.urllib.parse import urljoin
 # from pprint import pprint
 # import inspect
 
+from .httpiewrapper import request as httpie_main
 from .outputmethod import OutputMethod
 from .commandio import put as command_ouput, read_file
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
@@ -385,35 +381,8 @@ class ExecutionVisitor(NodeVisitor):
                 command = ['curl'] + context.curl_args(self.method, quote=True)
             command_ouput(' '.join(command), self.output_methods, self.output_file_path)
         elif child_type == 'action':
-            output = BytesIO()
-            try:
-                env = Environment(stdout=output, is_windows=False)
-
-                # XXX: httpie_main() doesn't provide an API for us to get the
-                # HTTP response object, so we use this super dirty hack -
-                # sys.settrace() to intercept get_response() that is called in
-                # httpie_main() internally. The HTTP response intercepted is
-                # assigned to self.last_response, which may be useful for
-                # self.listener.
-                sys.settrace(self._trace_get_response)
-                try:
-                    httpie_main(context.httpie_args(self.method), env=env)
-                finally:
-                    sys.settrace(None)
-
-                content = output.getvalue()
-            finally:
-                output.close()
-
-            # XXX: Work around a bug of click.echo_via_pager(). When you pass
-            # a bytestring to echo_via_pager(), it converts the bytestring with
-            # str(b'abc'), which makes it "b'abc'".
-            if six.PY2:
-                content = unicode(content, 'utf-8')  # noqa
-            else:
-                content = str(content, 'utf-8')
+            content = httpie_main(self, context, self.method)
             command_ouput(content, self.output_methods, self.output_file_path)
-            # click.echo_via_pager(content)
 
             if self.last_response:
                 self.listener.response_returned(self.context,
