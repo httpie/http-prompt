@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
-
 import re
-import json
 
 
 def smart_quote(s):
@@ -24,9 +22,6 @@ def unquote(s):
 def unescape(s):
     return re.sub(r'\\(.)', r'\1', s)
 
-def is_json(data):
-  try:
-    json.loads(data)
-  except ValueError:
-    return False
-  return True
+def strip_color_codes(s):
+    #Strips ANSI color codes from string
+    return re.sub(u"[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]", "", s)
