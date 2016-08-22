@@ -6,8 +6,6 @@ from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
-# from pprint import pprint
-# import inspect
 
 from .httpiewrapper import request as httpie_main
 from .outputmethod import OutputMethod
@@ -193,7 +191,10 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_help(self, node, children):
-        command_ouput(generate_help_text(), self.output_methods, self.output_file_path)
+        command_ouput(
+            generate_help_text(),
+            self.output_methods,
+            self.output_file_path)
         return node
 
     def visit_redir_file(self, node, children):
@@ -214,11 +215,11 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_exec(self, node, children):
-        #exclude "exec" keyword
+        # exclude "exec" keyword
         path = node.text[4:].strip()
 
         commands = read_file(path).splitlines()
-        #wipe out current context state before we load a new one
+        # wipe out current context state before we load a new one
         commands.insert(0, 'rm *')
         commands = iter(commands)
 
@@ -233,7 +234,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_source(self, node, children):
-        #exclude "source" keyword
+        # exclude "source" keyword
         path = node.text[6:].strip()
 
         commands = iter(read_file(path).splitlines())
@@ -379,7 +380,10 @@ class ExecutionVisitor(NodeVisitor):
             else:
                 assert self.tool == 'curl'
                 command = ['curl'] + context.curl_args(self.method, quote=True)
-            command_ouput(' '.join(command), self.output_methods, self.output_file_path)
+            command_ouput(
+                ' '.join(command),
+                self.output_methods,
+                self.output_file_path)
         elif child_type == 'action':
             content = httpie_main(self, context, self.method)
             command_ouput(content, self.output_methods, self.output_file_path)
@@ -419,7 +423,9 @@ def execute(command, context, listener=None):
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
             elif exc_class is FileNotFoundError:
-                key = re.search(r"FileNotFoundError:\s*[Errno 2]\s*(.+).*", str(err)).group(1)
+                key = re.search(
+                    r"FileNotFoundError:\s*[Errno 2]\s*(.+).*",
+                    str(err)).group(1)
                 click.secho(key, err=True, fg='red')
 
             else:

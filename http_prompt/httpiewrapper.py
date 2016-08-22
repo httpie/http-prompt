@@ -6,6 +6,7 @@ from httpie.context import Environment
 from httpie.core import main as httpie_main
 from six import BytesIO
 
+
 def request(nodeVisitor, context, method):
     output = BytesIO()
     content = None
@@ -38,6 +39,3 @@ def request(nodeVisitor, context, method):
             content = str(content, 'utf-8')
 
         return content
-
-
-

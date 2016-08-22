@@ -113,7 +113,8 @@ class HttpPromptLexer(RegexLexer):
             (r'', Text, 'urlpath')
         ],
         'urlpath': [
-            (r'https?://([^\s"\'\\]|(\\.))+', String, combined('concat_mut', 'redir_out')),
+            (r'https?://([^\s"\'\\]|(\\.))+', String,
+             combined('concat_mut', 'redir_out')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)(")',
              bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
@@ -135,7 +136,8 @@ class HttpPromptLexer(RegexLexer):
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, combined('concat_mut', 'redir_out')),
+            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)',
+             String, combined('concat_mut', 'redir_out')),
             (r'', Text, combined('concat_mut', 'redir_out'))
         ],
 

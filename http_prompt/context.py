@@ -72,7 +72,6 @@ class Context(object):
                     args.append(arg)
         return args
 
-
     def httpie_args(self, method=None, quote=False):
         args = []
 
