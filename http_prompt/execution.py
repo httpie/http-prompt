@@ -138,8 +138,6 @@ class ExecutionVisitor(NodeVisitor):
         self.method = None
         self.tool = None
         self.output = CommandIO(Printer())
-        self.output_methods = []
-        self.output_file_path = None
 
         self.listener = listener if listener else DummyExecutionListener()
         self.last_response = None
