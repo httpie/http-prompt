@@ -9,9 +9,9 @@ import six
 from mock import patch
 
 from http_prompt.context import Context
-from http_prompt.commandio import save_file, read_file
 from http_prompt.execution import execute
 from http_prompt.xdg import get_tmp_dir
+from http_prompt.utils import strip_color_codes
 
 
 class ExecutionTestCase(unittest.TestCase):
@@ -19,7 +19,7 @@ class ExecutionTestCase(unittest.TestCase):
     def setUp(self):
         self.patchers = [
             ('httpie_main', patch('http_prompt.httpiewrapper.httpie_main')),
-            ('commandio_click', patch('http_prompt.commandio.click')),
+            ('commandio_click', patch('http_prompt.printer.click')),
             ('execution_click', patch('http_prompt.execution.click')),
         ]
         for attr_name, patcher in self.patchers:
@@ -37,6 +37,17 @@ class ExecutionTestCase(unittest.TestCase):
     def mockHttpieMain(self):
         patcher = patch('http_prompt.execution.httpie_main')
         return (patcher, patcher.start())
+
+    def save_file(self, data, path, file_op='w'):
+        data = strip_color_codes(data)
+        with open(path.strip(), file_op) as f:
+            f.write(data)
+
+    def read_file(self, path):
+        content = None
+        with open(path.strip(), 'r') as f:
+            content = f.read()
+            return content
 
 
 class TestExecution_noop(ExecutionTestCase):
@@ -101,7 +112,7 @@ class TestExecution_source(ExecutionTestCase):
                 "Accept": "application/json"
             }
         })
-        save_file(dummy_context.literal_args(quote=True), filepath)
+        self.save_file(dummy_context.literal_args(quote=True), filepath)
 
         execute('inherited=value', self.context)
         execute('source ' + filepath, self.context)
@@ -135,7 +146,7 @@ class TestExecution_exec(ExecutionTestCase):
                 "Accept": "application/json"
             }
         })
-        save_file(dummy_context.literal_args(quote=True), filepath)
+        self.save_file(dummy_context.literal_args(quote=True), filepath)
 
         execute('inherited=value', self.context)
         execute('Origin:some-value', self.context)
@@ -167,7 +178,9 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
 
         # helper fn
         def cmdAssertEqual():
-            loaded_commands = iter(read_file(self.test_filepath).splitlines())
+            loaded_commands = iter(
+                self.read_file(
+                    self.test_filepath).splitlines())
             index = 0
             for cmd in loaded_commands:
                 self.assertEqual(cmd, self.cmds[index])
@@ -190,7 +203,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         # case 1
         execute('httpie > ' + self.test_filepath, self.context)
 
-        file_contents = read_file(self.test_filepath)
+        file_contents = self.read_file(self.test_filepath)
         self.assertEqual(
             file_contents,
             'http https://api.github.com bar==baz foo=bar Accept:application/json')
@@ -198,7 +211,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         # case 2
         execute('httpie post > ' + self.test_filepath, self.context)
 
-        file_contents = read_file(self.test_filepath)
+        file_contents = self.read_file(self.test_filepath)
         self.assertEqual(
             file_contents,
             'http POST https://api.github.com bar==baz foo=bar Accept:application/json')
@@ -206,7 +219,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         # case 3
         execute('httpie post /suburl > ' + self.test_filepath, self.context)
 
-        file_contents = read_file(self.test_filepath)
+        file_contents = self.read_file(self.test_filepath)
         self.assertEqual(
             file_contents,
             'http POST https://api.github.com/suburl bar==baz foo=bar Accept:application/json')
@@ -217,7 +230,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
             self.test_filepath,
             self.context)
 
-        file_contents = read_file(self.test_filepath)
+        file_contents = self.read_file(self.test_filepath)
         self.assertEqual(
             file_contents,
             'http POST https://api.github.com/suburl bar==baz foo=bar some=data Accept:application/json')
@@ -234,7 +247,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         def assertFileContentsEqualsExpected(cmd, expected_data):
             try:
                 execute(cmd, self.context)
-                file_contents = read_file(self.test_filepath)
+                file_contents = self.read_file(self.test_filepath)
                 self.assertEqual(file_contents, expected_data)
             except(Exception) as e:
                 patcher.stop()
@@ -719,35 +732,36 @@ class TestHttpAction(ExecutionTestCase):
 
 class TestCommandPreview(ExecutionTestCase):
 
+    def assertClickEchoCalledWith(self, data):
+        self.commandio_click.style.assert_called_with(
+            data, bg=None, fg=None)
+        self.commandio_click.echo_via_pager.assert_called_with(
+            self.commandio_click.style.return_value, nl=False)
+
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
-                                                               'http http://localhost')
+        self.assertClickEchoCalledWith( 'http http://localhost')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
-            'http POST http://localhost name=alice')
+        self.assertClickEchoCalledWith('http POST http://localhost name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
-            'http POST http://localhost/api name=alice')
+        self.assertClickEchoCalledWith('http POST http://localhost/api name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
-        execute('httpie post http://httpbin.org/post name=alice', self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
-            'http POST http://httpbin.org/post name=alice')
+        execute('httpie POST http://httpbin.org/post name=alice', self.context)
+        self.assertClickEchoCalledWith('http POST http://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
-            'http POST https://httpbin.org/post name=alice')
+        self.assertClickEchoCalledWith('http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
@@ -755,7 +769,7 @@ class TestCommandPreview(ExecutionTestCase):
         execute(r'httpie post http://httpbin.org/post name="john doe" '
                 r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
                 self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
+        self.assertClickEchoCalledWith(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
             "'name=john doe' 'Authorization:ApiKey 1234'")
         self.assertEqual(self.context.url, 'http://localhost')
@@ -765,7 +779,7 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.commandio_click.echo_via_pager.assert_called_with(
+        self.assertClickEchoCalledWith(
             'http GET http://localhost foo==1 foo==2 foo==3')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)

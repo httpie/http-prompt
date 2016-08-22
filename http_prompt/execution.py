@@ -8,8 +8,8 @@ from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
 from .httpiewrapper import request as httpie_main
-from .outputmethod import OutputMethod
-from .commandio import put as command_ouput, read_file
+from .printer import Printer
+from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
 from .utils import unescape, unquote
@@ -32,8 +32,7 @@ grammar = Grammar(r"""
     source = _ "source" _ string _
     exec = _ "exec" _ string _
 
-    redir_out = _ (redir_append_file / redir_file) redir_filepath
-    redir_filepath = _ string _
+    redir_out = _ (redir_append_file / redir_file) _ string _
     redir_file = _ ">" _
     redir_append_file = _ ">>" _
 
@@ -138,6 +137,7 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
+        self.output = CommandIO(Printer())
         self.output_methods = []
         self.output_file_path = None
 
@@ -187,30 +187,27 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_help(self, node, children):
-        command_ouput(
-            generate_help_text(),
-            self.output_methods,
-            self.output_file_path)
+        self.output.write(generate_help_text())
+        self.output.close()
         return node
 
-    def visit_redir_file(self, node, children):
-        self.output_methods.append(OutputMethod.write_file)
-        return node
+    def visit_redir_out(self, node, children):
+        parsed = re.search(r"(>>|>)\s*(.*)", node.text)
+        redirection_type = parsed.group(1)
+        path = parsed.group(2)
+        file_op = 'w'
 
-    def visit_redir_append_file(self, node, children):
-        self.output_methods.append(OutputMethod.append_file)
-        return node
+        if redirection_type == '>>':
+            file_op = 'a'
 
-    def visit_redir_filepath(self, node, children):
-        path = node.text.strip()
-        self.output_file_path = unquote(path)
+        self.output.setOutputStream(open(unquote(path), file_op))
         return node
 
     def visit_exec(self, node, children):
         # exclude "exec" keyword
         path = node.text[4:].strip()
 
-        commands = read_file(path).splitlines()
+        commands = CommandIO(open(path, 'r')).read().splitlines()
         # wipe out current context state before we load a new one
         commands.insert(0, 'rm *')
         commands = iter(commands)
@@ -222,14 +219,16 @@ class ExecutionVisitor(NodeVisitor):
         context = self._final_context()
 
         args = context.literal_args(quote=True)
-        command_ouput(args, self.output_methods, self.output_file_path)
+        self.output.write(args)
+        self.output.close()
         return node
 
     def visit_source(self, node, children):
         # exclude "source" keyword
         path = node.text[6:].strip()
 
-        commands = iter(read_file(path).splitlines())
+        commands = CommandIO(open(path, 'r')).read().splitlines()
+        commands = iter(commands)
 
         for command in commands:
             execute(command, self.context, self.listener)
@@ -238,7 +237,8 @@ class ExecutionVisitor(NodeVisitor):
         context = self._final_context()
 
         args = context.literal_args(quote=True)
-        command_ouput(args, self.output_methods, self.output_file_path)
+        self.output.write(args)
+        self.output.close()
         return node
 
     def visit_env(self, node, children):
@@ -246,7 +246,8 @@ class ExecutionVisitor(NodeVisitor):
         context = self._final_context()
 
         args = context.literal_args(quote=True)
-        command_ouput(args, self.output_methods, self.output_file_path)
+        self.output.write(args)
+        self.output.close()
         return node
 
     def visit_exit(self, node, children):
@@ -372,18 +373,16 @@ class ExecutionVisitor(NodeVisitor):
             else:
                 assert self.tool == 'curl'
                 command = ['curl'] + context.curl_args(self.method, quote=True)
-            command_ouput(
-                ' '.join(command),
-                self.output_methods,
-                self.output_file_path)
+            self.output.write(' '.join(command))
         elif child_type == 'action':
             content = httpie_main(self, context, self.method)
-            command_ouput(content, self.output_methods, self.output_file_path)
+            self.output.write(content)
 
             if self.last_response:
                 self.listener.response_returned(self.context,
                                                 self.last_response)
 
+        self.output.close()
         return node
 
     def generic_visit(self, node, children):

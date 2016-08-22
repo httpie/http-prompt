@@ -1,54 +1,64 @@
-from .base import TempAppDirTestCase
+from mock import patch, Mock
+import unittest
 
-from http_prompt.commandio import save_file,read_file,put
-from http_prompt.outputmethod import OutputMethod
-
-from mock import patch
+from http_prompt.commandio import CommandIO
 
 
-class TestCommandIO(TempAppDirTestCase):
+class TestCommandIO(unittest.TestCase):
 
     def setUp(self):
         super(TestCommandIO, self).setUp()
         self.patchers = [
-            ('commandio_click', patch('http_prompt.commandio.click')),
+            ('commandio_click', patch('http_prompt.printer.click')),
         ]
         for attr_name, patcher in self.patchers:
             setattr(self, attr_name, patcher.start())
 
-        self.data = 'whatever'
-        self.filepath = self.temp_dir + '/savetest'
+        self.test_data = 'whatever'
+
+        attrs = {
+            'write.return_value': 3,
+            'close.return_value': None,
+            'read.return_value': self.test_data
+        }
+        self.dummyStream = Mock(mode=None, out=None, **attrs)
 
     def tearDown(self):
         super(TestCommandIO, self).tearDown()
         for _, patcher in self.patchers:
             patcher.stop()
 
-    def test_save_and_read(self):
+    def test_close(self):
+        output = CommandIO(self.dummyStream)
+        output.close()
+        self.assertTrue(self.dummyStream.close.called)
 
-        save_file(self.data, self.filepath)
+    def test_write(self):
+        output = CommandIO(self.dummyStream)
+        output.write(self.test_data)
 
-        saved_data = read_file(self.filepath)
+        self.assertTrue(self.dummyStream.write.called)
+        args = self.dummyStream.write.call_args[0][0]
+        self.assertEqual(self.test_data, args)
 
-        self.assertEqual(self.data, saved_data)
+    def test_write_append(self):
+        self.dummyStream.mode = 'a'
+        output = CommandIO(self.dummyStream)
+        output.write(self.test_data)
 
-    def test_put(self):
+        self.assertTrue(self.dummyStream.write.called)
+        args = self.dummyStream.write.call_args[0][0]
+        self.assertEqual('\n' + self.test_data, args)
 
-        #write file and echo
-        put(self.data, [OutputMethod.echo, OutputMethod.write_file], self.filepath)
-        saved_data = read_file(self.filepath)
+    def test_read(self):
+        output = CommandIO(self.dummyStream)
+        output.read()
 
-        env_text = self.commandio_click.echo_via_pager.call_args[0][0]
+        self.assertTrue(self.dummyStream.read.called)
 
-        self.assertEqual(self.data, saved_data)
-        self.assertEqual(self.data, env_text)
+    def test_set_output_stream(self):
+        stream = Mock()
+        output = CommandIO(self.dummyStream)
+        output.setOutputStream(stream)
 
-        #append file and echo
-
-        put(self.data, [OutputMethod.echo, OutputMethod.append_file], self.filepath)
-        saved_data = read_file(self.filepath)
-
-        env_text = self.commandio_click.echo_via_pager.call_args[0][0]
-
-        self.assertEqual(self.data + '\n' + self.data, saved_data)
-        self.assertEqual(self.data, env_text)
+        self.assertEqual(stream, output.out)

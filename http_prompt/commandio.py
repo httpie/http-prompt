@@ -1,28 +1,33 @@
-import click
-from .outputmethod import OutputMethod
+import sys
+import six
+
+from .printer import Printer
 from .utils import strip_color_codes
 
 
-def read_file(path):
-    content = None
+class CommandIO():
 
-    with open(path.strip(), 'r') as f:
-        content = f.read()
-    return content
+    def __init__(self, stream=sys.stdout):
+        self.out = stream
 
+    def close(self):
+        return self.out.close()
 
-def put(data, methods=[OutputMethod.echo], path=None):
+    def write(self, data):
+        if self.out is not Printer:
+            data = strip_color_codes(data)
 
-    if OutputMethod.echo in methods or len(methods) == 0:
-        click.echo_via_pager(data)
+        if hasattr(
+            self.out,
+            'mode') and isinstance(
+            self.out.mode,
+         six.string_types) and self.out.mode.find('a') != -1:
+            data = '\n' + data
 
-    if OutputMethod.write_file in methods:
-        save_file(data, path, 'w')
-    elif OutputMethod.append_file in methods:
-        data = '\n' + data
-        save_file(data, path, 'a')
+        return self.out.write(data)
 
-def save_file(data, path, file_op='w'):
-    data =  strip_color_codes(data)
-    with open(path.strip(), file_op) as f:
-        f.write(data)
+    def read(self):
+        return self.out.read()
+
+    def setOutputStream(self, stream):
+        self.out = stream
