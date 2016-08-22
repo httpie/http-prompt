@@ -34,12 +34,8 @@ grammar = Grammar(r"""
 
     redir_out = _ (redir_append_file / redir_file) redir_filepath
     redir_filepath = _ string _
-    redir_file = _ (">" / tee_without_opt) _
-    redir_append_file = _ (">>" / tee_append) _
-    tee = _ (~r"\|\s*tee\s*") _
-    tee_opt = ("-a" / "--append")
-    tee_append = _ tee _ tee_opt _
-    tee_without_opt = _ tee _ !tee_opt
+    redir_file = _ ">" _
+    redir_append_file = _ ">>" _
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -203,10 +199,6 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_redir_append_file(self, node, children):
         self.output_methods.append(OutputMethod.append_file)
-        return node
-
-    def visit_tee(self, node, children):
-        self.output_methods.append(OutputMethod.echo)
         return node
 
     def visit_redir_filepath(self, node, children):

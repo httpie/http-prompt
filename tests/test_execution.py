@@ -184,22 +184,6 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         # Test command output redirection - append file operation
         execute('env >> ' + self.test_filepath, self.context)
 
-        # Test command output redirection
-        # tee write file operation and echo to a console
-        execute('env | tee ' + self.test_filepath, self.context)
-
-        cmdAssertEqual()
-        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
-        self.assertEqual(console_output, '\n'.join(self.cmds))
-
-        # Test command output redirection
-        # tee append file operation and echo to a console
-        execute('env | tee -a ' + self.test_filepath, self.context)
-
-        cmdAssertEqual()
-        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
-        self.assertEqual(console_output, '\n'.join(self.cmds))
-
     def test_preview_cmd_output_redirection(self):
 
         # Test command output redirection - write file operation
@@ -275,21 +259,6 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
         assertFileContentsEqualsExpected(
             'get >> ' + self.test_filepath,
             response + '\n' + response)
-
-        # case 5
-        assertFileContentsEqualsExpected(
-            'get /some/suburl | tee ' + self.test_filepath, response)
-
-        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
-        self.assertEqual(console_output, response)
-
-        # case 6
-        assertFileContentsEqualsExpected(
-            'get /some/suburl | tee --append ' + self.test_filepath,
-            response + '\n' + response)
-
-        console_output = self.commandio_click.echo_via_pager.call_args[0][0]
-        self.assertEqual(console_output, response)
 
         patcher.stop()
 

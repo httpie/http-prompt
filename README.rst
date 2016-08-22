@@ -174,7 +174,6 @@ Currently, few supported constructs are available:
 
     > command > /path/to/file # writes output of the command to the file
     > command >> /path/to/file # appends output of the command to the file (or created a new file if it does not exist)
-    > command | tee [-a,--append] /path/to/file # writes or appends output of the command to the file and simultaneously prints the output data to the console
 
 where the ``command`` is one of the following: ``env``, ``httpie``, ``curl``, ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
 
