@@ -1,4 +1,4 @@
-from pygments.lexer import RegexLexer, bygroups, words, using
+from pygments.lexer import RegexLexer, bygroups, words, using, include, combined
 from pygments.lexers import BashLexer
 
 from pygments.token import Text, String, Keyword, Name, Operator
@@ -56,30 +56,34 @@ class HttpPromptLexer(RegexLexer):
         ],
         'rm_name': string_rules('end'),
 
+        'shell_command': [
+            (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
+        ],
         'concat_mut': [
             (r'$', Text, 'end'),
             (r'\s+', Text),
 
             # Flag options, such as (--form) and (--json)
-            (words(FLAG_OPTIONS, suffix=r'\b'), Name),
+            (words(FLAG_OPTIONS, suffix=r'\b'), Name, 'concat_mut'),
 
             # Options with values, such as (--style=default) and (--pretty all)
-            (words(VALUE_OPTIONS, suffix=r'\b'), Name, 'option_op'),
+            (words(VALUE_OPTIONS, suffix=r'\b'), Name,
+             combined('shell_command', 'option_op')),
 
-            (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
+            include('shell_command'),
 
             # Unquoted or value-quoted request mutation,
             # such as (name="John Doe") and (name=John\ Doe)
             (r'((?:[^\s\'"\\=:]|(?:\\.))*)(:|==|=)',
-             bygroups(Name, Operator), 'unquoted_mut'),
+             bygroups(Name, Operator), combined('shell_command', 'unquoted_mut')),
 
             # Full single-quoted request mutation, such as ('name=John Doe')
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(:|==|=)",
-             bygroups(Text, Name, Operator), 'squoted_mut'),
+             bygroups(Text, Name, Operator), combined('shell_command', 'squoted_mut')),
 
             # Full double-quoted request mutation, such as ("name=John Doe")
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(:|==|=)',
-             bygroups(Text, Name, Operator), 'dquoted_mut')
+             bygroups(Text, Name, Operator), combined('shell_command', 'dquoted_mut'))
         ],
 
         'option_op': [
