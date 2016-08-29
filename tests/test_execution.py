@@ -736,11 +736,11 @@ class TestCommandPreview(ExecutionTestCase):
         self.commandio_click.style.assert_called_with(
             data, bg=None, fg=None)
         self.commandio_click.echo_via_pager.assert_called_with(
-            self.commandio_click.style.return_value, nl=False)
+            self.commandio_click.style.return_value)
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.assertClickEchoCalledWith( 'http http://localhost')
+        self.assertClickEchoCalledWith('http http://localhost')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
@@ -749,19 +749,22 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.assertClickEchoCalledWith('http POST http://localhost/api name=alice')
+        self.assertClickEchoCalledWith(
+            'http POST http://localhost/api name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
         execute('httpie POST http://httpbin.org/post name=alice', self.context)
-        self.assertClickEchoCalledWith('http POST http://httpbin.org/post name=alice')
+        self.assertClickEchoCalledWith(
+            'http POST http://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.assertClickEchoCalledWith('http POST https://httpbin.org/post name=alice')
+        self.assertClickEchoCalledWith(
+            'http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
