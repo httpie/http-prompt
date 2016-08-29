@@ -26,15 +26,11 @@ def _get_dir(envvar_name, default_dir, resource_name=None):
 
 if sys.platform == 'win32':  # nocover
     # NOTE: LOCALAPPDATA is not available on Windows XP
-    get_tmp_dir = partial(_get_dir, 'TEMP',
-                          os.path.expanduser('~/AppData/Local/Temp'))
     get_data_dir = partial(_get_dir, 'LOCALAPPDATA',
                            os.path.expanduser('~/AppData/Local'))
     get_config_dir = partial(_get_dir, 'LOCALAPPDATA',
                              os.path.expanduser('~/AppData/Local'))
 else:
-    get_tmp_dir = partial(_get_dir, 'TEMP',
-                          os.path.expanduser('/tmp/'))
     get_data_dir = partial(_get_dir, 'XDG_DATA_HOME',
                            os.path.expanduser('~/.local/share'))
     get_config_dir = partial(_get_dir, 'XDG_CONFIG_HOME',

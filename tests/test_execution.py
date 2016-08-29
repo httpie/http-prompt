@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
-import unittest
-
 import pytest
 import six
 
@@ -10,13 +8,15 @@ from mock import patch
 
 from http_prompt.context import Context
 from http_prompt.execution import execute
-from http_prompt.xdg import get_tmp_dir
 from http_prompt.utils import strip_color_codes
 
+from .base import TempAppDirTestCase
 
-class ExecutionTestCase(unittest.TestCase):
+
+class ExecutionTestCase(TempAppDirTestCase):
 
     def setUp(self):
+        super(ExecutionTestCase, self).setUp()
         self.patchers = [
             ('httpie_main', patch('http_prompt.httpiewrapper.httpie_main')),
             ('commandio_click', patch('http_prompt.printer.click')),
@@ -28,6 +28,7 @@ class ExecutionTestCase(unittest.TestCase):
         self.context = Context('http://localhost')
 
     def tearDown(self):
+        super(ExecutionTestCase, self).tearDown()
         for _, patcher in self.patchers:
             patcher.stop()
 
@@ -94,7 +95,7 @@ class TestExecution_source(ExecutionTestCase):
 
     def test_source(self):
 
-        filepath = get_tmp_dir() + '/dummy_http-prompt_context'
+        filepath = self.temp_dir + '/dummy_http-prompt_context'
         dummy_context_url = 'http://127.0.0.1:3000'
 
         dummy_context = Context(dummy_context_url)
@@ -128,7 +129,7 @@ class TestExecution_source(ExecutionTestCase):
 class TestExecution_exec(ExecutionTestCase):
 
     def test_exec(self):
-        filepath = get_tmp_dir() + '/test_dummy_http-prompt_context'
+        filepath = self.temp_dir + '/test_dummy_http-prompt_context'
         dummy_context_url = 'http://127.0.0.1:3000'
 
         dummy_context = Context(dummy_context_url)
@@ -162,7 +163,7 @@ class TestExecution_unix_pipelines(ExecutionTestCase):
 
     def setUp(self):
         super(TestExecution_unix_pipelines, self).setUp()
-        self.test_filepath = get_tmp_dir() + '/test_unix_pipelines'
+        self.test_filepath = self.temp_dir + '/test_unix_pipelines'
 
         self.cmds = ['cd https://api.github.com',
                      'bar==baz',
