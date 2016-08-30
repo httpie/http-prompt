@@ -17,7 +17,7 @@ from . import __version__
 from . import config
 from .completer import HttpPromptCompleter
 from .context import Context
-from .contextio import load_context, save_context, url_to_context_filename
+from .contextio import load_context, save_context
 from .execution import execute
 from .lexer import HttpPromptLexer
 from .utils import smart_quote
@@ -44,13 +44,6 @@ class ExecutionListener(object):
 
     def __init__(self, cfg):
         self.cfg = cfg
-
-    def url_changed(self, old_url, context):
-        # Load context from disk if base URL is changed
-        old_filename = url_to_context_filename(old_url)
-        new_filename = url_to_context_filename(context.url)
-        if old_filename != new_filename:
-            load_context(context)
 
     def context_changed(self, context):
         save_context(context)

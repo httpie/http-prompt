@@ -3,8 +3,6 @@
 import json
 import os
 
-from six.moves.urllib.parse import urlparse
-
 from . import xdg
 
 
@@ -14,21 +12,14 @@ EXCLUDED_ATTRS = ['url', 'should_exit']
 # Don't save these HTTPie options to avoid collision with user config file
 EXCLUDED_OPTIONS = ['--style']
 
-
-def url_to_context_filename(url):
-    r = urlparse(url)
-    host = r.hostname
-    port = r.port
-    if not port:
-        port = 443 if r.scheme == 'https' else 80
-    return host + '.' + str(port)
+# Filename the current environment context will be saved to
+CONTEXT_FILENAME = 'context.hp'
 
 
 def load_context(context):
     """Load a Context object in place from user data directory."""
-    dir_path = xdg.get_data_dir('context')
-    filename = url_to_context_filename(context.url)
-    file_path = os.path.join(dir_path, filename)
+    dir_path = xdg.get_data_dir()
+    file_path = os.path.join(dir_path, CONTEXT_FILENAME)
     if os.path.exists(file_path):
         with open(file_path) as f:
             json_obj = json.load(f)
@@ -38,9 +29,8 @@ def load_context(context):
 
 def save_context(context):
     """Save a Context object to user data directory."""
-    dir_path = xdg.get_data_dir('context')
-    filename = url_to_context_filename(context.url)
-    file_path = os.path.join(dir_path, filename)
+    dir_path = xdg.get_data_dir()
+    file_path = os.path.join(dir_path, CONTEXT_FILENAME)
     json_obj = context.json_obj()
 
     for name in EXCLUDED_ATTRS:

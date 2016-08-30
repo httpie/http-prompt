@@ -1,35 +1,40 @@
 import re
-import sys
 
 import click
-import six
 
-from httpie.context import Environment
-from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from six import BytesIO
 from six.moves.urllib.parse import urljoin
 
+from .httpiewrapper import request as httpie_main
+from .printer import Printer
+from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
-from .utils import unescape
+from .utils import unescape, unquote
 
 
 grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / help / exit / _
+    immutation = preview / action / help / exit / env / exec / source / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
-    preview = _ tool _ (method _)? (urlpath _)? concat_mut*
-    action = _ method _ (urlpath _)? concat_mut*
-    urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
+    preview = _ tool _ (method _)? (urlpath _)? concat_mut* redir_out? _
+    action = _ method _ (urlpath _)? concat_mut* redir_out? _
+    urlpath = (~r"https?://" unquoted_string) / (!concat_mut !redir_out string)
     help = _ "help" _
     exit = _ "exit" _
+    env  = _ "env" _ (redir_out)?
+    source = _ "source" _ string _
+    exec = _ "exec" _ string _
+
+    redir_out = _ (redir_append_file / redir_file) _ string _
+    redir_file = _ ">" _
+    redir_append_file = _ ">>" _
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -116,9 +121,6 @@ def generate_help_text():
 
 class DummyExecutionListener(object):
 
-    def url_changed(self, old_url, context):
-        pass
-
     def context_changed(self, context):
         pass
 
@@ -135,6 +137,7 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
+        self.output = CommandIO(Printer())
 
         self.listener = listener if listener else DummyExecutionListener()
         self.last_response = None
@@ -151,9 +154,6 @@ class ExecutionVisitor(NodeVisitor):
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
-
-        if self.context_override.url != self.context.url:
-            self.listener.url_changed(self.context.url, self.context_override)
 
         return node
 
@@ -185,7 +185,67 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_help(self, node, children):
-        click.echo_via_pager(generate_help_text())
+        self.output.write(generate_help_text())
+        self.output.close()
+        return node
+
+    def visit_redir_out(self, node, children):
+        parsed = re.search(r"(>>|>)\s*(.*)", node.text)
+        redirection_type = parsed.group(1)
+        path = parsed.group(2)
+        file_op = 'w'
+
+        if redirection_type == '>>':
+            file_op = 'a'
+
+        self.output.setOutputStream(open(unquote(path), file_op))
+        return node
+
+    def visit_exec(self, node, children):
+        # exclude "exec" keyword
+        path = node.text[4:].strip()
+
+        commands = CommandIO(open(path, 'r')).read().splitlines()
+        # wipe out current context state before we load a new one
+        commands.insert(0, 'rm *')
+        commands = iter(commands)
+
+        for command in commands:
+            execute(command, self.context, self.listener)
+
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.literal_args(quote=True)
+        self.output.write(args)
+        self.output.close()
+        return node
+
+    def visit_source(self, node, children):
+        # exclude "source" keyword
+        path = node.text[6:].strip()
+
+        commands = CommandIO(open(path, 'r')).read().splitlines()
+        commands = iter(commands)
+
+        for command in commands:
+            execute(command, self.context, self.listener)
+
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.literal_args(quote=True)
+        self.output.write(args)
+        self.output.close()
+        return node
+
+    def visit_env(self, node, children):
+        self.context = self._final_context()
+        context = self._final_context()
+
+        args = context.literal_args(quote=True)
+        self.output.write(args)
+        self.output.close()
         return node
 
     def visit_exit(self, node, children):
@@ -311,41 +371,16 @@ class ExecutionVisitor(NodeVisitor):
             else:
                 assert self.tool == 'curl'
                 command = ['curl'] + context.curl_args(self.method, quote=True)
-            click.echo(' '.join(command))
+            self.output.write(' '.join(command))
         elif child_type == 'action':
-            output = BytesIO()
-            try:
-                env = Environment(stdout=output, is_windows=False)
-
-                # XXX: httpie_main() doesn't provide an API for us to get the
-                # HTTP response object, so we use this super dirty hack -
-                # sys.settrace() to intercept get_response() that is called in
-                # httpie_main() internally. The HTTP response intercepted is
-                # assigned to self.last_response, which may be useful for
-                # self.listener.
-                sys.settrace(self._trace_get_response)
-                try:
-                    httpie_main(context.httpie_args(self.method), env=env)
-                finally:
-                    sys.settrace(None)
-
-                content = output.getvalue()
-            finally:
-                output.close()
-
-            # XXX: Work around a bug of click.echo_via_pager(). When you pass
-            # a bytestring to echo_via_pager(), it converts the bytestring with
-            # str(b'abc'), which makes it "b'abc'".
-            if six.PY2:
-                content = unicode(content, 'utf-8')  # noqa
-            else:
-                content = str(content, 'utf-8')
-            click.echo_via_pager(content)
+            content = httpie_main(self, context, self.method)
+            self.output.write(content)
 
             if self.last_response:
                 self.listener.response_returned(self.context,
                                                 self.last_response)
 
+        self.output.close()
         return node
 
     def generic_visit(self, node, children):
@@ -376,6 +411,12 @@ def execute(command, context, listener=None):
                 key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
+            elif exc_class is FileNotFoundError:
+                key = re.search(
+                    r"FileNotFoundError:\s*[Errno 2]\s*(.+).*",
+                    str(err)).group(1)
+                click.secho(key, err=True, fg='red')
+
             else:
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')

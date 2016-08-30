@@ -45,18 +45,8 @@ class Context(object):
         self.options.update(context.options)
         self.should_exit = self.should_exit
 
-    def httpie_args(self, method=None, quote=False):
+    def httpie_data_args(self, quote=False):
         args = []
-
-        for k, v in sorted(six.iteritems(self.options)):
-            args.append(k)
-            if v is not None:
-                args.append(smart_quote(v))
-
-        if method:
-            args.append(method.upper())
-
-        args.append(self.url)
 
         if quote:
             quote_arg = smart_quote
@@ -80,6 +70,39 @@ class Context(object):
                 else:
                     arg = quote_arg('%s%s%s' % (k, op, value))
                     args.append(arg)
+        return args
+
+    def httpie_args(self, method=None, quote=False):
+        args = []
+
+        for k, v in sorted(six.iteritems(self.options)):
+            args.append(k)
+            if v is not None:
+                args.append(smart_quote(v))
+
+        if method:
+            args.append(method.upper())
+
+        args.append(self.url)
+
+        data_args = self.httpie_data_args(quote)
+        args.extend(data_args)
+
+        return args
+
+    def literal_args(self, quote=False):
+        args = ''
+
+        for k, v in sorted(six.iteritems(self.options)):
+            opt = k
+            if v is not None:
+                opt += ' ' + smart_quote(v)
+            args += opt + '\n'
+
+        args += 'cd ' + self.url + '\n'
+
+        data_args = '\n'.join(self.httpie_data_args(quote))
+        args += data_args
 
         return args
 
