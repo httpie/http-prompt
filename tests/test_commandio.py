@@ -1,7 +1,9 @@
 from mock import patch, Mock
 import unittest
 
+from http_prompt.printer import Printer
 from http_prompt.commandio import CommandIO
+from http_prompt.utils import strip_color_codes
 
 
 class TestCommandIO(unittest.TestCase):
@@ -9,12 +11,13 @@ class TestCommandIO(unittest.TestCase):
     def setUp(self):
         super(TestCommandIO, self).setUp()
         self.patchers = [
-            ('commandio_click', patch('http_prompt.printer.click')),
+            ('click', patch('http_prompt.printer.click')),
         ]
         for attr_name, patcher in self.patchers:
             setattr(self, attr_name, patcher.start())
 
-        self.test_data = 'whatever'
+        #colored "HTTP" string
+        self.test_data = '[38;5;70;01mHTTP[39;00m[38;5;252m'
 
         attrs = {
             'write.return_value': 3,
@@ -33,13 +36,23 @@ class TestCommandIO(unittest.TestCase):
         output.close()
         self.assertTrue(self.dummyStream.close.called)
 
+    def test_write_to_stdout(self):
+        output = CommandIO(Printer())
+        output.write(self.test_data)
+
+        self.assertTrue(self.click.echo_via_pager.called)
+        self.click.style.assert_called_with(
+            self.test_data, bg=None, fg=None)
+        self.click.echo_via_pager.assert_called_with(
+            self.click.style.return_value)
+
     def test_write(self):
         output = CommandIO(self.dummyStream)
         output.write(self.test_data)
 
         self.assertTrue(self.dummyStream.write.called)
         args = self.dummyStream.write.call_args[0][0]
-        self.assertEqual(self.test_data, args)
+        self.assertEqual(strip_color_codes(self.test_data), args)
 
     def test_write_append(self):
         self.dummyStream.mode = 'a'
@@ -48,7 +61,7 @@ class TestCommandIO(unittest.TestCase):
 
         self.assertTrue(self.dummyStream.write.called)
         args = self.dummyStream.write.call_args[0][0]
-        self.assertEqual('\n' + self.test_data, args)
+        self.assertEqual('\n' + strip_color_codes(self.test_data), args)
 
     def test_read(self):
         output = CommandIO(self.dummyStream)

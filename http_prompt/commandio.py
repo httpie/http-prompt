@@ -14,7 +14,7 @@ class CommandIO():
         return self.out.close()
 
     def write(self, data):
-        if self.out is not Printer:
+        if isinstance(self.out, Printer) == False:
             data = strip_color_codes(data)
 
         if hasattr(
