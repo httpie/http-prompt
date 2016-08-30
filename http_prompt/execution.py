@@ -27,9 +27,9 @@ grammar = Grammar(r"""
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
-    preview = _ tool _ (method _)? (urlpath _)? concat_mut*
-    action = _ method _ (urlpath _)? concat_mut*
-    urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
+    preview = _ tool _ (method _)? (urlpath _)? concat_mut* shell_cmd_redir?
+    action = _ method _ (urlpath _)? concat_mut* shell_cmd_redir?
+    urlpath = (~r"https?://" unquoted_string) / (!concat_mut !shell_cmd_redir string)
     help = _ "help" _
     exit = _ "exit" _
 
@@ -90,6 +90,7 @@ grammar = Grammar(r"""
 
     code_block = "`" shell_code "`"
     shell_code = ~r"[^`]*"
+    shell_cmd_redir = _ "|" _ (shell_code / code_block)
 """)
 
 
