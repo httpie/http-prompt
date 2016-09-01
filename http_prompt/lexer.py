@@ -60,7 +60,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
         ],
         'shell_redirection': [
-            (r'\s*(\|)([^`]*)', bygroups(Keyword, using(BashLexer))),
+            (r'\s*(\|)(.*)', bygroups(Keyword, using(BashLexer))),
         ],
         'concat_mut': [
             (r'$', Text, 'end'),
@@ -111,7 +111,8 @@ class HttpPromptLexer(RegexLexer):
             (r'', Text, 'urlpath')
         ],
         'urlpath': [
-            (r'https?://([^\s"\'\\]|(\\.))+', String, combined('concat_mut', 'shell_redirection')),
+            (r'https?://([^\s"\'\\]|(\\.))+', String,
+             combined('concat_mut', 'shell_redirection')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)(")',
              bygroups(Text, String, Text), combined('concat_mut', 'shell_redirection')),
@@ -133,7 +134,8 @@ class HttpPromptLexer(RegexLexer):
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, combined('concat_mut', 'shell_redirection')),
+            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String,
+             combined('concat_mut', 'shell_redirection')),
             (r'', Text, combined('concat_mut', 'shell_redirection'))
         ],
 

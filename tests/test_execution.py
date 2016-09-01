@@ -6,6 +6,7 @@ import unittest
 
 import pytest
 import six
+import os.path
 
 from mock import patch
 
@@ -573,11 +574,24 @@ class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
         ExecutionTestCase.tearDown(self)
         TempAppDirTestCase.tearDown(self)
 
-    # def test_pipe_to_shell_cmd_redirection(self):
-        # execute("get some==data | tee /tmp/file", self.context)
-        # self.assertEqual(self.context.options, {
-            # '--auth': 'user:pass'
-        # })
+    def test_action_cmd_pipe_to_shell_redirection(self):
+        filepath = self.temp_dir + '/shell_cmd_subprocess_test'
+        execute("get some==data | tee " + filepath, self.context)
+        # TODO after it's merged to the master we can test if the click has been called
+        # with specific data which has been returned from the httpie_main, now
+        # it's not possible
+        self.click.echo_via_pager.assert_called_with('')
+        self.assertTrue(os.path.isfile(filepath))
+
+    def test_preview_cmd_pipe_to_shell_redirection(self):
+        execute("httpie get some==data | sed 's/data$/input/'", self.context)
+        self.click.echo_via_pager.assert_called_with(
+            'http GET http://localhost some==input')
+
+    def test_pipe_shell_redirection_with_backticks(self):
+        execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`", self.context)
+        self.click.echo_via_pager.assert_called_with(
+            'http POST http://127.0.0.1')
 
     def test_unquoted_option(self):
         execute("--auth `echo user:pass`", self.context)

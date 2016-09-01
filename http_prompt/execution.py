@@ -10,7 +10,7 @@ from httpie.context import Environment
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
-from parsimonious.nodes import NodeVisitor
+from parsimonious.nodes import NodeVisitor, Node
 from six import BytesIO, text_type
 from six.moves.urllib.parse import urljoin
 
@@ -90,8 +90,7 @@ grammar = Grammar(r"""
 
     code_block = "`" shell_code "`"
     shell_code = ~r"[^`]*"
-    shell_cmd_redir = _ "|" _ (shell_code / code_block)
-    register_shell_cmd_redir = _ "|" _ (shell_code / code_block)
+    shell_cmd_redir = _ "|" _ (code_block / shell_code)
 """)
 
 
@@ -145,6 +144,15 @@ class ExecutionVisitor(NodeVisitor):
         self.method = None
         self.tool = None
         self.output_data = None
+        # Flag variable determining whether run another shell subrocess or not
+        # when we combine "pipe to shell command redirection" with backticks
+        # quoted shell command.
+        # Consider eg.:
+        # localhost> httpie post | `echo "sed 's/localhost/127.0.0.1/'"`
+        # After we're done with evaluating the command within the backticks,
+        # we need to run following command (and tha's what the flag signalizes):
+        # localhost> httpie post | sed 's/localhost/127.0.0.1/'
+        self.pipe_shell_redir = False
 
         self.listener = listener if listener else DummyExecutionListener()
         self.last_response = None
@@ -351,7 +359,7 @@ class ExecutionVisitor(NodeVisitor):
 
         if self.last_response:
             self.listener.response_returned(self.context,
-                    self.last_response)
+                                            self.last_response)
 
         return node
 
@@ -360,7 +368,7 @@ class ExecutionVisitor(NodeVisitor):
         command = None
         if self.tool == 'httpie':
             command = ['http'] + context.httpie_args(self.method,
-                    quote=True)
+                                                     quote=True)
         else:
             assert self.tool == 'curl'
             command = ['curl'] + context.curl_args(self.method, quote=True)
@@ -368,23 +376,52 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_code_block(self, node, children):
+        if self.pipe_shell_redir:
+            node_clone = Node(
+                expr_name='shell_code',
+                full_text=children[1],
+                start=0,
+                end=len(children[1]))
+            return self.visit(node_clone)
         return children[1]
+
+    def _is_backticks_cmd_preceded_with_pipe_redir(self, node):
+        left_hand_input = node.full_text[:node.start]
+        right_hand_input = node.full_text[node.end:]
+        start_backticks = re.search(r"\|.*`\s*$", left_hand_input)
+        end_backticks = re.search(r"`\s*$", right_hand_input)
+        if start_backticks is not None and end_backticks is not None:
+            return True
+        return False
 
     def visit_shell_code(self, node, children):
         stdin = None
         stdin_data = self.output_data
-        if stdin_data is not None:
+        is_backticks_cmd = self._is_backticks_cmd_preceded_with_pipe_redir(node)
+
+        if stdin_data is not None and is_backticks_cmd == False:
             stdin = PIPE
             stdin_data = stdin_data.encode('ascii')
 
-        p = subprocess.Popen(node.text, shell=True, stdin=stdin, stdout=PIPE, stderr=PIPE)
+        p = subprocess.Popen(
+            node.text,
+            shell=True,
+            stdin=stdin,
+            stdout=PIPE,
+            stderr=PIPE)
         out, err = p.communicate(stdin_data)
         if p.returncode != 0:
             exc = CalledProcessError(p.returncode, node.text)
             exc.output = text_type(err or out, 'utf-8').rstrip()
             raise exc
-        self.output_data = text_type(out, 'utf-8').rstrip()
-        return self.output_data
+
+        data = text_type(out, 'utf-8').rstrip()
+
+        if not is_backticks_cmd:
+            self.output_data = data
+        else:
+            self.pipe_shell_redir = True
+        return data
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:
