@@ -59,6 +59,9 @@ class HttpPromptLexer(RegexLexer):
         'shell_command': [
             (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
         ],
+        'shell_redirection': [
+            (r'\s*(\|)([^`]*)', bygroups(Keyword, using(BashLexer))),
+        ],
         'concat_mut': [
             (r'$', Text, 'end'),
             (r'\s+', Text),
@@ -103,34 +106,35 @@ class HttpPromptLexer(RegexLexer):
 
         'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'urlpath'),
+             bygroups(Keyword, Text), combined('urlpath', 'shell_redirection')),
+            include('shell_redirection'),
             (r'', Text, 'urlpath')
         ],
         'urlpath': [
-            (r'https?://([^\s"\'\\]|(\\.))+', String, 'concat_mut'),
+            (r'https?://([^\s"\'\\]|(\\.))+', String, combined('concat_mut', 'shell_redirection')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'shell_redirection')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)', bygroups(Text, String)),
 
             (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'shell_redirection')),
 
             (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)", bygroups(Text, String)),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'shell_redirection')),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)', bygroups(Text, String)),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), 'concat_mut'),
+             bygroups(Text, String, Text), combined('concat_mut', 'shell_redirection')),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, 'concat_mut'),
-            (r'', Text, 'concat_mut')
+            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)', String, combined('concat_mut', 'shell_redirection')),
+            (r'', Text, combined('concat_mut', 'shell_redirection'))
         ],
 
         'end': [
