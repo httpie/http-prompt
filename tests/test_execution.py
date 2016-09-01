@@ -12,6 +12,8 @@ from mock import patch
 from http_prompt.context import Context
 from http_prompt.execution import execute
 
+from .base import TempAppDirTestCase
+
 
 class ExecutionTestCase(unittest.TestCase):
 
@@ -561,7 +563,21 @@ class TestCommandPreview(ExecutionTestCase):
         self.assertFalse(self.context.querystring_params)
 
 
-class TestShellCode(ExecutionTestCase):
+class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
+
+    def setUp(self):
+        ExecutionTestCase.setUp(self)
+        TempAppDirTestCase.setUp(self)
+
+    def tearDown(self):
+        ExecutionTestCase.tearDown(self)
+        TempAppDirTestCase.tearDown(self)
+
+    # def test_pipe_to_shell_cmd_redirection(self):
+        # execute("get some==data | tee /tmp/file", self.context)
+        # self.assertEqual(self.context.options, {
+            # '--auth': 'user:pass'
+        # })
 
     def test_unquoted_option(self):
         execute("--auth `echo user:pass`", self.context)

@@ -233,3 +233,19 @@ class TestShellCode(LexerTestCase):
             (Text, 'john'),
             (Text, '`'),
         ])
+
+    def test_pipe_to_shell_cmd_redirection(self):
+        self.assertEqual(self.get_tokens('httpie post | tee "/tmp/test"'), [
+            (Keyword, 'httpie'),
+            (Keyword, 'post'),
+            (Keyword, '|'),
+            (Text, 'tee'),
+            (String.Double, '"/tmp/test"'),
+        ])
+
+        self.assertEqual(self.get_tokens('post | tee "/tmp/test"'), [
+            (Keyword, 'post'),
+            (Keyword, '|'),
+            (Text, 'tee'),
+            (String.Double, '"/tmp/test"'),
+        ])
