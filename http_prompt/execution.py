@@ -23,7 +23,7 @@ grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = ((preview / action / help / exit) shell_cmd_redir?) / _
+    immutation = ((preview / action / help ) shell_cmd_redir?) / exit / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
