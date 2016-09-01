@@ -7,11 +7,12 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
-from .httpiewrapper import request as httpie_main
-from .printer import Printer
 from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
+from .context.formatter import format_context
+from .httpiewrapper import request as httpie_main
+from .printer import Printer
 from .utils import unescape, unquote
 
 
@@ -366,12 +367,11 @@ class ExecutionVisitor(NodeVisitor):
 
         if child_type == 'preview':
             if self.tool == 'httpie':
-                command = ['http'] + context.httpie_args(self.method,
-                                                         quote=True)
+                command = format_context(context, 'httpie', method=self.method)
             else:
                 assert self.tool == 'curl'
-                command = ['curl'] + context.curl_args(self.method, quote=True)
-            self.output.write(' '.join(command))
+                command = format_context(context, 'curl', method=self.method)
+            self.output.write(command)
         elif child_type == 'action':
             content = httpie_main(self, context, self.method)
             self.output.write(content)

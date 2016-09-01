@@ -7,10 +7,45 @@ from httpie.core import main as httpie_main
 from six import BytesIO
 
 
-def request(nodeVisitor, context, method):
-    output = BytesIO()
-    content = None
+def _httpie_args_from_context(context, method=None):
+    # TODO: The code here is kind of duplicate with
+    # http_prompt.context.formatter
+    args = []
 
+    for k, v in sorted(six.iteritems(context.options)):
+        args.append(k)
+        if v is not None:
+            args.append(v)
+
+    if method:
+        args.append(method.upper())
+
+    args.append(context.url)
+
+    operators_and_items = [
+        # (operator, dict_of_request_items)
+        ('==', context.querystring_params),
+        ('=', context.body_params),
+        (':', context.headers)
+    ]
+
+    for op, item_dict in operators_and_items:
+        for k, value in sorted(six.iteritems(item_dict)):
+            if isinstance(value, (list, tuple)):
+                for v in value:
+                    arg = '%s%s%s' % (k, op, v)
+                    args.append(arg)
+            else:
+                arg = '%s%s%s' % (k, op, value)
+                args.append(arg)
+
+    return args
+
+
+def request(node_visitor, context, method):
+    content = None
+    args = _httpie_args_from_context(context, method)
+    output = BytesIO()
     try:
         env = Environment(stdout=output, is_windows=False)
 
@@ -20,9 +55,9 @@ def request(nodeVisitor, context, method):
         # httpie_main() internally. The HTTP response intercepted is
         # assigned to nodeVisitor.last_response, which may be useful for
         # nodeVisitor.listener.
-        sys.settrace(nodeVisitor._trace_get_response)
+        sys.settrace(node_visitor._trace_get_response)
         try:
-            httpie_main(context.httpie_args(method), env=env)
+            httpie_main(args, env=env)
         finally:
             sys.settrace(None)
 
@@ -38,4 +73,4 @@ def request(nodeVisitor, context, method):
         else:
             content = str(content, 'utf-8')
 
-        return content
+    return content
