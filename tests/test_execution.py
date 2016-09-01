@@ -512,23 +512,23 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.click.echo.assert_called_with('http http://localhost')
+        self.click.echo_via_pager.assert_called_with('http http://localhost')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://localhost name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://localhost/api name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
         execute('httpie post http://httpbin.org/post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -536,7 +536,7 @@ class TestCommandPreview(ExecutionTestCase):
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -545,7 +545,7 @@ class TestCommandPreview(ExecutionTestCase):
         execute(r'httpie post http://httpbin.org/post name="john doe" '
                 r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
                 self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
             "'name=john doe' 'Authorization:ApiKey 1234'")
         self.assertEqual(self.context.url, 'http://localhost')
@@ -555,7 +555,7 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http GET http://localhost foo==1 foo==2 foo==3')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
