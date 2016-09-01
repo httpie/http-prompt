@@ -315,9 +315,7 @@ class ExecutionVisitor(NodeVisitor):
                 self.last_response = arg
 
     def visit_immutation(self, node, children):
-        # check if command is redirected to a shell eg.: "> httpie | tee /tmp/log"
-        parsed = re.search(r"\s*\|\s*(.*)", node.text)
-        if self.output_data is not None and parsed is None:
+        if self.output_data is not None:
             click.echo_via_pager(self.output_data)
 
         return node
@@ -385,7 +383,8 @@ class ExecutionVisitor(NodeVisitor):
             exc = CalledProcessError(p.returncode, node.text)
             exc.output = text_type(err or out, 'utf-8').rstrip()
             raise exc
-        return text_type(out, 'utf-8').rstrip()
+        self.output_data = text_type(out, 'utf-8').rstrip()
+        return self.output_data
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:
