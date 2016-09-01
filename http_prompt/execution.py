@@ -27,8 +27,8 @@ grammar = Grammar(r"""
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
-    preview = _ tool _ (method _)? (urlpath _)? concat_mut* &shell_cmd_redir?
-    action = _ method _ (urlpath _)? concat_mut* &shell_cmd_redir?
+    preview = _ tool _ (method _)? (urlpath _)? concat_mut*
+    action = _ method _ (urlpath _)? concat_mut*
     urlpath = (~r"https?://" unquoted_string) / (!concat_mut !shell_cmd_redir string)
     help = _ "help" _
     exit = _ "exit" _
@@ -315,9 +315,11 @@ class ExecutionVisitor(NodeVisitor):
                 self.last_response = arg
 
     def visit_immutation(self, node, children):
-        parsed = re.search(r"\s*(\|)\s*(.*)", node.text)
+        # check if command is redirected to a shell eg.: "> httpie | tee /tmp/log"
+        parsed = re.search(r"\s*\|\s*(.*)", node.text)
         if self.output_data is not None and parsed is None:
             click.echo_via_pager(self.output_data)
+
         return node
 
     def visit_action(self, node, children):
