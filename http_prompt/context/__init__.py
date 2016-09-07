@@ -1,8 +1,3 @@
-import six
-
-from http_prompt.utils import smart_quote
-
-
 class Context(object):
 
     def __init__(self, url=None):
@@ -39,13 +34,3 @@ class Context(object):
         self.body_params.update(context.body_params)
         self.options.update(context.options)
         self.should_exit = self.should_exit
-
-    def httpie_options(context):
-        opts = []
-        for k, v in sorted(six.iteritems(context.options)):
-            opt = k
-            if v is not None:
-                opt += ' ' + smart_quote(v)
-            yield
-            opts.append(opt)
-        return opts

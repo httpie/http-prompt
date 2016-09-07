@@ -10,7 +10,6 @@ from six.moves.urllib.parse import urljoin
 from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
-from .context.formatter import format_context
 from .httpiewrapper import request as httpie_main
 from .printer import Printer
 from .utils import unescape, unquote
@@ -403,6 +402,7 @@ def execute(command, context, listener=None):
         try:
             visitor.visit(root)
         except VisitationError as err:
+            raise
             exc_class = err.original_class
             if exc_class is KeyError:
                 # XXX: Need to parse VisitationError error message to get the
