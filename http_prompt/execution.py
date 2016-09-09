@@ -1,17 +1,22 @@
 import re
+import sys
 
 import click
 
+from httpie.context import Environment
+from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
-from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
-from .httpiewrapper import request as httpie_main
-from .printer import Printer
+from .context.transform import (
+    extract_args_for_httpie_main,
+    format_to_curl,
+    format_to_httpie,
+    format_to_http_prompt)
 from .utils import unescape, unquote
 
 
@@ -128,6 +133,21 @@ class DummyExecutionListener(object):
         pass
 
 
+class Printer(object):
+
+    def write(self, data):
+        click.echo_via_pager(data.decode('utf-8'))
+
+    def flush(self):
+        pass
+
+    def close(self):
+        pass
+
+    def isatty(self):
+        return True
+
+
 class ExecutionVisitor(NodeVisitor):
 
     def __init__(self, context, listener=None):
@@ -137,10 +157,22 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
-        self.output = CommandIO(Printer())
+        self._output = Printer()
 
-        self.listener = listener if listener else DummyExecutionListener()
+        self.listener = listener or DummyExecutionListener()
+
+        # Last response object returned by HTTPie
         self.last_response = None
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, new_output):
+        if self._output:
+            self._output.close()
+        self._output = new_output
 
     def visit_method(self, node, children):
         self.method = node.text
@@ -186,66 +218,47 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_help(self, node, children):
         self.output.write(generate_help_text())
-        self.output.close()
         return node
 
     def visit_redir_out(self, node, children):
         parsed = re.search(r"(>>|>)\s*(.*)", node.text)
         redirection_type = parsed.group(1)
         path = parsed.group(2)
-        file_op = 'w'
 
         if redirection_type == '>>':
-            file_op = 'a'
+            mode = 'ab'
+        else:
+            mode = 'wb'
 
-        self.output.setOutputStream(open(unquote(path), file_op))
+        filename = unquote(path)
+        self.output = open(filename, mode)
         return node
 
     def visit_exec(self, node, children):
-        # exclude "exec" keyword
+        # Exclude "exec" keyword
         path = node.text[4:].strip()
 
-        commands = CommandIO(open(path, 'r')).read().splitlines()
-        # wipe out current context state before we load a new one
-        commands.insert(0, 'rm *')
-        commands = iter(commands)
+        with open(unquote(path)) as f:
+            # Wipe out context first
+            execute('rm *', self.context, self.listener)
+            for line in f:
+                execute(line, self.context, self.listener)
 
-        for command in commands:
-            execute(command, self.context, self.listener)
-
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
         return node
 
     def visit_source(self, node, children):
-        # exclude "source" keyword
+        # Exclude "source" keyword
         path = node.text[6:].strip()
 
-        commands = CommandIO(open(path, 'r')).read().splitlines()
-        commands = iter(commands)
+        with open(unquote(path)) as f:
+            for line in f:
+                execute(line, self.context, self.listener)
 
-        for command in commands:
-            execute(command, self.context, self.listener)
-
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
         return node
 
     def visit_env(self, node, children):
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
+        text = format_to_http_prompt(self.context).encode('utf-8')
+        self.output.write(text)
         return node
 
     def visit_exit(self, node, children):
@@ -360,20 +373,36 @@ class ExecutionVisitor(NodeVisitor):
             elif event == 'return':
                 self.last_response = arg
 
+    def _call_httpie_main(self):
+        args = extract_args_for_httpie_main(self.context, self.method)
+        env = Environment(stdout=self.output, is_windows=False)
+        env.stdout_isatty = self.output.isatty()
+
+        # XXX: httpie_main() doesn't provide an API for us to get the
+        # HTTP response object, so we use this super dirty hack -
+        # sys.settrace() to intercept get_response() that is called in
+        # httpie_main() internally. The HTTP response intercepted is
+        # assigned to self.last_response, which self.listener may be
+        # interested in.
+        sys.settrace(self._trace_get_response)
+        try:
+            httpie_main(args, env=env)
+        finally:
+            sys.settrace(None)
+
     def visit_immutation(self, node, children):
         context = self._final_context()
         child_type = children[0].expr_name
 
         if child_type == 'preview':
             if self.tool == 'httpie':
-                command = format_context(context, 'httpie', method=self.method)
+                command = format_to_httpie(context, self.method)
             else:
                 assert self.tool == 'curl'
-                command = format_context(context, 'curl', method=self.method)
-            self.output.write(command)
+                command = format_to_curl(context, self.method)
+            self.output.write(command.encode('utf-8'))
         elif child_type == 'action':
-            content = httpie_main(self, context, self.method)
-            self.output.write(content)
+            self._call_httpie_main()
 
             if self.last_response:
                 self.listener.response_returned(self.context,
@@ -402,7 +431,6 @@ def execute(command, context, listener=None):
         try:
             visitor.visit(root)
         except VisitationError as err:
-            raise
             exc_class = err.original_class
             if exc_class is KeyError:
                 # XXX: Need to parse VisitationError error message to get the

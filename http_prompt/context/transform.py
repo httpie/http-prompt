@@ -88,7 +88,6 @@ def format_to_httpie(context, method=None):
         cmd.append(method.upper())
     cmd.append(context.url)
     cmd += _extract_httpie_request_items(context, quote=True)
-    print(cmd)
     return ' '.join(cmd)
 
 
