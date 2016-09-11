@@ -1,3 +1,4 @@
+import io
 import re
 import sys
 
@@ -17,6 +18,7 @@ from .context.transform import (
     format_to_curl,
     format_to_httpie,
     format_to_http_prompt)
+from .output import Printer, FileWriter
 from .utils import unescape, unquote
 
 
@@ -133,21 +135,6 @@ class DummyExecutionListener(object):
         pass
 
 
-class Printer(object):
-
-    def write(self, data):
-        click.echo_via_pager(data.decode('utf-8'))
-
-    def flush(self):
-        pass
-
-    def close(self):
-        pass
-
-    def isatty(self):
-        return True
-
-
 class ExecutionVisitor(NodeVisitor):
 
     def __init__(self, context, listener=None):
@@ -222,23 +209,23 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_redir_out(self, node, children):
         parsed = re.search(r"(>>|>)\s*(.*)", node.text)
-        redirection_type = parsed.group(1)
+        redirection_op = parsed.group(1)
         path = parsed.group(2)
 
-        if redirection_type == '>>':
+        if redirection_op == '>>':
             mode = 'ab'
         else:
             mode = 'wb'
 
         filename = unquote(path)
-        self.output = open(filename, mode)
+        self.output = FileWriter(open(filename, mode))
         return node
 
     def visit_exec(self, node, children):
         # Exclude "exec" keyword
         path = node.text[4:].strip()
 
-        with open(unquote(path)) as f:
+        with io.open(unquote(path), encoding='utf-8') as f:
             # Wipe out context first
             execute('rm *', self.context, self.listener)
             for line in f:
@@ -250,14 +237,14 @@ class ExecutionVisitor(NodeVisitor):
         # Exclude "source" keyword
         path = node.text[6:].strip()
 
-        with open(unquote(path)) as f:
+        with io.open(unquote(path), encoding='utf-8') as f:
             for line in f:
                 execute(line, self.context, self.listener)
 
         return node
 
     def visit_env(self, node, children):
-        text = format_to_http_prompt(self.context).encode('utf-8')
+        text = format_to_http_prompt(self.context)
         self.output.write(text)
         return node
 
@@ -391,16 +378,16 @@ class ExecutionVisitor(NodeVisitor):
             sys.settrace(None)
 
     def visit_immutation(self, node, children):
-        context = self._final_context()
+        self.context = self._final_context()
         child_type = children[0].expr_name
 
         if child_type == 'preview':
             if self.tool == 'httpie':
-                command = format_to_httpie(context, self.method)
+                command = format_to_httpie(self.context, self.method)
             else:
                 assert self.tool == 'curl'
-                command = format_to_curl(context, self.method)
-            self.output.write(command.encode('utf-8'))
+                command = format_to_curl(self.context, self.method)
+            self.output.write(command)
         elif child_type == 'action':
             self._call_httpie_main()
 

@@ -22,11 +22,3 @@ def unquote(s):
 
 def unescape(s):
     return re.sub(r'\\(.)', r'\1', s)
-
-
-def strip_color_codes(s):
-    # Strips ANSI color codes from string
-    return re.sub(
-        u"[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]",
-        "",
-     s)

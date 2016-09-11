@@ -46,8 +46,8 @@ class ExecutionListener(object):
         self.cfg = cfg
 
     def context_changed(self, context):
-        pass
-        # save_context(context)
+        # Dump the current context to HTTP Prompt format
+        save_context(context)
 
     def response_returned(self, context, response):
         if not response.cookies:
@@ -85,7 +85,7 @@ def cli(url, http_options):
 
     url = fix_incomplete_url(url)
     context = Context(url)
-    # load_context(context)
+    load_context(context)
 
     output_style = cfg.get('output_style')
     if output_style:
