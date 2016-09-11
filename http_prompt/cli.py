@@ -1,4 +1,5 @@
 import os
+import sys
 
 import click
 
@@ -85,7 +86,6 @@ def cli(url, http_options):
 
     url = fix_incomplete_url(url)
     context = Context(url)
-    load_context(context)
 
     output_style = cfg.get('output_style')
     if output_style:
@@ -104,9 +104,12 @@ def cli(url, http_options):
 
     listener = ExecutionListener(cfg)
 
-    # Execute default HTTPie options
-    http_options = [smart_quote(a) for a in http_options]
-    execute(' '.join(http_options), context, listener=listener)
+    # Execute HTTPie options from CLI or load from last context
+    if len(sys.argv) > 1:
+        http_options = [smart_quote(a) for a in http_options]
+        execute(' '.join(http_options), context, listener=listener)
+    else:
+        load_context(context)
 
     while True:
         try:

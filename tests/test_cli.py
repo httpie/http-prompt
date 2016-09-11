@@ -1,4 +1,5 @@
 import os
+import sys
 import unittest
 
 from click.testing import CliRunner
@@ -16,25 +17,33 @@ def run_and_exit(cli_args=None, prompt_commands=None):
     if cli_args is None:
         cli_args = []
 
-    # Make sure last command is 'exit'
+        # Make sure last command is 'exit'
     if prompt_commands is None:
         prompt_commands = ['exit']
     else:
         prompt_commands += ['exit']
 
-    with patch.multiple('http_prompt.cli',
-                        prompt=DEFAULT, execute=DEFAULT) as mocks:
-        mocks['execute'].side_effect = execute
+    # Fool cli() so that it believes we're running from CLI instead of pytest.
+    # We will restore it at the end of the function.
+    orig_argv = sys.argv
+    sys.argv = ['http-prompt'] + cli_args
 
-        # prompt() is mocked to return the command in 'prompt_commands' in
-        # sequence, i.e., prompt() returns prompt_commands[i-1] when it is
-        # called for the ith time
-        mocks['prompt'].side_effect = prompt_commands
+    try:
+        with patch.multiple('http_prompt.cli',
+                            prompt=DEFAULT, execute=DEFAULT) as mocks:
+            mocks['execute'].side_effect = execute
 
-        result = CliRunner().invoke(cli, cli_args)
-        context = mocks['execute'].call_args[0][1]
+            # prompt() is mocked to return the command in 'prompt_commands' in
+            # sequence, i.e., prompt() returns prompt_commands[i-1] when it is
+            # called for the ith time
+            mocks['prompt'].side_effect = prompt_commands
 
-    return result, context
+            result = CliRunner().invoke(cli, cli_args)
+            context = mocks['execute'].call_args[0][1]
+
+        return result, context
+    finally:
+        sys.argv = orig_argv
 
 
 class TestCli(TempAppDirTestCase):
@@ -95,13 +104,29 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.headers, {})
         self.assertEqual(context.querystring_params, {'id': ['10']})
 
+        result, context = run_and_exit()
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
+
+    def test_cli_args_bypasses_persistent_context(self):
+        result, context = run_and_exit(['//example.com', 'name=bob', 'id==10'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
+
         result, context = run_and_exit(['//example.com', 'sex=M'])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(context.url, 'http://example.com')
         self.assertEqual(context.options, {})
-        self.assertEqual(context.body_params, {'name': 'bob', 'sex': 'M'})
+        self.assertEqual(context.body_params, {'sex': 'M'})
         self.assertEqual(context.headers, {})
-        self.assertEqual(context.querystring_params, {'id': ['10']})
 
     def test_config_file(self):
         # Config file is not there at the beginning
