@@ -42,11 +42,11 @@ class HttpPromptLexer(RegexLexer):
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text), 'action'),
-            (r'exit\s*', Keyword, 'end'),
-            (r'help\s*', Keyword, 'end'),
-            (r'env\s*', Keyword, 'redir_out'),
-            (r'source\s*', Keyword, 'file_path'),
-            (r'exec\s*', Keyword, 'file_path'),
+            (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
+            (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
+            (r'(env)(\s*)', bygroups(Keyword, Text), 'redir_out'),
+            (r'(source)(\s*)', bygroups(Keyword, Text), 'file_path'),
+            (r'(exec)(\s*)', bygroups(Keyword, Text), 'file_path'),
             (r'', Text, 'concat_mut')
         ],
 
@@ -86,11 +86,9 @@ class HttpPromptLexer(RegexLexer):
             (r'(\s+|=)', Operator, 'option_value'),
         ],
         'option_value': string_rules('#pop:2'),
-        'file_path': [
-            (r'(/)?([^/\0]+(/)?)+', String),
-        ],
+        'file_path': string_rules('end'),
         'redir_out': [
-            (r'(?i)(>>|>)(\s*)', Operator, 'file_path')
+            (r'(?i)(>>?)(\s*)', bygroups(Operator, Text), 'file_path')
         ],
 
         'unquoted_mut': string_rules('#pop'),

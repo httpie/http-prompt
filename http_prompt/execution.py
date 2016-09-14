@@ -222,25 +222,19 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_exec(self, node, children):
-        # Exclude "exec" keyword
-        path = node.text[4:].strip()
-
-        with io.open(unquote(path), encoding='utf-8') as f:
+        path = unescape(unquote(children[3]))
+        with io.open(path, encoding='utf-8') as f:
             # Wipe out context first
             execute('rm *', self.context, self.listener)
             for line in f:
                 execute(line, self.context, self.listener)
-
         return node
 
     def visit_source(self, node, children):
-        # Exclude "source" keyword
-        path = node.text[6:].strip()
-
-        with io.open(unquote(path), encoding='utf-8') as f:
+        path = unescape(unquote(children[3]))
+        with io.open(path, encoding='utf-8') as f:
             for line in f:
                 execute(line, self.context, self.listener)
-
         return node
 
     def visit_env(self, node, children):

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import io
+import shutil
+
 import pytest
 import six
 
@@ -107,6 +110,16 @@ class TestExecution_env(ExecutionTestCase):
                            "Accept:text/csv\n"
                            "'Authorization:ApiKey 1234'\n")
 
+    def test_env_non_ascii(self):
+        self.context.body_params['name'] = '許 功蓋'
+        execute('env', self.context)
+        self.assert_stdout("--form\n--verify=no\n"
+                           "cd http://localhost:8000/api\n"
+                           "limit==50\npage==1\n"
+                           "'name=許 功蓋'\n"
+                           "Accept:text/csv\n"
+                           "'Authorization:ApiKey 1234'\n")
+
     def test_env_write_to_file(self):
         filename = self.make_tempfile()
 
@@ -127,7 +140,28 @@ class TestExecution_env(ExecutionTestCase):
                          "Accept:text/csv\n"
                          "'Authorization:ApiKey 1234'\n")
 
-    def test_env_write_to_quoted_file(self):
+    def test_env_non_ascii_and_write_to_file(self):
+        filename = self.make_tempfile()
+
+        # write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        self.context.body_params['name'] = '許 功蓋'
+        execute('env > %s' % filename, self.context)
+
+        with io.open(filename, encoding='utf-8') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=許 功蓋'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
+    def test_env_write_to_quoted_filename(self):
         filename = self.make_tempfile()
 
         # Write something first to make sure it's a full overwrite
@@ -220,8 +254,57 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             '--verify': 'no'
         })
 
-    def test_source_quoted_file(self):
+    def test_source_with_spaces(self):
+        execute(' source       %s   ' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    def test_source_quoted_filename(self):
         execute('source "%s"' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    def test_source_escaped_filename(self):
+        new_filename = self.filename + r' copy'
+        shutil.copyfile(self.filename, new_filename)
+
+        new_filename = new_filename.replace(' ', r'\ ')
+
+        execute('source %s' % new_filename, self.context)
 
         self.assertEqual(self.context.url,
                          'http://localhost:8000/api/v2/user')
@@ -259,7 +342,24 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             'username': 'jane'
         })
 
-    def test_exec_quoted_file(self):
+    def test_exec_with_spaces(self):
+        execute('  exec    %s   ' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+    def test_exec_quoted_filename(self):
         execute("exec '%s'" % self.filename, self.context)
 
         self.assertEqual(self.context.url,
@@ -275,6 +375,98 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             'name': 'Jane Doe',
             'username': 'jane'
         })
+
+    def test_exec_escaped_filename(self):
+        new_filename = self.filename + r' copy'
+        shutil.copyfile(self.filename, new_filename)
+
+        new_filename = new_filename.replace(' ', r'\ ')
+
+        execute('exec %s' % new_filename, self.context)
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+
+class TestExecution_env_and_source(ExecutionTestCase):
+
+    def test_env_and_source(self):
+        c = Context()
+        c.url = 'http://localhost:8000/api'
+        c.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        c.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        c.body_params.update({
+            'name': 'John Doe'
+        })
+        c.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+        c2 = c.copy()
+
+        filename = self.make_tempfile()
+        execute('env > %s' % filename, c)
+        execute('rm *', c)
+
+        self.assertFalse(c.headers)
+        self.assertFalse(c.querystring_params)
+        self.assertFalse(c.body_params)
+        self.assertFalse(c.options)
+
+        execute('source %s' % filename, c)
+
+        self.assertEqual(c, c2)
+
+    def test_env_and_source_non_ascii(self):
+        c = Context()
+        c.url = 'http://localhost:8000/api'
+        c.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        c.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        c.body_params.update({
+            'name': '許 功蓋'
+        })
+        c.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+        c2 = c.copy()
+
+        filename = self.make_tempfile()
+        execute('env > %s' % filename, c)
+        execute('rm *', c)
+
+        self.assertFalse(c.headers)
+        self.assertFalse(c.querystring_params)
+        self.assertFalse(c.body_params)
+        self.assertFalse(c.options)
+
+        execute('source %s' % filename, c)
+
+        self.assertEqual(c, c2)
 
 
 class TestExecution_help(ExecutionTestCase):
@@ -792,7 +984,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
             content = f.read()
         self.assertEqual(content, 'http http://localhost')
 
-    def test_httpie_redirect_write_quoted_file(self):
+    def test_httpie_redirect_write_quoted_filename(self):
         filename = self.make_tempfile()
 
         # Write something first to make sure it's a full overwrite
@@ -845,7 +1037,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
             content = f.read()
         self.assertEqual(content, 'hello world\nhttp http://localhost')
 
-    def test_httpie_redirect_append_quoted_file(self):
+    def test_httpie_redirect_append_quoted_filename(self):
         filename = self.make_tempfile()
 
         # Write something first to make sure it's an append
