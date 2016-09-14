@@ -420,12 +420,12 @@ def execute(command, context, listener=None):
                 key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
-            elif exc_class is FileNotFoundError:
-                key = re.search(
-                    r"FileNotFoundError:\s*[Errno 2]\s*(.+).*",
-                    str(err)).group(1)
-                click.secho(key, err=True, fg='red')
+            elif issubclass(exc_class, IOError):
+                msg = str(err).splitlines()[0]
 
+                # Remove the exception class name at the beginning
+                msg = msg[msg.find(':') + 2:]
+                click.secho(msg, err=True, fg='red')
             else:
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')

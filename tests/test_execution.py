@@ -276,6 +276,22 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             '--verify': 'no'
         })
 
+    def test_source_non_existing_file(self):
+        c = self.context.copy()
+        execute('source no_such_file.txt', self.context)
+        self.assertEqual(self.context, c)
+
+        # Try to get the error message when opening a non-existing file
+        try:
+            with open('no_such_file.txt'):
+                pass
+        except IOError as err:
+            err_msg = str(err)
+        else:
+            assert False, 'what?! no_such_file.txt exists!'
+
+        self.assert_stderr(err_msg)
+
     def test_source_quoted_filename(self):
         execute('source "%s"' % self.filename, self.context)
 
@@ -358,6 +374,22 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             'name': 'Jane Doe',
             'username': 'jane'
         })
+
+    def test_exec_non_existing_file(self):
+        c = self.context.copy()
+        execute('exec no_such_file.txt', self.context)
+        self.assertEqual(self.context, c)
+
+        # Try to get the error message when opening a non-existing file
+        try:
+            with open('no_such_file.txt'):
+                pass
+        except IOError as err:
+            err_msg = str(err)
+        else:
+            assert False, 'what?! no_such_file.txt exists!'
+
+        self.assert_stderr(err_msg)
 
     def test_exec_quoted_filename(self):
         execute("exec '%s'" % self.filename, self.context)
