@@ -208,7 +208,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_redir_out(self, node, children):
-        parsed = re.search(r"(>>|>)\s*(.*)", node.text)
+        parsed = re.search(r"(>>?)\s*(.*)", node.text)
         redirection_op = parsed.group(1)
         path = parsed.group(2)
 
@@ -356,8 +356,10 @@ class ExecutionVisitor(NodeVisitor):
 
     def _call_httpie_main(self):
         args = extract_args_for_httpie_main(self.context, self.method)
-        env = Environment(stdout=self.output, is_windows=False)
+        env = Environment(stdout=self.output, stdin=sys.stdin,
+                          is_windows=False)
         env.stdout_isatty = self.output.isatty()
+        env.stdin_isatty = True
 
         # XXX: httpie_main() doesn't provide an API for us to get the
         # HTTP response object, so we use this super dirty hack -

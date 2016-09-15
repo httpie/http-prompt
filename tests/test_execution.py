@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import hashlib
 import io
+import json
 import shutil
+import sys
 
 import pytest
 import six
@@ -955,6 +958,78 @@ class TestHttpAction(ExecutionTestCase):
     def test_head_uppercase(self):
         execute('HEAD', self.context)
         self.assert_httpie_main_called_with(['HEAD', 'http://localhost'])
+
+
+class TestHttpActionRedirection(ExecutionTestCase):
+
+    def test_get(self):
+        execute('get > data.json', self.context)
+        self.assert_httpie_main_called_with(['GET', 'http://localhost'])
+
+        env = self.httpie_main.call_args[1]['env']
+        self.assertFalse(env.stdout_isatty)
+        self.assertEqual(env.stdout.fp.name, 'data.json')
+
+
+@pytest.mark.slow
+class TestHttpBin(TempAppDirTestCase):
+    """Send real requests to http://httpbin.org, save the responses to files,
+    and asserts on the file content.
+    """
+    def setUp(self):
+        super(TestHttpBin, self).setUp()
+
+        # XXX: pytest doesn't allow HTTPie to read stdin while it's capturing
+        # stdout, so we replace stdin with a file temporarily during the test.
+        self.orig_stdin = sys.stdin
+        filename = self.make_tempfile()
+        sys.stdin = open(filename, 'rb')
+        sys.stdin.isatty = lambda: True
+
+    def tearDown(self):
+        sys.stdin.close()
+        sys.stdin = self.orig_stdin
+
+        super(TestHttpBin, self).tearDown()
+
+    def execute(self, command):
+        context = Context('http://httpbin.org')
+        filename = self.make_tempfile()
+        execute('%s > %s' % (command, filename), context)
+
+        with open(filename, 'rb') as f:
+            return f.read()
+
+    def test_get_image(self):
+        data = self.execute('get /image/png')
+        self.assertTrue(data)
+        self.assertEqual(hashlib.sha1(data).hexdigest(),
+                         '379f5137831350c900e757b39e525b9db1426d53')
+
+    def test_get_querystring(self):
+        data = self.execute('get /get id==1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        self.assertEqual(data['args'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    def test_post_json(self):
+        data = self.execute('post /post id=1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        self.assertEqual(data['json'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    def test_post_form(self):
+        data = self.execute('post /post --form id=1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        print(data)
+        self.assertEqual(data['form'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
 
 class TestCommandPreview(ExecutionTestCase):
