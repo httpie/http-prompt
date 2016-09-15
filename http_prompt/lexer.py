@@ -39,9 +39,11 @@ class HttpPromptLexer(RegexLexer):
             (r'\s+', Text),
             (r'(cd)(\s*)', bygroups(Keyword, Text), 'cd'),
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
-            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
+            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'action'),
+
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'action'),
+             bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
+
             (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
             (r'(env)(\s*)', bygroups(Keyword, Text), 'redir_out'),
@@ -102,11 +104,8 @@ class HttpPromptLexer(RegexLexer):
         ],
 
         'action': [
-            include('urlpath')
-        ],
-        'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), combined('urlpath', 'redir_out')),
+             bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
             include('redir_out'),
             (r'', Text, 'urlpath')
         ],

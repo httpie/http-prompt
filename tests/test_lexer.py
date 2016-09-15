@@ -285,7 +285,7 @@ class TestLexerPreview(LexerTestCase):
         ])
 
 
-class TestPreviewRedirection(LexerTestCase):
+class TestLexerPreviewRedirection(LexerTestCase):
 
     def test_httpie_write(self):
         self.assertEqual(self.get_tokens('httpie > file.txt'), [
@@ -411,4 +411,126 @@ class TestPreviewRedirection(LexerTestCase):
             (Text, "'"), (String, 'john doe'), (Text, "'"),
             (Name, 'page'), (Operator, '=='), (String, '2'),
             (Operator, '>>'), (String, 'file.txt')
+        ])
+
+
+class TestLexerAction(LexerTestCase):
+
+    def test_get(self):
+        self.assertEqual(self.get_tokens('get'), [
+            (Keyword, 'get')
+        ])
+
+    def test_post_with_spaces(self):
+        self.assertEqual(self.get_tokens('   post  '), [
+            (Keyword, 'post')
+        ])
+
+    def test_capital_head(self):
+        self.assertEqual(self.get_tokens('HEAD'), [
+            (Keyword, 'HEAD')
+        ])
+
+    def test_delete_random_capitals(self):
+        self.assertEqual(self.get_tokens('dElETe'), [
+            (Keyword, 'dElETe')
+        ])
+
+    def test_patch(self):
+        self.assertEqual(self.get_tokens('patch'), [
+            (Keyword, 'patch')
+        ])
+
+    def test_get_with_querystring_params(self):
+        command = 'get page==10 id==200'
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'get'),
+            (Name, 'page'), (Operator, '=='), (String, '10'),
+            (Name, 'id'), (Operator, '=='), (String, '200')
+        ])
+
+    def test_capital_get_with_querystring_params(self):
+        command = 'GET page==10 id==200'
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'GET'),
+            (Name, 'page'), (Operator, '=='), (String, '10'),
+            (Name, 'id'), (Operator, '=='), (String, '200')
+        ])
+
+    def test_post_with_body_params(self):
+        command = 'post name="john doe" username=john'
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'post'), (Name, 'name'), (Operator, '='),
+            (Text, '"'), (String, 'john doe'), (Text, '"'),
+            (Name, 'username'), (Operator, '='), (String, 'john')
+        ])
+
+    def test_post_with_spaces_and_body_params(self):
+        command = '  post   name="john doe"     username=john  '
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'post'), (Name, 'name'), (Operator, '='),
+            (Text, '"'), (String, 'john doe'), (Text, '"'),
+            (Name, 'username'), (Operator, '='), (String, 'john')
+        ])
+
+
+class TestLexerActionRedirection(LexerTestCase):
+
+    def test_get_write(self):
+        self.assertEqual(self.get_tokens('get > file.txt'), [
+            (Keyword, 'get'), (Operator, '>'), (String, 'file.txt')
+        ])
+
+    def test_get_write_quoted_filename(self):
+        self.assertEqual(self.get_tokens('get > "/tmp/my file.txt"'), [
+            (Keyword, 'get'), (Operator, '>'),
+            (Text, '"'), (String, '/tmp/my file.txt'), (Text, '"')
+        ])
+
+    def test_get_append(self):
+        self.assertEqual(self.get_tokens('get >> file.txt'), [
+            (Keyword, 'get'), (Operator, '>>'), (String, 'file.txt')
+        ])
+
+    def test_get_append_escaped_filename(self):
+        self.assertEqual(self.get_tokens(r'get >> /tmp/my\ file.txt'), [
+            (Keyword, 'get'), (Operator, '>>'),
+            (String, r'/tmp/my\ file.txt')
+        ])
+
+    def test_post_append_with_spaces(self):
+        self.assertEqual(self.get_tokens('   post  >>   file.txt'), [
+            (Keyword, 'post'), (Operator, '>>'), (String, 'file.txt')
+        ])
+
+    def test_capital_head_write(self):
+        self.assertEqual(self.get_tokens('HEAD > file.txt'), [
+            (Keyword, 'HEAD'), (Operator, '>'), (String, 'file.txt')
+        ])
+
+    def test_get_append_with_querystring_params(self):
+        command = 'get page==10 id==200 >> /tmp/file.txt'
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'get'),
+            (Name, 'page'), (Operator, '=='), (String, '10'),
+            (Name, 'id'), (Operator, '=='), (String, '200'),
+            (Operator, '>>'), (String, '/tmp/file.txt')
+        ])
+
+    def test_post_write_escaped_filename_with_body_params(self):
+        command = r'post name="john doe" username=john > /tmp/my\ file.txt'
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'post'), (Name, 'name'), (Operator, '='),
+            (Text, '"'), (String, 'john doe'), (Text, '"'),
+            (Name, 'username'), (Operator, '='), (String, 'john'),
+            (Operator, '>'), (String, r'/tmp/my\ file.txt')
+        ])
+
+    def test_post_append_with_spaces_and_body_params(self):
+        command = ' post    name="john doe"  username=john  >> /tmp/file.txt  '
+        self.assertEqual(self.get_tokens(command), [
+            (Keyword, 'post'), (Name, 'name'), (Operator, '='),
+            (Text, '"'), (String, 'john doe'), (Text, '"'),
+            (Name, 'username'), (Operator, '='), (String, 'john'),
+            (Operator, '>>'), (String, '/tmp/file.txt')
         ])
