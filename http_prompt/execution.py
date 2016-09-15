@@ -359,7 +359,7 @@ class ExecutionVisitor(NodeVisitor):
         env = Environment(stdout=self.output, stdin=sys.stdin,
                           is_windows=False)
         env.stdout_isatty = self.output.isatty()
-        env.stdin_isatty = True
+        env.stdin_isatty = sys.stdin.isatty()
 
         # XXX: httpie_main() doesn't provide an API for us to get the
         # HTTP response object, so we use this super dirty hack -

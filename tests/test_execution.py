@@ -284,14 +284,13 @@ class TestExecution_source_and_exec(ExecutionTestCase):
         execute('source no_such_file.txt', self.context)
         self.assertEqual(self.context, c)
 
-        # Try to get the error message when opening a non-existing file
+        # Expect the error message would be the same as when we open the
+        # non-existing file
         try:
-            with open('no_such_file.txt'):
+            with io.open('no_such_file.txt'):
                 pass
         except IOError as err:
-            # The 'replace' part is to fix an issue where Python 2 converts
-            # the unicode filename to "u'FILENAME'"
-            err_msg = str(err).replace("u'", "'")
+            err_msg = str(err)
         else:
             assert False, 'what?! no_such_file.txt exists!'
 
@@ -387,12 +386,10 @@ class TestExecution_source_and_exec(ExecutionTestCase):
 
         # Try to get the error message when opening a non-existing file
         try:
-            with open('no_such_file.txt'):
+            with io.open('no_such_file.txt'):
                 pass
         except IOError as err:
-            # The 'replace' part is to fix an issue where Python 2 converts
-            # the unicode filename to "u'FILENAME'"
-            err_msg = str(err).replace("u'", "'")
+            err_msg = str(err)
         else:
             assert False, 'what?! no_such_file.txt exists!'
 
@@ -981,9 +978,21 @@ class TestHttpBin(TempAppDirTestCase):
 
         # XXX: pytest doesn't allow HTTPie to read stdin while it's capturing
         # stdout, so we replace stdin with a file temporarily during the test.
+        class MockStdin(object):
+            def __init__(self, fp):
+                self.fp = fp
+
+            def isatty(self):
+                return True
+
+            def __getattr__(self, name):
+                if name == 'isatty':
+                    return self.isatty
+                return getattr(self.fp, name)
+
         self.orig_stdin = sys.stdin
         filename = self.make_tempfile()
-        sys.stdin = open(filename, 'rb')
+        sys.stdin = MockStdin(open(filename, 'rb'))
         sys.stdin.isatty = lambda: True
 
     def tearDown(self):
@@ -1025,7 +1034,6 @@ class TestHttpBin(TempAppDirTestCase):
     def test_post_form(self):
         data = self.execute('post /post --form id=1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
-        print(data)
         self.assertEqual(data['form'], {
             'id': '1234'
         })
