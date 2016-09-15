@@ -286,7 +286,9 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             with open('no_such_file.txt'):
                 pass
         except IOError as err:
-            err_msg = str(err)
+            # The 'replace' part is to fix an issue where Python 2 converts
+            # the unicode filename to "u'FILENAME'"
+            err_msg = str(err).replace("u'", "'")
         else:
             assert False, 'what?! no_such_file.txt exists!'
 
@@ -385,7 +387,9 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             with open('no_such_file.txt'):
                 pass
         except IOError as err:
-            err_msg = str(err)
+            # The 'replace' part is to fix an issue where Python 2 converts
+            # the unicode filename to "u'FILENAME'"
+            err_msg = str(err).replace("u'", "'")
         else:
             assert False, 'what?! no_such_file.txt exists!'
 
