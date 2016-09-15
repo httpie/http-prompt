@@ -73,7 +73,7 @@ class ExecutionListener(object):
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
-@click.argument('url', default='http://localhost')
+@click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
 def cli(url, http_options):
