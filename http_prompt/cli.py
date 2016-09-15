@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import os
 import sys
 
@@ -22,6 +24,10 @@ from .contextio import load_context, save_context
 from .execution import execute
 from .lexer import HttpPromptLexer
 from .utils import smart_quote
+
+
+# XXX: http://click.pocoo.org/python3/#unicode-literals
+click.disable_unicode_literals_warning = True
 
 
 def fix_incomplete_url(url):
