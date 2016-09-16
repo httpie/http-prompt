@@ -55,7 +55,7 @@ def test_format_to_httpie_get():
     output = t.format_to_httpie(c, method='get')
     assert output == ("http GET http://localhost/things "
                       "limit==10 name==alice 'name==bob bob' page==2 "
-                      "Accept:text/html 'Authorization:ApiKey 1234'")
+                      "Accept:text/html 'Authorization:ApiKey 1234'\n")
 
 
 def test_format_to_httpie_post():
@@ -76,7 +76,7 @@ def test_format_to_httpie_post():
     output = t.format_to_httpie(c, method='post')
     assert output == ("http --form --verify=no POST http://localhost/things "
                       "email=jane@example.com 'full name=Jane Doe' "
-                      "Accept:text/html 'Authorization:ApiKey 1234'")
+                      "Accept:text/html 'Authorization:ApiKey 1234'\n")
 
 
 def test_format_to_http_prompt_1():

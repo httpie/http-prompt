@@ -92,7 +92,7 @@ def format_to_httpie(context, method=None):
         cmd.append(method.upper())
     cmd.append(context.url)
     cmd += _extract_httpie_request_items(context, quote=True)
-    return ' '.join(cmd)
+    return ' '.join(cmd) + '\n'
 
 
 def format_to_http_prompt(context, excluded_options=None):

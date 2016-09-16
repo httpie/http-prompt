@@ -1048,28 +1048,28 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.assert_stdout('http http://localhost')
+        self.assert_stdout('http http://localhost\n')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.assert_stdout('http POST http://localhost name=alice')
+        self.assert_stdout('http POST http://localhost name=alice\n')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.assert_stdout('http POST http://localhost/api name=alice')
+        self.assert_stdout('http POST http://localhost/api name=alice\n')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
         execute('httpie POST http://httpbin.org/post name=alice', self.context)
-        self.assert_stdout('http POST http://httpbin.org/post name=alice')
+        self.assert_stdout('http POST http://httpbin.org/post name=alice\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.assert_stdout('http POST https://httpbin.org/post name=alice')
+        self.assert_stdout('http POST https://httpbin.org/post name=alice\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
@@ -1079,7 +1079,7 @@ class TestCommandPreview(ExecutionTestCase):
                 self.context)
         self.assert_stdout(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
-            "'name=john doe' 'Authorization:ApiKey 1234'")
+            "'name=john doe' 'Authorization:ApiKey 1234'\n")
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.querystring_params)
@@ -1087,7 +1087,7 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.assert_stdout('http GET http://localhost foo==1 foo==2 foo==3')
+        self.assert_stdout('http GET http://localhost foo==1 foo==2 foo==3\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
 
@@ -1105,7 +1105,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'http http://localhost')
+        self.assertEqual(content, 'http http://localhost\n')
 
     def test_httpie_redirect_write_quoted_filename(self):
         filename = self.make_tempfile()
@@ -1118,7 +1118,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'http http://localhost')
+        self.assertEqual(content, 'http http://localhost\n')
 
     @pytest.mark.skipif(sys.platform == 'win32',
                         reason="Windows doesn't use backslashes to escape")
@@ -1134,7 +1134,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'http http://localhost')
+        self.assertEqual(content, 'http http://localhost\n')
 
     def test_httpie_redirect_write_with_args(self):
         filename = self.make_tempfile()
@@ -1148,7 +1148,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'http POST http://example.org name=john')
+        self.assertEqual(content, 'http POST http://example.org name=john\n')
 
     def test_httpie_redirect_append(self):
         filename = self.make_tempfile()
@@ -1161,7 +1161,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'hello world\nhttp http://localhost')
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
 
     def test_httpie_redirect_append_without_spaces(self):
         filename = self.make_tempfile()
@@ -1174,7 +1174,7 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'hello world\nhttp http://localhost')
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
 
     def test_httpie_redirect_append_quoted_filename(self):
         filename = self.make_tempfile()
@@ -1187,4 +1187,4 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
 
         with open(filename) as f:
             content = f.read()
-        self.assertEqual(content, 'hello world\nhttp http://localhost')
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
