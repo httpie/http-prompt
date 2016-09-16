@@ -22,7 +22,7 @@ from .output import Printer, FileWriter
 from .utils import unescape, unquote
 
 
-grammar = Grammar(r"""
+grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
@@ -36,10 +36,10 @@ grammar = Grammar(r"""
     help = _ "help" _
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
-    source = _ "source" _ string _
-    exec = _ "exec" _ string _
+    source = _ "source" _ filepath _
+    exec = _ "exec" _ filepath _
 
-    redir_out = _ (redir_append_file / redir_file) _ string _
+    redir_out = _ (redir_append_file / redir_file) _ filepath _
     redir_file = _ ">" _
     redir_append_file = _ ">>" _
 
@@ -54,7 +54,7 @@ grammar = Grammar(r"""
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
     unquoted_mutkey_item = unquoted_mutkey_char / escapeseq
-    unquoted_mutkey_char = ~r"[^\s'\"\\=:]"
+    unquoted_mutkey_char = ~r"[^\s'\"\\=:>]"
     squoted_mutkey = squoted_mutkey_item+
     squoted_mutval = squoted_stringitem*
     squoted_mutkey_item = squoted_mutkey_char / escapeseq
@@ -97,7 +97,22 @@ grammar = Grammar(r"""
     unquoted_stringchar = ~r"[^\s'\"\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
-""")
+"""
+
+if sys.platform == 'win32':
+    # XXX: Windows use backslashes as separators in its filesystem path, so we
+    # have to avoid using backslashes to escape chars here.
+    grammar += r"""
+        filepath = quoted_string / unquoted_filepath
+        unquoted_filepath = unquoted_filepath_char+
+        unquoted_filepath_char = ~r"[^\s\"]"
+    """
+else:
+    grammar += r"""
+        filepath = string
+    """
+
+grammar = Grammar(grammar)
 
 
 def urljoin2(base, path, **kwargs):
@@ -331,8 +346,14 @@ class ExecutionVisitor(NodeVisitor):
     def visit_value_optname(self, node, children):
         return node.text
 
+    def visit_filepath(self, node, children):
+        return children[0]
+
     def visit_string(self, node, children):
         return children[0]
+
+    def visit_unquoted_filepath(self, node, children):
+        return node.text
 
     def visit_unquoted_string(self, node, children):
         return unescape(node.text)
