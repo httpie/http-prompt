@@ -126,6 +126,14 @@ def generate_help_text():
     return text
 
 
+if sys.platform == 'win32':  # nocover
+    def normalize_filepath(path):
+        return unquote(path)
+else:
+    def normalize_filepath(path):
+        return unescape(unquote(path))
+
+
 class DummyExecutionListener(object):
 
     def context_changed(self, context):
@@ -217,12 +225,12 @@ class ExecutionVisitor(NodeVisitor):
         else:
             mode = 'wb'
 
-        filename = unquote(path)
+        filename = normalize_filepath(path)
         self.output = FileWriter(open(filename, mode))
         return node
 
     def visit_exec(self, node, children):
-        path = unescape(unquote(children[3]))
+        path = normalize_filepath(children[3])
         with io.open(path, encoding='utf-8') as f:
             # Wipe out context first
             execute('rm *', self.context, self.listener)
@@ -231,7 +239,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_source(self, node, children):
-        path = unescape(unquote(children[3]))
+        path = normalize_filepath(children[3])
         with io.open(path, encoding='utf-8') as f:
             for line in f:
                 execute(line, self.context, self.listener)

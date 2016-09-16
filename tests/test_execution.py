@@ -318,6 +318,8 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             '--verify': 'no'
         })
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
     def test_source_escaped_filename(self):
         new_filename = self.filename + r' copy'
         shutil.copyfile(self.filename, new_filename)
@@ -412,6 +414,8 @@ class TestExecution_source_and_exec(ExecutionTestCase):
             'username': 'jane'
         })
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
     def test_exec_escaped_filename(self):
         new_filename = self.filename + r' copy'
         shutil.copyfile(self.filename, new_filename)
@@ -1111,6 +1115,22 @@ class TestCommandPreviewRedirection(ExecutionTestCase):
             f.write('hello world\n')
 
         execute('httpie > "%s"' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'http http://localhost')
+
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
+    def test_httpie_redirect_write_escaped_filename(self):
+        filename = self.make_tempfile()
+        filename += r' copy'
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie > %s' % filename.replace(' ', r'\ '), self.context)
 
         with open(filename) as f:
             content = f.read()
