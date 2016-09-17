@@ -1,21 +1,28 @@
+import io
 import re
+import sys
 
 import click
 
+from httpie.context import Environment
+from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
-from .httpiewrapper import request as httpie_main
-from .printer import Printer
-from .commandio import CommandIO
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
+from .context.transform import (
+    extract_args_for_httpie_main,
+    format_to_curl,
+    format_to_httpie,
+    format_to_http_prompt)
+from .output import Printer, FileWriter
 from .utils import unescape, unquote
 
 
-grammar = Grammar(r"""
+grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
@@ -29,10 +36,10 @@ grammar = Grammar(r"""
     help = _ "help" _
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
-    source = _ "source" _ string _
-    exec = _ "exec" _ string _
+    source = _ "source" _ filepath _
+    exec = _ "exec" _ filepath _
 
-    redir_out = _ (redir_append_file / redir_file) _ string _
+    redir_out = _ (redir_append_file / redir_file) _ filepath _
     redir_file = _ ">" _
     redir_append_file = _ ">>" _
 
@@ -47,7 +54,7 @@ grammar = Grammar(r"""
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
     unquoted_mutkey_item = unquoted_mutkey_char / escapeseq
-    unquoted_mutkey_char = ~r"[^\s'\"\\=:]"
+    unquoted_mutkey_char = ~r"[^\s'\"\\=:>]"
     squoted_mutkey = squoted_mutkey_item+
     squoted_mutval = squoted_stringitem*
     squoted_mutkey_item = squoted_mutkey_char / escapeseq
@@ -90,7 +97,22 @@ grammar = Grammar(r"""
     unquoted_stringchar = ~r"[^\s'\"\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
-""")
+"""
+
+if sys.platform == 'win32':
+    # XXX: Windows use backslashes as separators in its filesystem path, so we
+    # have to avoid using backslashes to escape chars here.
+    grammar += r"""
+        filepath = quoted_string / unquoted_filepath
+        unquoted_filepath = unquoted_filepath_char+
+        unquoted_filepath_char = ~r"[^\s\"]"
+    """
+else:
+    grammar += r"""
+        filepath = string
+    """
+
+grammar = Grammar(grammar)
 
 
 def urljoin2(base, path, **kwargs):
@@ -119,6 +141,14 @@ def generate_help_text():
     return text
 
 
+if sys.platform == 'win32':  # nocover
+    def normalize_filepath(path):
+        return unquote(path)
+else:
+    def normalize_filepath(path):
+        return unescape(unquote(path))
+
+
 class DummyExecutionListener(object):
 
     def context_changed(self, context):
@@ -137,10 +167,22 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
-        self.output = CommandIO(Printer())
+        self._output = Printer()
 
-        self.listener = listener if listener else DummyExecutionListener()
+        self.listener = listener or DummyExecutionListener()
+
+        # Last response object returned by HTTPie
         self.last_response = None
+
+    @property
+    def output(self):
+        return self._output
+
+    @output.setter
+    def output(self, new_output):
+        if self._output:
+            self._output.close()
+        self._output = new_output
 
     def visit_method(self, node, children):
         self.method = node.text
@@ -186,66 +228,41 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_help(self, node, children):
         self.output.write(generate_help_text())
-        self.output.close()
         return node
 
     def visit_redir_out(self, node, children):
-        parsed = re.search(r"(>>|>)\s*(.*)", node.text)
-        redirection_type = parsed.group(1)
+        parsed = re.search(r"(>>?)\s*(.*)", node.text)
+        redirection_op = parsed.group(1)
         path = parsed.group(2)
-        file_op = 'w'
 
-        if redirection_type == '>>':
-            file_op = 'a'
+        if redirection_op == '>>':
+            mode = 'ab'
+        else:
+            mode = 'wb'
 
-        self.output.setOutputStream(open(unquote(path), file_op))
+        filename = normalize_filepath(path)
+        self.output = FileWriter(open(filename, mode))
         return node
 
     def visit_exec(self, node, children):
-        # exclude "exec" keyword
-        path = node.text[4:].strip()
-
-        commands = CommandIO(open(path, 'r')).read().splitlines()
-        # wipe out current context state before we load a new one
-        commands.insert(0, 'rm *')
-        commands = iter(commands)
-
-        for command in commands:
-            execute(command, self.context, self.listener)
-
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
+        path = normalize_filepath(children[3])
+        with io.open(path, encoding='utf-8') as f:
+            # Wipe out context first
+            execute('rm *', self.context, self.listener)
+            for line in f:
+                execute(line, self.context, self.listener)
         return node
 
     def visit_source(self, node, children):
-        # exclude "source" keyword
-        path = node.text[6:].strip()
-
-        commands = CommandIO(open(path, 'r')).read().splitlines()
-        commands = iter(commands)
-
-        for command in commands:
-            execute(command, self.context, self.listener)
-
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
+        path = normalize_filepath(children[3])
+        with io.open(path, encoding='utf-8') as f:
+            for line in f:
+                execute(line, self.context, self.listener)
         return node
 
     def visit_env(self, node, children):
-        self.context = self._final_context()
-        context = self._final_context()
-
-        args = context.literal_args(quote=True)
-        self.output.write(args)
-        self.output.close()
+        text = format_to_http_prompt(self.context)
+        self.output.write(text)
         return node
 
     def visit_exit(self, node, children):
@@ -329,8 +346,14 @@ class ExecutionVisitor(NodeVisitor):
     def visit_value_optname(self, node, children):
         return node.text
 
+    def visit_filepath(self, node, children):
+        return children[0]
+
     def visit_string(self, node, children):
         return children[0]
+
+    def visit_unquoted_filepath(self, node, children):
+        return node.text
 
     def visit_unquoted_string(self, node, children):
         return unescape(node.text)
@@ -360,21 +383,38 @@ class ExecutionVisitor(NodeVisitor):
             elif event == 'return':
                 self.last_response = arg
 
+    def _call_httpie_main(self):
+        args = extract_args_for_httpie_main(self.context, self.method)
+        env = Environment(stdout=self.output, stdin=sys.stdin,
+                          is_windows=False)
+        env.stdout_isatty = self.output.isatty()
+        env.stdin_isatty = sys.stdin.isatty()
+
+        # XXX: httpie_main() doesn't provide an API for us to get the
+        # HTTP response object, so we use this super dirty hack -
+        # sys.settrace() to intercept get_response() that is called in
+        # httpie_main() internally. The HTTP response intercepted is
+        # assigned to self.last_response, which self.listener may be
+        # interested in.
+        sys.settrace(self._trace_get_response)
+        try:
+            httpie_main(args, env=env)
+        finally:
+            sys.settrace(None)
+
     def visit_immutation(self, node, children):
-        context = self._final_context()
+        self.context = self._final_context()
         child_type = children[0].expr_name
 
         if child_type == 'preview':
             if self.tool == 'httpie':
-                command = ['http'] + context.httpie_args(self.method,
-                                                         quote=True)
+                command = format_to_httpie(self.context, self.method)
             else:
                 assert self.tool == 'curl'
-                command = ['curl'] + context.curl_args(self.method, quote=True)
-            self.output.write(' '.join(command))
+                command = format_to_curl(self.context, self.method)
+            self.output.write(command)
         elif child_type == 'action':
-            content = httpie_main(self, context, self.method)
-            self.output.write(content)
+            self._call_httpie_main()
 
             if self.last_response:
                 self.listener.response_returned(self.context,
@@ -411,12 +451,12 @@ def execute(command, context, listener=None):
                 key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
-            elif exc_class is FileNotFoundError:
-                key = re.search(
-                    r"FileNotFoundError:\s*[Errno 2]\s*(.+).*",
-                    str(err)).group(1)
-                click.secho(key, err=True, fg='red')
+            elif issubclass(exc_class, IOError):
+                msg = str(err).splitlines()[0]
 
+                # Remove the exception class name at the beginning
+                msg = msg[msg.find(':') + 2:]
+                click.secho(msg, err=True, fg='red')
             else:
                 # TODO: Better error message
                 click.secho(str(err), err=True, fg='red')

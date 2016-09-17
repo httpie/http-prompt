@@ -1,6 +1,5 @@
 """Meta data for autocomplete."""
 
-
 try:
     from collections import OrderedDict
 except ImportError:  # For Python 2.6, nocover
@@ -9,22 +8,21 @@ except ImportError:  # For Python 2.6, nocover
 from . import options as opt
 
 
-ROOT_COMMANDS = OrderedDict(
-    [('cd', 'Change URL/path'),
-     ('env', 'Get current environment setup'),
-     ('source',
-      'Loads saved environment from a file. The command pollutes the current environment.'),
-     ('exec',
-      'Loads saved environment from a file. The command resets the current environment.'),
-     ('curl', 'Preview curl command'),
-     ('exit', 'Exit HTTP Prompt'),
-     ('help', 'List commands, actions, and HTTPie options'),
-     ('httpie', 'Preview HTTPie command'),
-     ('rm *', 'Remove all options and parameters'),
-     ('rm -b', 'Remove body parameter'),
-     ('rm -h', 'Remove header'),
-     ('rm -o', 'Remove HTTPie option'),
-     ('rm -q', 'Remove querystring parameter'), ])
+ROOT_COMMANDS = OrderedDict([
+    ('cd', 'Change URL/path'),
+    ('curl', 'Preview curl command'),
+    ('env', 'Print environment'),
+    ('exec', 'Clear and load environment from a file'),
+    ('exit', 'Exit HTTP Prompt'),
+    ('help', 'List commands, actions, and HTTPie options'),
+    ('httpie', 'Preview HTTPie command'),
+    ('rm *', 'Remove all options and parameters'),
+    ('rm -b', 'Remove body parameter'),
+    ('rm -h', 'Remove header'),
+    ('rm -o', 'Remove HTTPie option'),
+    ('rm -q', 'Remove querystring parameter'),
+    ('source', 'Load environment from a file'),
+])
 
 ACTIONS = OrderedDict([
     ('delete', 'DELETE request'),

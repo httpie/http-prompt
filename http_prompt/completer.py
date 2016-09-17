@@ -18,6 +18,7 @@ from .completion import (ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES,
 
 
 RULES = [
+    # (regex pattern, a method name in CompletionGenerator)
     (r'((?:[^\s\'"\\=:]|(?:\\.))+):((?:[^\s\'"\\]|(?:\\.))*)$',
      'header_values'),
 
@@ -27,7 +28,7 @@ RULES = [
     (r'rm\s+\-h\s+', 'existing_header_names'),
     (r'rm\s+\-o\s+', 'existing_option_names'),
     (r'rm\s+\-q\s+', 'existing_querystring_params'),
-    (r'', 'root_commands')
+    (r'^\s*[^\s]*$', 'root_commands')
 ]
 
 

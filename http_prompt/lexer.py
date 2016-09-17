@@ -39,14 +39,16 @@ class HttpPromptLexer(RegexLexer):
             (r'\s+', Text),
             (r'(cd)(\s*)', bygroups(Keyword, Text), 'cd'),
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
-            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'preview_action'),
+            (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'action'),
+
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), 'action'),
-            (r'exit\s*', Keyword, 'end'),
-            (r'help\s*', Keyword, 'end'),
-            (r'env\s*', Keyword, 'redir_out'),
-            (r'source\s*', Keyword, 'file_path'),
-            (r'exec\s*', Keyword, 'file_path'),
+             bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
+
+            (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
+            (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
+            (r'(env)(\s*)', bygroups(Keyword, Text), 'redir_out'),
+            (r'(source)(\s*)', bygroups(Keyword, Text), 'file_path'),
+            (r'(exec)(\s*)', bygroups(Keyword, Text), 'file_path'),
             (r'', Text, 'concat_mut')
         ],
 
@@ -86,11 +88,9 @@ class HttpPromptLexer(RegexLexer):
             (r'(\s+|=)', Operator, 'option_value'),
         ],
         'option_value': string_rules('#pop:2'),
-        'file_path': [
-            (r'(/)?([^/\0]+(/)?)+', String),
-        ],
+        'file_path': string_rules('end'),
         'redir_out': [
-            (r'(?i)(>>|>)(\s*)', Keyword, 'file_path')
+            (r'(?i)(>>?)(\s*)', bygroups(Operator, Text), 'file_path')
         ],
 
         'unquoted_mut': string_rules('#pop'),
@@ -104,11 +104,8 @@ class HttpPromptLexer(RegexLexer):
         ],
 
         'action': [
-            include('urlpath')
-        ],
-        'preview_action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
-             bygroups(Keyword, Text), combined('urlpath', 'redir_out')),
+             bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
             include('redir_out'),
             (r'', Text, 'urlpath')
         ],
@@ -117,22 +114,28 @@ class HttpPromptLexer(RegexLexer):
              combined('concat_mut', 'redir_out')),
 
             (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
+             bygroups(Text, String, Text),
+             combined('concat_mut', 'redir_out')),
 
-            (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)', bygroups(Text, String)),
+            (r'(")(https?://(?:[^\r\n"\\]|(?:\\.))+)',
+             bygroups(Text, String)),
 
             (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
+             bygroups(Text, String, Text),
+             combined('concat_mut', 'redir_out')),
 
-            (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)", bygroups(Text, String)),
+            (r"(')(https?://(?:[^\r\n'\\]|(?:\\.))+)",
+             bygroups(Text, String)),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(")',
-             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
+             bygroups(Text, String, Text),
+             combined('concat_mut', 'redir_out')),
 
             (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)', bygroups(Text, String)),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(')",
-             bygroups(Text, String, Text), combined('concat_mut', 'redir_out')),
+             bygroups(Text, String, Text),
+             combined('concat_mut', 'redir_out')),
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 

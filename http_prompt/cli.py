@@ -1,4 +1,7 @@
+from __future__ import unicode_literals
+
 import os
+import sys
 
 import click
 
@@ -21,6 +24,10 @@ from .contextio import load_context, save_context
 from .execution import execute
 from .lexer import HttpPromptLexer
 from .utils import smart_quote
+
+
+# XXX: http://click.pocoo.org/python3/#unicode-literals
+click.disable_unicode_literals_warning = True
 
 
 def fix_incomplete_url(url):
@@ -46,6 +53,7 @@ class ExecutionListener(object):
         self.cfg = cfg
 
     def context_changed(self, context):
+        # Dump the current context to HTTP Prompt format
         save_context(context)
 
     def response_returned(self, context, response):
@@ -65,7 +73,7 @@ class ExecutionListener(object):
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
-@click.argument('url', default='http://localhost')
+@click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
 def cli(url, http_options):
@@ -84,7 +92,6 @@ def cli(url, http_options):
 
     url = fix_incomplete_url(url)
     context = Context(url)
-    load_context(context)
 
     output_style = cfg.get('output_style')
     if output_style:
@@ -103,9 +110,12 @@ def cli(url, http_options):
 
     listener = ExecutionListener(cfg)
 
-    # Execute default HTTPie options
-    http_options = [smart_quote(a) for a in http_options]
-    execute(' '.join(http_options), context, listener=listener)
+    # Execute HTTPie options from CLI or load from last context
+    if len(sys.argv) > 1:
+        http_options = [smart_quote(a) for a in http_options]
+        execute(' '.join(http_options), context, listener=listener)
+    else:
+        load_context(context)
 
     while True:
         try:

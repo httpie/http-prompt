@@ -39,7 +39,6 @@ def read_requirements(filename):
         with open(filename) as f:
             return f.read().splitlines()
     except IOError:
-        import os
         raise IOError(os.getcwd())
 
 
@@ -52,7 +51,7 @@ setup(
     author='Chang-Hung Liang',
     author_email='eliang.cs@gmail.com',
     license='MIT',
-    packages=['http_prompt'],
+    packages=['http_prompt', 'http_prompt.context'],
     entry_points="""
         [console_scripts]
         http-prompt=http_prompt.cli:cli
