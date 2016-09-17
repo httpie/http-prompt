@@ -169,16 +169,16 @@ You can redirect the output of a command to a file by using the syntax:
 .. code-block:: bash
 
     # Write output to a file
-    > COMMAND > /path/to/file # writes output of the command to the file
+    > COMMAND > /path/to/file
 
     # Append output to a file
     > COMMAND >> /path/to/file
 
 where ``COMMAND`` can be one of the following:
 
-    * ``env``
-    * ``httpie``
-    * HTTP actions: ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
+* ``env``
+* ``httpie``
+* HTTP actions: ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
 
 
 Saving and Loading Sessions
@@ -253,21 +253,20 @@ user data directory private. By default, HTTP Prompt sets the modes of
 ``$XDG_DATA_HOME/http-prompt`` to ``rwx------`` (i.e., ``700``) so that the
 only person who can read it is the owner (you).
 
-.. note:: For users who have used older versions: Since 0.6.0, HTTP Prompt only
-    stores the last context instead of grouping multiple contexts by hostnames
-    and ports like it did previously. We changed the behavior because the
-    feature can be simply replaced by ``source`` and ``env`` commands. See the
-    discussion in #70 for detail.
+**Note for users of older versions**: Since 0.6.0, HTTP Prompt only stores the
+last context instead of grouping multiple contexts by hostnames and ports like
+it did previously. We changed the behavior because the feature can be simply
+replaced by ``source`` and ``env`` commands. See the discussion in
+`issue #70 <https://github.com/eliangcs/http-prompt/issues/70>`_ for detail.
 
 
 Roadmap
 -------
 
-* More configurable options
-* More HTTP headers for autocomplete
 * Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
-* Support for cURL command preview
 * Shell command evaluation
+* Support for cURL command and raw format preview
+* Improve autocomplete
 * Python syntax evaluation
 * HTTP/2 support
 
