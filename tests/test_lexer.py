@@ -185,3 +185,67 @@ class TestShellCode(LexerTestCase):
             (Operator, '=='),
             (String, 'john')
         ])
+        self.assertEqual(self.get_tokens('name==`echo john`'), [
+            (Name, 'name'),
+            (Operator, '=='),
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (Text, 'john'),
+            (Text, '`')
+        ])
+
+    def test_unquoted_bodystring(self):
+        self.assertEqual(self.get_tokens('`echo name`=john'), [
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (Text, 'name'),
+            (Text, '`'),
+            (Operator, '='),
+            (String, 'john')
+        ])
+        self.assertEqual(self.get_tokens('name=`echo john`'), [
+            (Name, 'name'),
+            (Operator, '='),
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (Text, 'john'),
+            (Text, '`')
+        ])
+
+    def test_header_option_value(self):
+        self.assertEqual(self.get_tokens('Accept:`echo "application/json"`'), [
+            (Name, 'Accept'),
+            (Operator, ':'),
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (String.Double, '"application/json"'),
+            (Text, '`'),
+        ])
+
+    def test_httpie_body_param(self):
+        self.assertEqual(self.get_tokens('httpie post name=`echo john`'), [
+            (Keyword, 'httpie'),
+            (Keyword, 'post'),
+            (Name, 'name'),
+            (Operator, '='),
+            (Text, '`'),
+            (Name.Builtin, 'echo'),
+            (Text, 'john'),
+            (Text, '`'),
+        ])
+
+    def test_pipe_to_shell_cmd_redirection(self):
+        self.assertEqual(self.get_tokens('httpie post | tee "/tmp/test"'), [
+            (Keyword, 'httpie'),
+            (Keyword, 'post'),
+            (Keyword, '|'),
+            (Text, 'tee'),
+            (String.Double, '"/tmp/test"'),
+        ])
+
+        self.assertEqual(self.get_tokens('post | tee "/tmp/test"'), [
+            (Keyword, 'post'),
+            (Keyword, '|'),
+            (Text, 'tee'),
+            (String.Double, '"/tmp/test"'),
+        ])

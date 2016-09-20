@@ -6,11 +6,14 @@ import unittest
 
 import pytest
 import six
+import os.path
 
 from mock import patch
 
 from http_prompt.context import Context
 from http_prompt.execution import execute
+
+from .base import TempAppDirTestCase
 
 
 class ExecutionTestCase(unittest.TestCase):
@@ -512,23 +515,23 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.click.echo.assert_called_with('http http://localhost')
+        self.click.echo_via_pager.assert_called_with('http http://localhost')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://localhost name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://localhost/api name=alice')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
         execute('httpie post http://httpbin.org/post name=alice', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST http://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -536,7 +539,7 @@ class TestCommandPreview(ExecutionTestCase):
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http POST https://httpbin.org/post name=alice')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
@@ -545,7 +548,7 @@ class TestCommandPreview(ExecutionTestCase):
         execute(r'httpie post http://httpbin.org/post name="john doe" '
                 r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
                 self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
             "'name=john doe' 'Authorization:ApiKey 1234'")
         self.assertEqual(self.context.url, 'http://localhost')
@@ -555,13 +558,40 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.click.echo.assert_called_with(
+        self.click.echo_via_pager.assert_called_with(
             'http GET http://localhost foo==1 foo==2 foo==3')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
 
 
-class TestShellCode(ExecutionTestCase):
+class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
+
+    def setUp(self):
+        ExecutionTestCase.setUp(self)
+        TempAppDirTestCase.setUp(self)
+
+    def tearDown(self):
+        ExecutionTestCase.tearDown(self)
+        TempAppDirTestCase.tearDown(self)
+
+    def test_action_cmd_pipe_to_shell_redirection(self):
+        filepath = self.temp_dir + '/shell_cmd_subprocess_test'
+        execute("get some==data | tee " + filepath, self.context)
+        # TODO after it's merged to the master we can test if the click has been called
+        # with specific data which has been returned from the httpie_main, now
+        # it's not possible
+        self.click.echo_via_pager.assert_called_with('')
+        self.assertTrue(os.path.isfile(filepath))
+
+    def test_preview_cmd_pipe_to_shell_redirection(self):
+        execute("httpie get some==data | sed 's/data$/input/'", self.context)
+        self.click.echo_via_pager.assert_called_with(
+            'http GET http://localhost some==input')
+
+    def test_pipe_shell_redirection_with_backticks(self):
+        execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`", self.context)
+        self.click.echo_via_pager.assert_called_with(
+            'http POST http://127.0.0.1')
 
     def test_unquoted_option(self):
         execute("--auth `echo user:pass`", self.context)

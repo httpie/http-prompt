@@ -10,7 +10,7 @@ from httpie.context import Environment
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
-from parsimonious.nodes import NodeVisitor
+from parsimonious.nodes import NodeVisitor, Node
 from six import BytesIO, text_type
 from six.moves.urllib.parse import urljoin
 
@@ -23,13 +23,13 @@ grammar = Grammar(r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / help / exit / _
+    immutation = ((preview / action / help ) shell_cmd_redir?) / exit / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
     preview = _ tool _ (method _)? (urlpath _)? concat_mut*
     action = _ method _ (urlpath _)? concat_mut*
-    urlpath = (~r"https?://" unquoted_string) / (!concat_mut string)
+    urlpath = (~r"https?://" unquoted_string) / (!concat_mut !shell_cmd_redir string)
     help = _ "help" _
     exit = _ "exit" _
 
@@ -90,6 +90,7 @@ grammar = Grammar(r"""
 
     code_block = "`" shell_code "`"
     shell_code = ~r"[^`]*"
+    shell_cmd_redir = _ "|" _ (code_block / shell_code)
 """)
 
 
@@ -142,6 +143,16 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
+        self.output_data = None
+        # Flag variable determining whether run another shell subrocess or not
+        # when we combine "pipe to shell command redirection" with backticks
+        # quoted shell command.
+        # Consider eg.:
+        # localhost> httpie post | `echo "sed 's/localhost/127.0.0.1/'"`
+        # After we're done with evaluating the command within the backticks,
+        # we need to run following command (and tha's what the flag signalizes):
+        # localhost> httpie post | sed 's/localhost/127.0.0.1/'
+        self.pipe_shell_redir = False
 
         self.listener = listener if listener else DummyExecutionListener()
         self.last_response = None
@@ -192,7 +203,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_help(self, node, children):
-        click.echo_via_pager(generate_help_text())
+        self.output_data = generate_help_text()
         return node
 
     def visit_exit(self, node, children):
@@ -312,62 +323,105 @@ class ExecutionVisitor(NodeVisitor):
                 self.last_response = arg
 
     def visit_immutation(self, node, children):
-        context = self._final_context()
-        child_type = children[0].expr_name
-
-        if child_type == 'preview':
-            if self.tool == 'httpie':
-                command = ['http'] + context.httpie_args(self.method,
-                                                         quote=True)
-            else:
-                assert self.tool == 'curl'
-                command = ['curl'] + context.curl_args(self.method, quote=True)
-            click.echo(' '.join(command))
-        elif child_type == 'action':
-            output = BytesIO()
-            try:
-                env = Environment(stdout=output, is_windows=False)
-
-                # XXX: httpie_main() doesn't provide an API for us to get the
-                # HTTP response object, so we use this super dirty hack -
-                # sys.settrace() to intercept get_response() that is called in
-                # httpie_main() internally. The HTTP response intercepted is
-                # assigned to self.last_response, which may be useful for
-                # self.listener.
-                sys.settrace(self._trace_get_response)
-                try:
-                    httpie_main(context.httpie_args(self.method), env=env)
-                finally:
-                    sys.settrace(None)
-
-                content = output.getvalue()
-            finally:
-                output.close()
-
-            # XXX: Work around a bug of click.echo_via_pager(). When you pass
-            # a bytestring to echo_via_pager(), it converts the bytestring with
-            # str(b'abc'), which makes it "b'abc'".
-            # TODO: What if content is not utf-8 encoded?
-            content = text_type(content, 'utf-8')
-            click.echo_via_pager(content)
-
-            if self.last_response:
-                self.listener.response_returned(self.context,
-                                                self.last_response)
+        if self.output_data is not None:
+            click.echo_via_pager(self.output_data)
 
         return node
 
+    def visit_action(self, node, children):
+        context = self._final_context()
+        output = BytesIO()
+        try:
+            env = Environment(stdout=output, is_windows=False)
+
+            # XXX: httpie_main() doesn't provide an API for us to get the
+            # HTTP response object, so we use this super dirty hack -
+            # sys.settrace() to intercept get_response() that is called in
+            # httpie_main() internally. The HTTP response intercepted is
+            # assigned to self.last_response, which may be useful for
+            # self.listener.
+            sys.settrace(self._trace_get_response)
+            try:
+                httpie_main(context.httpie_args(self.method), env=env)
+            finally:
+                sys.settrace(None)
+
+            content = output.getvalue()
+        finally:
+            output.close()
+
+        # XXX: Work around a bug of click.echo_via_pager(). When you pass
+        # a bytestring to echo_via_pager(), it converts the bytestring with
+        # str(b'abc'), which makes it "b'abc'".
+        # TODO: What if content is not utf-8 encoded?
+        content = text_type(content, 'utf-8')
+        self.output_data = content
+
+        if self.last_response:
+            self.listener.response_returned(self.context,
+                                            self.last_response)
+
+        return node
+
+    def visit_preview(self, node, children):
+        context = self._final_context()
+        command = None
+        if self.tool == 'httpie':
+            command = ['http'] + context.httpie_args(self.method,
+                                                     quote=True)
+        else:
+            assert self.tool == 'curl'
+            command = ['curl'] + context.curl_args(self.method, quote=True)
+        self.output_data = ' '.join(command)
+        return node
+
     def visit_code_block(self, node, children):
+        if self.pipe_shell_redir:
+            node_clone = Node(
+                expr_name='shell_code',
+                full_text=children[1],
+                start=0,
+                end=len(children[1]))
+            return self.visit(node_clone)
         return children[1]
 
+    def _is_backticks_cmd_preceded_with_pipe_redir(self, node):
+        left_hand_input = node.full_text[:node.start]
+        right_hand_input = node.full_text[node.end:]
+        start_backticks = re.search(r"\|.*`\s*$", left_hand_input)
+        end_backticks = re.search(r"`\s*$", right_hand_input)
+        if start_backticks is not None and end_backticks is not None:
+            return True
+        return False
+
     def visit_shell_code(self, node, children):
-        p = subprocess.Popen(node.text, shell=True, stdout=PIPE, stderr=PIPE)
-        out, err = p.communicate()
+        stdin = None
+        stdin_data = self.output_data
+        is_backticks_cmd = self._is_backticks_cmd_preceded_with_pipe_redir(node)
+
+        if stdin_data is not None and is_backticks_cmd == False:
+            stdin = PIPE
+            stdin_data = stdin_data.encode('ascii')
+
+        p = subprocess.Popen(
+            node.text,
+            shell=True,
+            stdin=stdin,
+            stdout=PIPE,
+            stderr=PIPE)
+        out, err = p.communicate(stdin_data)
         if p.returncode != 0:
             exc = CalledProcessError(p.returncode, node.text)
             exc.output = text_type(err or out, 'utf-8').rstrip()
             raise exc
-        return text_type(out, 'utf-8').rstrip()
+
+        data = text_type(out, 'utf-8').rstrip()
+
+        if not is_backticks_cmd:
+            self.output_data = data
+        else:
+            self.pipe_shell_redir = True
+        return data
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:
