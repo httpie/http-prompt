@@ -67,15 +67,15 @@ of these Python versions as your development environment, but using the latest
 version (3.5.x) is probably the best. You can install the latest Python with
 pyenv::
 
-    $ pyenv install 3.5.1
+    $ pyenv install 3.5.2
 
-This will install Python 3.5.1 in ``~/.pyenv/versions/3.5.1`` directory. To
+This will install Python 3.5.2 in ``~/.pyenv/versions/3.5.2`` directory. To
 create a virtualenv for HTTP Prompt, do::
 
-    $ pyenv virtualenv 3.5.1 http-prompt
+    $ pyenv virtualenv 3.5.2 http-prompt
 
 The command means: create a virtualenv named "http-prompt" based on Python
-3.5.1. The virtualenv can be found at ``~/.pyenv/versions/3.5.1/envs/http-prompt``.
+3.5.2. The virtualenv can be found at ``~/.pyenv/versions/3.5.2/envs/http-prompt``.
 
 To activate the virtualenv, do::
 
@@ -86,7 +86,7 @@ virtualenv's (named "http-prompt") Python.
 
 To go back to the system-wide Python, you have to deactivate the virtualenv::
 
-    $ pyenv deactivate http-prompt
+    $ pyenv deactivate
 
 Refer to pyenv_ and pyenv-virtualenv_ if anything else is unclear.
 
@@ -166,35 +166,50 @@ Tox_.
 Multiple Python Versions
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Make sure you're **not** in a virtualenv and you have installed all the Python
-versions we're targeting. If not, do::
+All the commands in this section should **NOT** be run in a virtualenv.
+Deactivate it first if you're in a virtualenv::
+
+    $ pyenv deactivate
+
+Make sure you have installed all the Python versions we're targeting. If not,
+do::
 
     $ pyenv install 2.6.9
-    $ pyenv install 2.7.11
+    $ pyenv install 2.7.12
     $ pyenv install 3.3.6
-    $ pyenv install 3.4.4
-    $ pyenv install 3.5.1
-    $ pyenv install pypy-5.0.0
+    $ pyenv install 3.4.5
+    $ pyenv install 3.5.2
+    $ pyenv install pypy-5.3.1
     $ pyenv install pypy3-2.4.0
 
 To use Tox_ with pyenv_, you have to instruct pyenv to use multiple Python
 versions for the project::
 
     $ cd ~/Projects/http-prompt
-    $ pyenv local 3.5.1 3.4.4 3.3.6 2.7.11 2.6.9 pypy-5.0.0 pypy3-2.4.0
+    $ pyenv local 3.5.2 3.4.5 3.3.6 2.7.12 2.6.9 pypy-5.3.1 pypy3-2.4.0
 
 This will generate a ``.python-version`` in the project directory::
 
     $ cat ~/Projects/http-prompt/.python-version
-    3.5.1
-    3.4.4
+    3.5.2
+    3.4.5
     3.3.6
-    2.7.11
+    2.7.12
     2.6.9
-    pypy-5.0.0
+    pypy-5.3.1
     pypy3-2.4.0
 
-Again, make sure you're **not** in a virtualenv, run ``tox``::
+This tells pyenv_ to choose a Python version based on the above order. In this
+case, 3.5.2 is the first choice, so any Python executables (such as ``python``
+and ``pip``) will be automatically mapped to the ones in
+``~/.pyenv/versions/3.5.2/bin``.
+
+We want to run ``tox`` using on Python 3.5.2. Make sure you have installed
+Tox_::
+
+    $ pip install tox
+
+To run tests, execute ``tox``::
 
     $ cd ~/Projects/http-prompt
     $ tox

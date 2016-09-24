@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-
 import re
 
 
@@ -7,6 +6,17 @@ def smart_quote(s):
     # TODO: Escape
     if ' ' in s:
         s = "'" + s + "'"
+    return s
+
+
+def unquote(s):
+    quotes = ["'", '"']
+    quote_str = None
+    if s[0] in quotes:
+        quote_str = s[0]
+
+    if quote_str and s[-1] == quote_str:
+        return s[1: -1]
     return s
 
 

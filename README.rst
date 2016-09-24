@@ -39,10 +39,13 @@ To start a session, you use the ``http-prompt`` executable:
 
 .. code-block:: bash
 
+    # Start with the last session or http://localhost:8000
+    $ http-prompt
+
     # Start with the given URL
     $ http-prompt http://httpbin.org
 
-    # Or start with some initial options
+    # Start with some initial options
     $ http-prompt localhost:8000/api --auth user:pass username=somebody
 
 Once you're in a session, you can use the following commands.
@@ -98,7 +101,18 @@ requests.
     > httpie
     http http://localhost
 
-To actually send a request, enter one of the HTTP methods:
+Besides ``httpie`` command, you can also use ``env`` to print the current
+session:
+
+.. code-block:: bash
+
+    > env
+    --verify=no
+    cd http://localhost
+    page==10
+    limit==20
+
+To actually send an HTTP request, enter one of the HTTP methods:
 
 .. code-block:: bash
 
@@ -147,13 +161,75 @@ To exit a session, simply enter:
     > exit
 
 
+Output Redirection
+------------------
+
+You can redirect the output of a command to a file by using the syntax:
+
+.. code-block:: bash
+
+    # Write output to a file
+    > COMMAND > /path/to/file
+
+    # Append output to a file
+    > COMMAND >> /path/to/file
+
+where ``COMMAND`` can be one of the following:
+
+* ``env``
+* ``httpie``
+* HTTP actions: ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
+
+
+Saving and Loading Sessions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+One of the use cases of output redirection is to save and load sessions, which
+is especially useful for team collaboration, where you want to share your
+sessions with your team members.
+
+To save your current session, you redirect the output of ``env`` to a file:
+
+.. code-block:: bash
+
+    > env > /path/to/file
+
+To load a saved session, you can use ``source`` or ``exec``. Their only
+difference is that ``exec`` wipes out the current session before loading.
+Usage:
+
+.. code-block:: bash
+
+    # Update the current session
+    > source /path/to/file
+
+    # Overwrite the current session completely
+    > exec /path/to/file
+
+
+Saving HTTP Respones
+~~~~~~~~~~~~~~~~~~~~
+
+Printing HTTP responses to the console is good for small text responses. For
+larger text or binary data, you may want to save the response to a file. Usage:
+
+.. code-block:: bash
+
+    # Save http://httpbin.org/image/png to a file
+    > cd http://httpbin.org/image/png
+    > get > pig.png
+
+    # Or use this one-liner
+    > get http://httpbin.org/image/png > pig.png
+
+
 Configuration
 -------------
 
-When launched for the first time, HTTP Prompt creates a user config file.
-The config file is ``$XDG_CONFIG_HOME/http-prompt/config.py`` (or
-``%LOCALAPPDATA%/http-prompt/config.py`` on Windows), By default, it's
-``~/.config/http-prompt/config.py`` (or ``~/AppData/Local/http-prompt/config.py``).
+When launched for the first time, HTTP Prompt creates a user config file at
+``$XDG_CONFIG_HOME/http-prompt/config.py`` (or ``%LOCALAPPDATA%/http-prompt/config.py``
+on Windows). By default, it's ``~/.config/http-prompt/config.py`` (or
+``~/AppData/Local/http-prompt/config.py``).
 
 ``config.py`` is a Python module with all the available options you can
 customize. Don't worry. You don't need to know Python to edit it. Just open it
@@ -163,30 +239,34 @@ up with a text editor and follow the guidance inside.
 Persistent Context
 ------------------
 
-HTTP Prompt keeps a data structure called *Context* to represent your current
-session. Every time you enter a command, HTTP Prompt saves the context to your
-filesystem, enabling you to resume your previous session when you restart
-``http-prompt``.
+HTTP Prompt keeps a data structure called *context* to represent your current
+session. Every time you enter a command modifying your context, HTTP Prompt
+saves the context to your filesystem, enabling you to resume your previous
+session when you restart ``http-prompt``.
 
-Categorized by hostnames and ports, context data is stored in the user data
-directory, which is ``$XDG_DATA_HOME/http-prompt`` (or ``%LOCALAPPDATA%/http-prompt``
-on Windows). By default, it's ``~/.local/share/http-prompt`` (or
-``~/AppData/Local/http-prompt`` on Windows).
+The last saved context is located at ``$XDG_DATA_HOME/http-prompt/context.hp``
+(or ``%LOCALAPPDATA%/http-prompt/context.hp`` on Windows). By default, it's
+``~/.local/share/http-prompt/context.hp`` (or ``~/AppData/Local/http-prompt/context.hp``).
 
 As context data may contain sensitive data like API keys, you should keep the
 user data directory private. By default, HTTP Prompt sets the modes of
 ``$XDG_DATA_HOME/http-prompt`` to ``rwx------`` (i.e., ``700``) so that the
 only person who can read it is the owner (you).
 
+**Note for users of older versions**: Since 0.6.0, HTTP Prompt only stores the
+last context instead of grouping multiple contexts by hostnames and ports like
+it did previously. We changed the behavior because the feature can be simply
+replaced by ``source`` and ``env`` commands. See the discussion in
+`issue #70 <https://github.com/eliangcs/http-prompt/issues/70>`_ for detail.
+
 
 Roadmap
 -------
 
-* More configurable options
-* More HTTP headers for autocomplete
 * Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
-* Support for cURL command preview
 * Shell command evaluation
+* Support for cURL command and raw format preview
+* Improve autocomplete
 * Python syntax evaluation
 * HTTP/2 support
 

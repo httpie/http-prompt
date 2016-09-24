@@ -4,6 +4,8 @@ import sys
 import tempfile
 import unittest
 
+import six
+
 
 class TempAppDirTestCase(unittest.TestCase):
     """Set up temporary app data and config directories before every test
@@ -43,3 +45,12 @@ class TempAppDirTestCase(unittest.TestCase):
                 del os.environ[name]
 
         shutil.rmtree(self.temp_dir)
+
+    def make_tempfile(self, data=''):
+        """Create a file under self.temp_dir and return the path."""
+        if isinstance(data, six.text_type):
+            data = data.encode('utf-8')
+
+        with tempfile.NamedTemporaryFile(dir=self.temp_dir, delete=False) as f:
+            f.write(data)
+            return f.name

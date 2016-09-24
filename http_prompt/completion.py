@@ -1,6 +1,5 @@
 """Meta data for autocomplete."""
 
-
 try:
     from collections import OrderedDict
 except ImportError:  # For Python 2.6, nocover
@@ -12,6 +11,8 @@ from . import options as opt
 ROOT_COMMANDS = OrderedDict([
     ('cd', 'Change URL/path'),
     ('curl', 'Preview curl command'),
+    ('env', 'Print environment'),
+    ('exec', 'Clear and load environment from a file'),
     ('exit', 'Exit HTTP Prompt'),
     ('help', 'List commands, actions, and HTTPie options'),
     ('httpie', 'Preview HTTPie command'),
@@ -20,6 +21,7 @@ ROOT_COMMANDS = OrderedDict([
     ('rm -h', 'Remove header'),
     ('rm -o', 'Remove HTTPie option'),
     ('rm -q', 'Remove querystring parameter'),
+    ('source', 'Load environment from a file'),
 ])
 
 ACTIONS = OrderedDict([

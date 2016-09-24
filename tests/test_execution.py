@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import hashlib
+import io
+import json
+import shutil
 import sys
-import unittest
 
 import pytest
 import six
@@ -16,12 +19,15 @@ from http_prompt.execution import execute
 from .base import TempAppDirTestCase
 
 
-class ExecutionTestCase(unittest.TestCase):
+class ExecutionTestCase(TempAppDirTestCase):
 
     def setUp(self):
+        super(ExecutionTestCase, self).setUp()
         self.patchers = [
             ('httpie_main', patch('http_prompt.execution.httpie_main')),
-            ('click', patch('http_prompt.execution.click')),
+            ('echo_via_pager',
+             patch('http_prompt.output.click.echo_via_pager')),
+            ('secho', patch('http_prompt.execution.click.secho'))
         ]
         for attr_name, patcher in self.patchers:
             setattr(self, attr_name, patcher.start())
@@ -29,11 +35,22 @@ class ExecutionTestCase(unittest.TestCase):
         self.context = Context('http://localhost')
 
     def tearDown(self):
+        super(ExecutionTestCase, self).tearDown()
         for _, patcher in self.patchers:
             patcher.stop()
 
     def assert_httpie_main_called_with(self, args):
         self.assertEqual(self.httpie_main.call_args[0][0], args)
+
+    def assert_stdout(self, expected_msg):
+        printed_msg = self.echo_via_pager.call_args[0][0]
+        self.assertEqual(printed_msg, expected_msg)
+
+    def assert_stderr(self, expected_msg):
+        printed_msg = self.secho.call_args[0][0]
+        print_options = self.secho.call_args[1]
+        self.assertEqual(printed_msg, expected_msg)
+        self.assertEqual(print_options, {'err': True, 'fg': 'red'})
 
 
 class TestExecution_noop(ExecutionTestCase):
@@ -57,16 +74,452 @@ class TestExecution_noop(ExecutionTestCase):
         self.assertFalse(self.context.should_exit)
 
 
+class TestExecution_env(ExecutionTestCase):
+
+    def setUp(self):
+        super(TestExecution_env, self).setUp()
+
+        self.context.url = 'http://localhost:8000/api'
+        self.context.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        self.context.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        self.context.body_params.update({
+            'name': 'John Doe'
+        })
+        self.context.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+    def test_env(self):
+        execute('env', self.context)
+        self.assert_stdout("--form\n--verify=no\n"
+                           "cd http://localhost:8000/api\n"
+                           "limit==50\npage==1\n"
+                           "'name=John Doe'\n"
+                           "Accept:text/csv\n"
+                           "'Authorization:ApiKey 1234'\n")
+
+    def test_env_with_spaces(self):
+        execute('  env   ', self.context)
+        self.assert_stdout("--form\n--verify=no\n"
+                           "cd http://localhost:8000/api\n"
+                           "limit==50\npage==1\n"
+                           "'name=John Doe'\n"
+                           "Accept:text/csv\n"
+                           "'Authorization:ApiKey 1234'\n")
+
+    def test_env_non_ascii(self):
+        self.context.body_params['name'] = '許 功蓋'
+        execute('env', self.context)
+        self.assert_stdout("--form\n--verify=no\n"
+                           "cd http://localhost:8000/api\n"
+                           "limit==50\npage==1\n"
+                           "'name=許 功蓋'\n"
+                           "Accept:text/csv\n"
+                           "'Authorization:ApiKey 1234'\n")
+
+    def test_env_write_to_file(self):
+        filename = self.make_tempfile()
+
+        # write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('env > %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=John Doe'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
+    def test_env_non_ascii_and_write_to_file(self):
+        filename = self.make_tempfile()
+
+        # write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        self.context.body_params['name'] = '許 功蓋'
+        execute('env > %s' % filename, self.context)
+
+        with io.open(filename, encoding='utf-8') as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=許 功蓋'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
+    def test_env_write_to_quoted_filename(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute("env > '%s'" % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=John Doe'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
+    def test_env_append_to_file(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('env >> %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "hello world\n"
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=John Doe'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
+
+class TestExecution_source_and_exec(ExecutionTestCase):
+
+    def setUp(self):
+        super(TestExecution_source_and_exec, self).setUp()
+
+        self.context.url = 'http://localhost:8000/api'
+        self.context.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        self.context.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        self.context.body_params.update({
+            'name': 'John Doe'
+        })
+        self.context.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+        # The file that is about to be sourced/exec'd
+        self.filename = self.make_tempfile(
+            "Language:en Authorization:'ApiKey 5678'\n"
+            "name='Jane Doe'  username=jane   limit==25\n"
+            "rm -o --form\n"
+            "cd v2/user\n")
+
+    def test_source(self):
+        execute('source %s' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    def test_source_with_spaces(self):
+        execute(' source       %s   ' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    def test_source_non_existing_file(self):
+        c = self.context.copy()
+        execute('source no_such_file.txt', self.context)
+        self.assertEqual(self.context, c)
+
+        # Expect the error message would be the same as when we open the
+        # non-existing file
+        try:
+            with io.open('no_such_file.txt'):
+                pass
+        except IOError as err:
+            err_msg = str(err)
+        else:
+            assert False, 'what?! no_such_file.txt exists!'
+
+        self.assert_stderr(err_msg)
+
+    def test_source_quoted_filename(self):
+        execute('source "%s"' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
+    def test_source_escaped_filename(self):
+        new_filename = self.filename + r' copy'
+        shutil.copyfile(self.filename, new_filename)
+
+        new_filename = new_filename.replace(' ', r'\ ')
+
+        execute('source %s' % new_filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'page': ['1'],
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+        self.assertEqual(self.context.options, {
+            '--verify': 'no'
+        })
+
+    def test_exec(self):
+        execute('exec %s' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+    def test_exec_with_spaces(self):
+        execute('  exec    %s   ' % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+    def test_exec_non_existing_file(self):
+        c = self.context.copy()
+        execute('exec no_such_file.txt', self.context)
+        self.assertEqual(self.context, c)
+
+        # Try to get the error message when opening a non-existing file
+        try:
+            with io.open('no_such_file.txt'):
+                pass
+        except IOError as err:
+            err_msg = str(err)
+        else:
+            assert False, 'what?! no_such_file.txt exists!'
+
+        self.assert_stderr(err_msg)
+
+    def test_exec_quoted_filename(self):
+        execute("exec '%s'" % self.filename, self.context)
+
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
+    def test_exec_escaped_filename(self):
+        new_filename = self.filename + r' copy'
+        shutil.copyfile(self.filename, new_filename)
+
+        new_filename = new_filename.replace(' ', r'\ ')
+
+        execute('exec %s' % new_filename, self.context)
+        self.assertEqual(self.context.url,
+                         'http://localhost:8000/api/v2/user')
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'ApiKey 5678',
+            'Language': 'en'
+        })
+        self.assertEqual(self.context.querystring_params, {
+            'limit': ['25']
+        })
+        self.assertEqual(self.context.body_params, {
+            'name': 'Jane Doe',
+            'username': 'jane'
+        })
+
+
+class TestExecution_env_and_source(ExecutionTestCase):
+
+    def test_env_and_source(self):
+        c = Context()
+        c.url = 'http://localhost:8000/api'
+        c.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        c.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        c.body_params.update({
+            'name': 'John Doe'
+        })
+        c.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+        c2 = c.copy()
+
+        filename = self.make_tempfile()
+        execute('env > %s' % filename, c)
+        execute('rm *', c)
+
+        self.assertFalse(c.headers)
+        self.assertFalse(c.querystring_params)
+        self.assertFalse(c.body_params)
+        self.assertFalse(c.options)
+
+        execute('source %s' % filename, c)
+
+        self.assertEqual(c, c2)
+
+    def test_env_and_source_non_ascii(self):
+        c = Context()
+        c.url = 'http://localhost:8000/api'
+        c.headers.update({
+            'Accept': 'text/csv',
+            'Authorization': 'ApiKey 1234'
+        })
+        c.querystring_params.update({
+            'page': ['1'],
+            'limit': ['50']
+        })
+        c.body_params.update({
+            'name': '許 功蓋'
+        })
+        c.options.update({
+            '--verify': 'no',
+            '--form': None
+        })
+
+        c2 = c.copy()
+
+        filename = self.make_tempfile()
+        execute('env > %s' % filename, c)
+        execute('rm *', c)
+
+        self.assertFalse(c.headers)
+        self.assertFalse(c.querystring_params)
+        self.assertFalse(c.body_params)
+        self.assertFalse(c.options)
+
+        execute('source %s' % filename, c)
+
+        self.assertEqual(c, c2)
+
+
 class TestExecution_help(ExecutionTestCase):
 
     def test_help(self):
         execute('help', self.context)
-        help_text = self.click.echo_via_pager.call_args[0][0]
+        help_text = self.echo_via_pager.call_args[0][0]
         self.assertTrue(help_text.startswith('Commands:\n\tcd'))
 
     def test_help_with_spaces(self):
         execute('  help   ', self.context)
-        help_text = self.click.echo_via_pager.call_args[0][0]
+        help_text = self.echo_via_pager.call_args[0][0]
         self.assertTrue(help_text.startswith('Commands:\n\tcd'))
 
 
@@ -182,14 +635,12 @@ class TestExecution_rm(ExecutionTestCase):
 
     def test_non_existing_key(self):
         execute('rm -q abcd', self.context)
-        err_msg = self.click.secho.call_args[0][0]
-        self.assertEqual(err_msg, "Key 'abcd' not found")
+        self.assert_stderr("Key 'abcd' not found")
 
     @pytest.mark.skipif(not six.PY2, reason='a bug on Python 2')
     def test_non_existing_key_unicode(self):  # See #25
         execute(u'rm -q abcd', self.context)
-        err_msg = self.click.secho.call_args[0][0]
-        self.assertEqual(err_msg, "Key 'abcd' not found")
+        self.assert_stderr("Key 'abcd' not found")
 
     def test_reset(self):
         self.context.options.update({
@@ -511,36 +962,115 @@ class TestHttpAction(ExecutionTestCase):
         self.assert_httpie_main_called_with(['HEAD', 'http://localhost'])
 
 
+class TestHttpActionRedirection(ExecutionTestCase):
+
+    def test_get(self):
+        execute('get > data.json', self.context)
+        self.assert_httpie_main_called_with(['GET', 'http://localhost'])
+
+        env = self.httpie_main.call_args[1]['env']
+        self.assertFalse(env.stdout_isatty)
+        self.assertEqual(env.stdout.fp.name, 'data.json')
+
+
+@pytest.mark.slow
+class TestHttpBin(TempAppDirTestCase):
+    """Send real requests to http://httpbin.org, save the responses to files,
+    and asserts on the file content.
+    """
+    def setUp(self):
+        super(TestHttpBin, self).setUp()
+
+        # XXX: pytest doesn't allow HTTPie to read stdin while it's capturing
+        # stdout, so we replace stdin with a file temporarily during the test.
+        class MockStdin(object):
+            def __init__(self, fp):
+                self.fp = fp
+
+            def isatty(self):
+                return True
+
+            def __getattr__(self, name):
+                if name == 'isatty':
+                    return self.isatty
+                return getattr(self.fp, name)
+
+        self.orig_stdin = sys.stdin
+        filename = self.make_tempfile()
+        sys.stdin = MockStdin(open(filename, 'rb'))
+        sys.stdin.isatty = lambda: True
+
+    def tearDown(self):
+        sys.stdin.close()
+        sys.stdin = self.orig_stdin
+
+        super(TestHttpBin, self).tearDown()
+
+    def execute(self, command):
+        context = Context('http://httpbin.org')
+        filename = self.make_tempfile()
+        execute('%s > %s' % (command, filename), context)
+
+        with open(filename, 'rb') as f:
+            return f.read()
+
+    def test_get_image(self):
+        data = self.execute('get /image/png')
+        self.assertTrue(data)
+        self.assertEqual(hashlib.sha1(data).hexdigest(),
+                         '379f5137831350c900e757b39e525b9db1426d53')
+
+    def test_get_querystring(self):
+        data = self.execute('get /get id==1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        self.assertEqual(data['args'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    def test_post_json(self):
+        data = self.execute('post /post id=1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        self.assertEqual(data['json'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    def test_post_form(self):
+        data = self.execute('post /post --form id=1234 X-Custom-Header:5678')
+        data = json.loads(data.decode('utf-8'))
+        self.assertEqual(data['form'], {
+            'id': '1234'
+        })
+        self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+
 class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_without_args(self):
         execute('httpie', self.context)
-        self.click.echo_via_pager.assert_called_with('http http://localhost')
+        self.assert_stdout('http http://localhost\n')
 
     def test_httpie_with_post(self):
         execute('httpie post name=alice', self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http POST http://localhost name=alice')
+        self.assert_stdout('http POST http://localhost name=alice\n')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_absolute_path(self):
         execute('httpie post /api name=alice', self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http POST http://localhost/api name=alice')
+        self.assert_stdout('http POST http://localhost/api name=alice\n')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_url(self):
-        execute('httpie post http://httpbin.org/post name=alice', self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http POST http://httpbin.org/post name=alice')
+        execute('httpie POST http://httpbin.org/post name=alice', self.context)
+        self.assert_stdout('http POST http://httpbin.org/post name=alice\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
     def test_httpie_with_full_https_url(self):
         execute('httpie post https://httpbin.org/post name=alice',
                 self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http POST https://httpbin.org/post name=alice')
+        self.assert_stdout('http POST https://httpbin.org/post name=alice\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
 
@@ -548,9 +1078,9 @@ class TestCommandPreview(ExecutionTestCase):
         execute(r'httpie post http://httpbin.org/post name="john doe" '
                 r"apikey==abc\ 123 'Authorization:ApiKey 1234'",
                 self.context)
-        self.click.echo_via_pager.assert_called_with(
+        self.assert_stdout(
             "http POST http://httpbin.org/post 'apikey==abc 123' "
-            "'name=john doe' 'Authorization:ApiKey 1234'")
+            "'name=john doe' 'Authorization:ApiKey 1234'\n")
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.querystring_params)
@@ -558,8 +1088,7 @@ class TestCommandPreview(ExecutionTestCase):
 
     def test_httpie_with_multi_querystring(self):
         execute('httpie get foo==1 foo==2 foo==3', self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http GET http://localhost foo==1 foo==2 foo==3')
+        self.assert_stdout('http GET http://localhost foo==1 foo==2 foo==3\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
 
@@ -577,9 +1106,10 @@ class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
     def test_action_cmd_pipe_to_shell_redirection(self):
         filepath = self.temp_dir + '/shell_cmd_subprocess_test'
         execute("get some==data | tee " + filepath, self.context)
-        # TODO after it's merged to the master we can test if the click has been called
-        # with specific data which has been returned from the httpie_main, now
-        # it's not possible
+
+        # TODO after it's merged to the master we can test if the click has
+        # been called with specific data which has been returned from the
+        # httpie_main, now it's not possible
         self.click.echo_via_pager.assert_called_with('')
         self.assertTrue(os.path.isfile(filepath))
 
@@ -589,7 +1119,8 @@ class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
             'http GET http://localhost some==input')
 
     def test_pipe_shell_redirection_with_backticks(self):
-        execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`", self.context)
+        execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`",
+                self.context)
         self.click.echo_via_pager.assert_called_with(
             'http POST http://127.0.0.1')
 
@@ -746,3 +1277,101 @@ class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
         self.assertEqual(self.context.body_params, {
             'name': 'John Doe'
         })
+
+
+class TestCommandPreviewRedirection(ExecutionTestCase):
+
+    def test_httpie_redirect_write(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie > %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'http http://localhost\n')
+
+    def test_httpie_redirect_write_quoted_filename(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie > "%s"' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'http http://localhost\n')
+
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="Windows doesn't use backslashes to escape")
+    def test_httpie_redirect_write_escaped_filename(self):
+        filename = self.make_tempfile()
+        filename += r' copy'
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie > %s' % filename.replace(' ', r'\ '), self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'http http://localhost\n')
+
+    def test_httpie_redirect_write_with_args(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie post http://example.org name=john > %s' % filename,
+                self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'http POST http://example.org name=john\n')
+
+    def test_httpie_redirect_append(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie >> %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
+
+    def test_httpie_redirect_append_without_spaces(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('httpie>>%s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
+
+    def test_httpie_redirect_append_quoted_filename(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute("httpie >> '%s'" % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'hello world\nhttp http://localhost\n')
