@@ -9,7 +9,6 @@ import sys
 
 import pytest
 import six
-import os.path
 
 from mock import patch
 
@@ -45,6 +44,10 @@ class ExecutionTestCase(TempAppDirTestCase):
     def assert_stdout(self, expected_msg):
         printed_msg = self.echo_via_pager.call_args[0][0]
         self.assertEqual(printed_msg, expected_msg)
+
+    def assert_stdout_startswith(self, expected_prefix):
+        printed_msg = self.echo_via_pager.call_args[0][0]
+        self.assertTrue(printed_msg.startswith(expected_prefix))
 
     def assert_stderr(self, expected_msg):
         printed_msg = self.secho.call_args[0][0]
@@ -514,13 +517,11 @@ class TestExecution_help(ExecutionTestCase):
 
     def test_help(self):
         execute('help', self.context)
-        help_text = self.echo_via_pager.call_args[0][0]
-        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+        self.assert_stdout_startswith('Commands:\n\tcd')
 
     def test_help_with_spaces(self):
         execute('  help   ', self.context)
-        help_text = self.echo_via_pager.call_args[0][0]
-        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+        self.assert_stdout_startswith('Commands:\n\tcd')
 
 
 class TestExecution_exit(ExecutionTestCase):
@@ -1093,36 +1094,30 @@ class TestCommandPreview(ExecutionTestCase):
         self.assertFalse(self.context.querystring_params)
 
 
-class TestShellCode(TempAppDirTestCase, ExecutionTestCase):
+class TestPipeToShell(ExecutionTestCase):
 
-    def setUp(self):
-        ExecutionTestCase.setUp(self)
-        TempAppDirTestCase.setUp(self)
+    # def test_action_cmd_pipe_to_shell_redirection(self):
+    #     filepath = self.make_tempfile()
+    #     execute("get some==data | tee " + filepath, self.context)
 
-    def tearDown(self):
-        ExecutionTestCase.tearDown(self)
-        TempAppDirTestCase.tearDown(self)
+    #     # TODO after it's merged to the master we can test if the click has
+    #     # been called with specific data which has been returned from the
+    #     # httpie_main, now it's not possible
+    #     self.assert_stdout('')
+    #     self.assertTrue(os.path.isfile(filepath))
 
-    def test_action_cmd_pipe_to_shell_redirection(self):
-        filepath = self.temp_dir + '/shell_cmd_subprocess_test'
-        execute("get some==data | tee " + filepath, self.context)
-
-        # TODO after it's merged to the master we can test if the click has
-        # been called with specific data which has been returned from the
-        # httpie_main, now it's not possible
-        self.click.echo_via_pager.assert_called_with('')
-        self.assertTrue(os.path.isfile(filepath))
-
-    def test_preview_cmd_pipe_to_shell_redirection(self):
+    def test_preview_pipe_to_sed(self):
         execute("httpie get some==data | sed 's/data$/input/'", self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http GET http://localhost some==input')
+        self.assert_stdout('http GET http://localhost some==input')
 
     def test_pipe_shell_redirection_with_backticks(self):
         execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`",
                 self.context)
         self.click.echo_via_pager.assert_called_with(
             'http POST http://127.0.0.1')
+
+
+class TestShellSubstitution(ExecutionTestCase):
 
     def test_unquoted_option(self):
         execute("--auth `echo user:pass`", self.context)

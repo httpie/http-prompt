@@ -22,7 +22,7 @@ from .context.transform import (
     format_to_curl,
     format_to_httpie,
     format_to_http_prompt)
-from .output import Printer, FileWriter
+from .output import Printer, TextWriter
 from .utils import unescape, unquote
 
 
@@ -30,25 +30,26 @@ grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = ((preview / action / env / help ) shell_cmd_redir?) / exit /
-                 exec / source / _
+    immutation = preview / action / env / help / exit / exec / source / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
+
     preview = _ tool _ (method _)? (urlpath _)? concat_mut* redir_out? _
     action = _ method _ (urlpath _)? concat_mut* redir_out? _
     urlpath = (~r"https?://" unquoted_string) /
-              (!concat_mut !redir_out string) /
-              (!conat_mut !shell_cmd_redir string)
+              (!concat_mut !redir_out string)
+
     help = _ "help" _
     exit = _ "exit" _
     env  = _ "env" _ (redir_out)?
     source = _ "source" _ filepath _
     exec = _ "exec" _ filepath _
 
-    redir_out = _ (redir_append_file / redir_file) _ filepath _
-    redir_file = _ ">" _
-    redir_append_file = _ ">>" _
+    redir_out = redir_append / redir_write / pipe
+    redir_append = _ ">>" _ filepath _
+    redir_write = _ ">" _ filepath _
+    pipe = _ "|" _ shell_code
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -189,7 +190,7 @@ class ExecutionVisitor(NodeVisitor):
         # tha's what the flag signalizes): localhost> httpie post | sed
         # 's/localhost/127.0.0.1/'
         self.pipe_shell_redir = False
-        self.output = Printer()
+        self._output = Printer()
 
         self.listener = listener or DummyExecutionListener()
 
@@ -252,18 +253,16 @@ class ExecutionVisitor(NodeVisitor):
         self.output.write(generate_help_text())
         return node
 
-    def visit_redir_out(self, node, children):
-        parsed = re.search(r"(>>?)\s*(.*)", node.text)
-        redirection_op = parsed.group(1)
-        path = parsed.group(2)
+    def _redirect_output(self, filepath, mode):
+        filepath = normalize_filepath(filepath)
+        self.output = TextWriter(open(filepath, mode))
 
-        if redirection_op == '>>':
-            mode = 'ab'
-        else:
-            mode = 'wb'
+    def visit_redir_append(self, node, children):
+        self._redirect_output(children[3], 'ab')
+        return node
 
-        filename = normalize_filepath(path)
-        self.output = FileWriter(open(filename, mode))
+    def visit_redir_write(self, node, children):
+        self._redirect_output(children[3], 'wb')
         return node
 
     def visit_exec(self, node, children):
@@ -443,9 +442,9 @@ class ExecutionVisitor(NodeVisitor):
         elif child_type == 'action':
             self._call_httpie_main()
 
-        if self.last_response:
-            self.listener.response_returned(self.context,
-                                            self.last_response)
+            if self.last_response:
+                self.listener.response_returned(self.context,
+                                                self.last_response)
 
         self.output.close()
         return node
@@ -454,11 +453,10 @@ class ExecutionVisitor(NodeVisitor):
         context = self._final_context()
         command = None
         if self.tool == 'httpie':
-            command = ['http'] + context.httpie_args(self.method,
-                                                     quote=True)
+            command = format_to_httpie(context, self.method)
         else:
             assert self.tool == 'curl'
-            command = ['curl'] + context.curl_args(self.method, quote=True)
+            command = format_to_curl(context, self.method)
         self.output_data = ' '.join(command)
         return node
 

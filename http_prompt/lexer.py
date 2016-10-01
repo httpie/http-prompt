@@ -120,7 +120,7 @@ class HttpPromptLexer(RegexLexer):
         'action': [
             (r'(?i)(get|head|post|put|patch|delete)(\s*)',
              bygroups(Keyword, Text),
-             combined('redir_out', 'shell_redirection' 'urlpath')),
+             combined('redir_out', 'shell_redirection', 'urlpath')),
             (r'', Text, 'urlpath')
         ],
         'urlpath': [

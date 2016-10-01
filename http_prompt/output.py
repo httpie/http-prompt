@@ -1,3 +1,5 @@
+import sys
+
 import click
 import six
 
@@ -19,9 +21,12 @@ class Printer(object):
     def isatty(self):
         return True
 
+    def fileno(self):
+        return sys.stdout.fileno()
 
-class FileWriter(object):
-    """Wrap a file object, opened with 'wb' or 'ab', so it accepts text
+
+class TextWriter(object):
+    """Wrap a file-like object, opened with 'wb' or 'ab', so it accepts text
     data.
     """
     def __init__(self, fp):
@@ -40,3 +45,6 @@ class FileWriter(object):
 
     def isatty(self):
         return self.fp.isatty()
+
+    def fileno(self):
+        return self.fp.fileno()
