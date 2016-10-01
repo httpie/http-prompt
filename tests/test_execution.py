@@ -1094,7 +1094,7 @@ class TestCommandPreview(ExecutionTestCase):
         self.assertFalse(self.context.querystring_params)
 
 
-class TestPipeToShell(ExecutionTestCase):
+class TestPipe(ExecutionTestCase):
 
     # def test_action_cmd_pipe_to_shell_redirection(self):
     #     filepath = self.make_tempfile()
@@ -1106,15 +1106,23 @@ class TestPipeToShell(ExecutionTestCase):
     #     self.assert_stdout('')
     #     self.assertTrue(os.path.isfile(filepath))
 
-    def test_preview_pipe_to_sed(self):
+    def test_httpie_sed(self):
         execute("httpie get some==data | sed 's/data$/input/'", self.context)
-        self.assert_stdout('http GET http://localhost some==input')
+        self.assert_stdout('http GET http://localhost some==input\n')
 
-    def test_pipe_shell_redirection_with_backticks(self):
+    def test_httpie_sed_with_echo(self):
         execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`",
                 self.context)
-        self.click.echo_via_pager.assert_called_with(
-            'http POST http://127.0.0.1')
+        self.assert_stdout("http POST http://127.0.0.1\n")
+
+    def test_env_grep(self):
+        self.context.body_params = {
+            'username': 'jane',
+            'name': 'Jane',
+            'password': '1234'
+        }
+        execute('env | grep name', self.context)
+        self.assert_stdout('name=Jane\nusername=jane\n')
 
 
 class TestShellSubstitution(ExecutionTestCase):

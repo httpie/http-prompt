@@ -1,18 +1,16 @@
 import io
 import re
-import subprocess
 import sys
 
 import click
 
-from subprocess import CalledProcessError, PIPE
+from subprocess import CalledProcessError, Popen, PIPE
 
 from httpie.context import Environment
 from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
-from parsimonious.nodes import NodeVisitor, Node
-from six import text_type
+from parsimonious.nodes import NodeVisitor
 from six.moves.urllib.parse import urljoin
 
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
@@ -49,7 +47,7 @@ grammar = r"""
     redir_out = redir_append / redir_write / pipe
     redir_append = _ ">>" _ filepath _
     redir_write = _ ">" _ filepath _
-    pipe = _ "|" _ shell_code
+    pipe = _ "|" _ (shell_subs / shell_code) _
 
     unquoted_mut = _ unquoted_mutkey mutop unquoted_mutval _
     full_quoted_mut = full_squoted_mut / full_dquoted_mut
@@ -61,15 +59,15 @@ grammar = r"""
     mutop = ":" / "==" / "="
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
-    unquoted_mutkey_item = code_block / unquoted_mutkey_char / escapeseq
+    unquoted_mutkey_item = shell_subs / unquoted_mutkey_char / escapeseq
     unquoted_mutkey_char = ~r"[^\s'\"\\=:>]"
     squoted_mutkey = squoted_mutkey_item+
     squoted_mutval = squoted_stringitem*
-    squoted_mutkey_item = code_block / squoted_mutkey_char / escapeseq
+    squoted_mutkey_item = shell_subs / squoted_mutkey_char / escapeseq
     squoted_mutkey_char = ~r"[^\r\n'\\=:]"
     dquoted_mutkey = dquoted_mutkey_item+
     dquoted_mutval = dquoted_stringitem*
-    dquoted_mutkey_item = code_block / dquoted_mutkey_char / escapeseq
+    dquoted_mutkey_item = shell_subs / dquoted_mutkey_char / escapeseq
     dquoted_mutkey_char = ~r'[^\r\n"\\=:]'
 
     option_mut = flag_option_mut / value_option_mut
@@ -97,18 +95,17 @@ grammar = r"""
     quoted_string = ('"' dquoted_stringitem* '"') /
                     ("'" squoted_stringitem* "'")
     unquoted_string = unquoted_stringitem+
-    dquoted_stringitem = code_block / dquoted_stringchar / escapeseq
-    squoted_stringitem = code_block / squoted_stringchar / escapeseq
-    unquoted_stringitem = code_block / unquoted_stringchar / escapeseq
+    dquoted_stringitem = shell_subs / dquoted_stringchar / escapeseq
+    squoted_stringitem = shell_subs / squoted_stringchar / escapeseq
+    unquoted_stringitem = shell_subs / unquoted_stringchar / escapeseq
     dquoted_stringchar = ~r'[^\r\n"\\]'
     squoted_stringchar = ~r"[^\r\n'\\]"
     unquoted_stringchar = ~r"[^\s'\"\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
 
-    code_block = "`" shell_code "`"
+    shell_subs = "`" shell_code "`"
     shell_code = ~r"[^`]*"
-    shell_cmd_redir = _ "|" _ (code_block / shell_code)
 """
 
 if sys.platform == 'win32':
@@ -192,6 +189,12 @@ class ExecutionVisitor(NodeVisitor):
         self.pipe_shell_redir = False
         self._output = Printer()
 
+        # If there's a pipe, as in "httpe post | sed s/POST/GET/", this
+        # variable points to the "sed" Popen object. The variable is necessary
+        # because the we need to redirect Popen.stdout to Printer, which does
+        # output pagination.
+        self.pipe_proc = None
+
         self.listener = listener or DummyExecutionListener()
 
         # Last response object returned by HTTPie
@@ -263,6 +266,12 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_redir_write(self, node, children):
         self._redirect_output(children[3], 'wb')
+        return node
+
+    def visit_pipe(self, node, children):
+        cmd = children[3]
+        self.pipe_proc = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE)
+        self.output = TextWriter(self.pipe_proc.stdin)
         return node
 
     def visit_exec(self, node, children):
@@ -428,47 +437,47 @@ class ExecutionVisitor(NodeVisitor):
         finally:
             sys.settrace(None)
 
+    # def visit_immutation(self, node, children):
+    #     self.context = self._final_context()
+    #     child_type = children[0].expr_name
+
+    #     if child_type == 'preview':
+    #         if self.tool == 'httpie':
+    #             command = format_to_httpie(self.context, self.method)
+    #         else:
+    #             assert self.tool == 'curl'
+    #             command = format_to_curl(self.context, self.method)
+    #         self.output.write(command)
+    #     elif child_type == 'action':
+    #         self._call_httpie_main()
+
+    #         if self.last_response:
+    #             self.listener.response_returned(self.context,
+    #                                             self.last_response)
+
+    #     self.output.close()
+    #     return node
+
     def visit_immutation(self, node, children):
-        self.context = self._final_context()
-        child_type = children[0].expr_name
-
-        if child_type == 'preview':
-            if self.tool == 'httpie':
-                command = format_to_httpie(self.context, self.method)
-            else:
-                assert self.tool == 'curl'
-                command = format_to_curl(self.context, self.method)
-            self.output.write(command)
-        elif child_type == 'action':
-            self._call_httpie_main()
-
-            if self.last_response:
-                self.listener.response_returned(self.context,
-                                                self.last_response)
-
         self.output.close()
+        if self.pipe_proc:
+            Printer().write(self.pipe_proc.stdout.read())
         return node
 
     def visit_preview(self, node, children):
         context = self._final_context()
-        command = None
         if self.tool == 'httpie':
             command = format_to_httpie(context, self.method)
         else:
             assert self.tool == 'curl'
             command = format_to_curl(context, self.method)
-        self.output_data = ' '.join(command)
+        self.output.write(command)
         return node
 
-    def visit_code_block(self, node, children):
-        if self.pipe_shell_redir:
-            node_clone = Node(
-                expr_name='shell_code',
-                full_text=children[1],
-                start=0,
-                end=len(children[1]))
-            return self.visit(node_clone)
-        return children[1]
+    def visit_shell_subs(self, node, children):
+        cmd = children[1]
+        p = Popen(cmd, shell=True, stdout=PIPE)
+        return p.stdout.read()
 
     def _is_backticks_cmd_preceded_with_pipe_redir(self, node):
         left_hand_input = node.full_text[:node.start]
@@ -480,34 +489,7 @@ class ExecutionVisitor(NodeVisitor):
         return False
 
     def visit_shell_code(self, node, children):
-        stdin = None
-        stdin_data = self.output_data
-        is_backticks_cmd = self._is_backticks_cmd_preceded_with_pipe_redir(
-            node)
-
-        if stdin_data is not None and not is_backticks_cmd:
-            stdin = PIPE
-            stdin_data = stdin_data.encode('ascii')
-
-        p = subprocess.Popen(
-            node.text,
-            shell=True,
-            stdin=stdin,
-            stdout=PIPE,
-            stderr=PIPE)
-        out, err = p.communicate(stdin_data)
-        if p.returncode != 0:
-            exc = CalledProcessError(p.returncode, node.text)
-            exc.output = text_type(err or out, 'utf-8').rstrip()
-            raise exc
-
-        data = text_type(out, 'utf-8').rstrip()
-
-        if not is_backticks_cmd:
-            self.output_data = data
-        else:
-            self.pipe_shell_redir = True
-        return data
+        return node.text
 
     def generic_visit(self, node, children):
         if not node.expr_name and node.children:
