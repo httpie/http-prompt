@@ -378,7 +378,7 @@ class ExecutionVisitor(NodeVisitor):
         return node.text
 
     def visit_unquoted_string(self, node, children):
-        return unescape(node.text)
+        return unescape(''.join(children))
 
     def visit_quoted_string(self, node, children):
         return self._visit_mut_key_or_val(node, children[0][1])
@@ -419,7 +419,8 @@ class ExecutionVisitor(NodeVisitor):
                 self.last_response = arg
 
     def _call_httpie_main(self):
-        args = extract_args_for_httpie_main(self.context, self.method)
+        context = self._final_context()
+        args = extract_args_for_httpie_main(context, self.method)
         env = Environment(stdout=self.output, stdin=sys.stdin,
                           is_windows=False)
         env.stdout_isatty = self.output.isatty()
@@ -474,10 +475,16 @@ class ExecutionVisitor(NodeVisitor):
         self.output.write(command)
         return node
 
+    def visit_action(self, node, children):
+        self._call_httpie_main()
+        if self.last_response:
+            self.listener.response_returned(self.context, self.last_response)
+        return node
+
     def visit_shell_subs(self, node, children):
         cmd = children[1]
         p = Popen(cmd, shell=True, stdout=PIPE)
-        return p.stdout.read()
+        return p.stdout.read().decode('utf-8').rstrip()
 
     def _is_backticks_cmd_preceded_with_pipe_redir(self, node):
         left_hand_input = node.full_text[:node.start]

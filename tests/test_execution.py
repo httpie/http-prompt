@@ -1254,7 +1254,7 @@ class TestShellSubstitution(ExecutionTestCase):
 
     def test_bad_command(self):
         execute("name=`bad command test`", self.context)
-        self.assertEqual(self.context.body_params, {})
+        self.assertEqual(self.context.body_params, {'name': ''})
 
     @pytest.mark.skipif(sys.platform == 'win32', reason="Unix-only commands")
     def test_pipe_and_grep(self):
