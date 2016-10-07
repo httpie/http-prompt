@@ -49,6 +49,9 @@ class ExecutionTestCase(TempAppDirTestCase):
         printed_msg = self.echo_via_pager.call_args[0][0]
         self.assertTrue(printed_msg.startswith(expected_prefix))
 
+    def get_stdout(self):
+        return self.echo_via_pager.call_args[0][0]
+
     def assert_stderr(self, expected_msg):
         printed_msg = self.secho.call_args[0][0]
         print_options = self.secho.call_args[1]
@@ -1001,13 +1004,22 @@ class TestHttpBin(TempAppDirTestCase):
         sys.stdin = MockStdin(open(filename, 'rb'))
         sys.stdin.isatty = lambda: True
 
+        # Mock echo_via_pager() so that we can catch data fed to stdout
+        self.patcher = patch('http_prompt.output.click.echo_via_pager')
+        self.echo_via_pager = self.patcher.start()
+
     def tearDown(self):
+        self.patcher.stop()
+
         sys.stdin.close()
         sys.stdin = self.orig_stdin
 
         super(TestHttpBin, self).tearDown()
 
-    def execute(self, command):
+    def get_stdout(self):
+        return self.echo_via_pager.call_args[0][0]
+
+    def execute_redirection(self, command):
         context = Context('http://httpbin.org')
         filename = self.make_tempfile()
         execute('%s > %s' % (command, filename), context)
@@ -1015,14 +1027,19 @@ class TestHttpBin(TempAppDirTestCase):
         with open(filename, 'rb') as f:
             return f.read()
 
+    def execute_pipe(self, command):
+        context = Context('http://httpbin.org')
+        execute(command, context)
+
     def test_get_image(self):
-        data = self.execute('get /image/png')
+        data = self.execute_redirection('get /image/png')
         self.assertTrue(data)
         self.assertEqual(hashlib.sha1(data).hexdigest(),
                          '379f5137831350c900e757b39e525b9db1426d53')
 
     def test_get_querystring(self):
-        data = self.execute('get /get id==1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'get /get id==1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['args'], {
             'id': '1234'
@@ -1030,7 +1047,8 @@ class TestHttpBin(TempAppDirTestCase):
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
     def test_post_json(self):
-        data = self.execute('post /post id=1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'post /post id=1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['json'], {
             'id': '1234'
@@ -1038,12 +1056,25 @@ class TestHttpBin(TempAppDirTestCase):
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
     def test_post_form(self):
-        data = self.execute('post /post --form id=1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'post /post --form id=1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['form'], {
             'id': '1234'
         })
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    def test_get_and_tee(self):
+        filename = self.make_tempfile()
+        self.execute_pipe('get /get hello==world | tee %s' % filename)
+
+        with open(filename) as f:
+            data = json.load(f)
+        self.assertEqual(data['args'], {'hello': 'world'})
+
+        printed_msg = self.get_stdout()
+        data = json.loads(printed_msg)
+        self.assertEqual(data['args'], {'hello': 'world'})
 
 
 class TestCommandPreview(ExecutionTestCase):
@@ -1095,16 +1126,6 @@ class TestCommandPreview(ExecutionTestCase):
 
 
 class TestPipe(ExecutionTestCase):
-
-    # def test_action_cmd_pipe_to_shell_redirection(self):
-    #     filepath = self.make_tempfile()
-    #     execute("get some==data | tee " + filepath, self.context)
-
-    #     # TODO after it's merged to the master we can test if the click has
-    #     # been called with specific data which has been returned from the
-    #     # httpie_main, now it's not possible
-    #     self.assert_stdout('')
-    #     self.assertTrue(os.path.isfile(filepath))
 
     def test_httpie_sed(self):
         execute("httpie get some==data | sed 's/data$/input/'", self.context)
@@ -1262,23 +1283,6 @@ class TestShellSubstitution(ExecutionTestCase):
                 self.context)
         self.assertEqual(self.context.body_params, {
             'greeting': 'hello world'
-        })
-
-    @pytest.mark.xfail
-    def test_set_env_unix(self):
-        execute('`FIRST_NAME=John LAST_NAME=Doe`', self.context)
-        execute('name=`echo "$FIRST_NAME $LAST_NAME"`', self.context)
-        self.assertEqual(self.context.body_params, {
-            'name': 'John Doe'
-        })
-
-    @pytest.mark.xfail
-    def test_set_env_windows(self):
-        execute('`set FIRST_NAME=John`', self.context)
-        execute('`set LAST_NAME=Doe`', self.context)
-        execute('name=`echo %FIRST_NAME% %LAST_NAME%`', self.context)
-        self.assertEqual(self.context.body_params, {
-            'name': 'John Doe'
         })
 
 
