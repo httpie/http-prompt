@@ -182,15 +182,6 @@ class ExecutionVisitor(NodeVisitor):
         self.context_override = Context(context.url)
         self.method = None
         self.tool = None
-
-        # Flag variable determining whether run another shell subrocess or not
-        # when we combine "pipe to shell command redirection" with backticks
-        # quoted shell command.  Consider eg.: localhost> httpie post | `echo
-        # "sed 's/localhost/127.0.0.1/'"` After we're done with evaluating the
-        # command within the backticks, we need to run following command (and
-        # tha's what the flag signalizes): localhost> httpie post | sed
-        # 's/localhost/127.0.0.1/'
-        self.pipe_shell_redir = False
         self._output = Printer()
 
         # If there's a pipe, as in "httpe post | sed s/POST/GET/", this
