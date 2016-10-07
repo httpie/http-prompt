@@ -112,7 +112,11 @@ if sys.platform == 'win32':
     # XXX: Windows use backslashes as separators in its filesystem path, so we
     # have to avoid using backslashes to escape chars here.
     grammar += r"""
-        filepath = quoted_string / unquoted_filepath
+        filepath = quoted_filepath / unquoted_filepath
+        quoted_filepath = ('"' dquoted_filepath_char+ '"') /
+                          ("'" squoted_filepath_char+ "'")
+        dquoted_filepath_char = ~r'[^\r\n"]'
+        squoted_filepath_char = ~r"[^\r\n']"
         unquoted_filepath = unquoted_filepath_char+
         unquoted_filepath_char = ~r"[^\s\"]"
     """
@@ -374,6 +378,9 @@ class ExecutionVisitor(NodeVisitor):
     def visit_string(self, node, children):
         return children[0]
 
+    def visit_quoted_filepath(self, node, children):
+        return node.text[1:-1]
+
     def visit_unquoted_filepath(self, node, children):
         return node.text
 
@@ -437,27 +444,6 @@ class ExecutionVisitor(NodeVisitor):
             httpie_main(args, env=env)
         finally:
             sys.settrace(None)
-
-    # def visit_immutation(self, node, children):
-    #     self.context = self._final_context()
-    #     child_type = children[0].expr_name
-
-    #     if child_type == 'preview':
-    #         if self.tool == 'httpie':
-    #             command = format_to_httpie(self.context, self.method)
-    #         else:
-    #             assert self.tool == 'curl'
-    #             command = format_to_curl(self.context, self.method)
-    #         self.output.write(command)
-    #     elif child_type == 'action':
-    #         self._call_httpie_main()
-
-    #         if self.last_response:
-    #             self.listener.response_returned(self.context,
-    #                                             self.last_response)
-
-    #     self.output.close()
-    #     return node
 
     def visit_immutation(self, node, children):
         self.output.close()

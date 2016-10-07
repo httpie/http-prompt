@@ -1064,6 +1064,7 @@ class TestHttpBin(TempAppDirTestCase):
         })
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
     def test_get_and_tee(self):
         filename = self.make_tempfile()
         self.execute_pipe('get /get hello==world | tee %s' % filename)
@@ -1127,15 +1128,18 @@ class TestCommandPreview(ExecutionTestCase):
 
 class TestPipe(ExecutionTestCase):
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
     def test_httpie_sed(self):
         execute("httpie get some==data | sed 's/data$/input/'", self.context)
         self.assert_stdout('http GET http://localhost some==input\n')
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
     def test_httpie_sed_with_echo(self):
         execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`",
                 self.context)
         self.assert_stdout("http POST http://127.0.0.1\n")
 
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
     def test_env_grep(self):
         self.context.body_params = {
             'username': 'jane',
@@ -1277,7 +1281,7 @@ class TestShellSubstitution(ExecutionTestCase):
         execute("name=`bad command test`", self.context)
         self.assertEqual(self.context.body_params, {'name': ''})
 
-    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix-only commands")
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
     def test_pipe_and_grep(self):
         execute("greeting=`echo 'hello world\nhihi\n' | grep hello`",
                 self.context)
