@@ -1,6 +1,6 @@
 import unittest
 
-from pygments.token import Keyword, String, Text, Error, Name, Operator
+from pygments.token import Keyword, String, Text, Error, Name, Operator, Literal
 
 from http_prompt.lexer import HttpPromptLexer
 
@@ -97,6 +97,12 @@ class TestLexer_env(LexerTestCase):
         self.assertEqual(self.get_tokens(r'env >> /tmp/my\ file.txt'), [
             (Keyword, 'env'), (Operator, '>>'),
             (String, r'/tmp/my\ file.txt')
+        ])
+
+    def test_env_pipe(self):
+        self.assertEqual(self.get_tokens('env | grep name'), [
+            (Keyword, 'env'), (Operator, '|'),
+            (Text, 'grep'), (Text, 'name')
         ])
 
 
@@ -345,18 +351,19 @@ class TestShellCode(LexerTestCase):
             (Text, '`'),
         ])
 
-    def test_pipe_to_shell_cmd_redirection(self):
+    def test_httpie_post_pipe(self):
         self.assertEqual(self.get_tokens('httpie post | tee "/tmp/test"'), [
             (Keyword, 'httpie'),
             (Keyword, 'post'),
-            (Keyword, '|'),
+            (Operator, '|'),
             (Text, 'tee'),
             (String.Double, '"/tmp/test"'),
         ])
 
+    def test_post_pipe(self):
         self.assertEqual(self.get_tokens('post | tee "/tmp/test"'), [
             (Keyword, 'post'),
-            (Keyword, '|'),
+            (Operator, '|'),
             (Text, 'tee'),
             (String.Double, '"/tmp/test"'),
         ])

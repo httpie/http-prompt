@@ -48,7 +48,8 @@ class HttpPromptLexer(RegexLexer):
 
             (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
-            (r'(env)(\s*)', bygroups(Keyword, Text), 'redir_out'),
+            (r'(env)(\s*)', bygroups(Keyword, Text),
+             combined('redir_out', 'pipe')),
             (r'(source)(\s*)', bygroups(Keyword, Text), 'file_path'),
             (r'(exec)(\s*)', bygroups(Keyword, Text), 'file_path'),
             (r'', Text, 'concat_mut')
@@ -66,7 +67,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(`)([^`]*)(`)', bygroups(Text, using(BashLexer), Text)),
         ],
         'pipe': [
-            (r'\s*(\|)(.*)', bygroups(Keyword, using(BashLexer))),
+            (r'(\s*)(\|)(.*)', bygroups(Text, Operator, using(BashLexer))),
         ],
         'concat_mut': [
             (r'$', Text, 'end'),
