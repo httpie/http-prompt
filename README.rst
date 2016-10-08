@@ -223,6 +223,58 @@ larger text or binary data, you may want to save the response to a file. Usage:
     > get http://httpbin.org/image/png > pig.png
 
 
+Pipeline
+--------
+
+HTTP Prompt supports simplified pipeline syntax, where you can pipe the output
+to a shell command:
+
+.. code-block:: bash
+
+    # Replace 'localhost' to '127.0.0.1'
+    > httpie POST http://localhost | sed 's/localhost/127.0.0.1/'
+    http http://127.0.0.1
+
+    # Only print the line that contains 'User-Agent' using grep
+    > get http://httpbin.org/get | grep 'User-Agent'
+        "User-Agent": "HTTPie/0.9.6"
+
+On macOS, you can even copy the result to the clipboard using ``pbcopy``:
+
+.. code-block:: bash
+
+    # Copy the HTTPie command to the clipboard (macOS only)
+    > httpie | pbcopy
+
+Another cool trick is to use jq_ to parse JSON data:
+
+.. code-block:: bash
+
+    > get http://httpbin.org/get | jq '.headers."User-Agent"'
+    "HTTPie/0.9.6"
+
+**Note**: Syntax with multiple pipes is not supported currently.
+
+
+Shell Substitution
+------------------
+
+Shell substitution happens when you put a shell command between two backticks
+like ``\`...\```. This syntax allows you compute a value from the shell
+environment and assign the value to a parameter::
+
+    # Set date to current time
+    > date==`date -u +"%Y-%m-%d %H:%M:%S"`
+    > httpie
+    http http://localhost:8000 'date==2016-10-08 09:45:00'
+
+    # Get password from a file. Suppose the file has a content of
+    # "secret_api_key".
+    > password==``cat ./apikey.txt``
+    > httpie
+    http http://localhost:8000 apikey==secret_api_key
+
+
 Configuration
 -------------
 
@@ -256,7 +308,7 @@ only person who can read it is the owner (you).
 **Note for users of older versions**: Since 0.6.0, HTTP Prompt only stores the
 last context instead of grouping multiple contexts by hostnames and ports like
 it did previously. We changed the behavior because the feature can be simply
-replaced by ``source`` and ``env`` commands. See the discussion in
+replaced by ``env``, ``exec`` and ``source`` commands. See the discussion in
 `issue #70 <https://github.com/eliangcs/http-prompt/issues/70>`_ for detail.
 
 
@@ -264,7 +316,6 @@ Roadmap
 -------
 
 * Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
-* Shell command evaluation
 * Support for cURL command and raw format preview
 * Improve autocomplete
 * Python syntax evaluation
@@ -302,6 +353,7 @@ Thanks
 .. _CONTRIBUTING.rst: https://github.com/eliangcs/http-prompt/blob/master/CONTRIBUTING.rst
 .. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
 .. _HTTPie: https://github.com/jkbrzt/httpie
+.. _jq: https://stedolan.github.io/jq/
 .. _Parsimonious: https://github.com/erikrose/parsimonious
 .. _pgcli: https://github.com/dbcli/pgcli
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit
