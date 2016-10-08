@@ -184,7 +184,7 @@ class ExecutionVisitor(NodeVisitor):
         self.tool = None
         self._output = Printer()
 
-        # If there's a pipe, as in "httpe post | sed s/POST/GET/", this
+        # If there's a pipe, as in "httpie post | sed s/POST/GET/", this
         # variable points to the "sed" Popen object. The variable is necessary
         # because the we need to redirect Popen.stdout to Printer, which does
         # output pagination.
