@@ -463,15 +463,6 @@ class ExecutionVisitor(NodeVisitor):
         p = Popen(cmd, shell=True, stdout=PIPE)
         return p.stdout.read().decode('utf-8').rstrip()
 
-    def _is_backticks_cmd_preceded_with_pipe_redir(self, node):
-        left_hand_input = node.full_text[:node.start]
-        right_hand_input = node.full_text[node.end:]
-        start_backticks = re.search(r"\|.*`\s*$", left_hand_input)
-        end_backticks = re.search(r"`\s*$", right_hand_input)
-        if start_backticks is not None and end_backticks is not None:
-            return True
-        return False
-
     def visit_shell_code(self, node, children):
         return node.text
 
