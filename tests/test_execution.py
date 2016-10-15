@@ -45,6 +45,13 @@ class ExecutionTestCase(TempAppDirTestCase):
         printed_msg = self.echo_via_pager.call_args[0][0]
         self.assertEqual(printed_msg, expected_msg)
 
+    def assert_stdout_startswith(self, expected_prefix):
+        printed_msg = self.echo_via_pager.call_args[0][0]
+        self.assertTrue(printed_msg.startswith(expected_prefix))
+
+    def get_stdout(self):
+        return self.echo_via_pager.call_args[0][0]
+
     def assert_stderr(self, expected_msg):
         printed_msg = self.secho.call_args[0][0]
         print_options = self.secho.call_args[1]
@@ -513,13 +520,11 @@ class TestExecution_help(ExecutionTestCase):
 
     def test_help(self):
         execute('help', self.context)
-        help_text = self.echo_via_pager.call_args[0][0]
-        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+        self.assert_stdout_startswith('Commands:\n\tcd')
 
     def test_help_with_spaces(self):
         execute('  help   ', self.context)
-        help_text = self.echo_via_pager.call_args[0][0]
-        self.assertTrue(help_text.startswith('Commands:\n\tcd'))
+        self.assert_stdout_startswith('Commands:\n\tcd')
 
 
 class TestExecution_exit(ExecutionTestCase):
@@ -999,13 +1004,22 @@ class TestHttpBin(TempAppDirTestCase):
         sys.stdin = MockStdin(open(filename, 'rb'))
         sys.stdin.isatty = lambda: True
 
+        # Mock echo_via_pager() so that we can catch data fed to stdout
+        self.patcher = patch('http_prompt.output.click.echo_via_pager')
+        self.echo_via_pager = self.patcher.start()
+
     def tearDown(self):
+        self.patcher.stop()
+
         sys.stdin.close()
         sys.stdin = self.orig_stdin
 
         super(TestHttpBin, self).tearDown()
 
-    def execute(self, command):
+    def get_stdout(self):
+        return self.echo_via_pager.call_args[0][0]
+
+    def execute_redirection(self, command):
         context = Context('http://httpbin.org')
         filename = self.make_tempfile()
         execute('%s > %s' % (command, filename), context)
@@ -1013,14 +1027,19 @@ class TestHttpBin(TempAppDirTestCase):
         with open(filename, 'rb') as f:
             return f.read()
 
+    def execute_pipe(self, command):
+        context = Context('http://httpbin.org')
+        execute(command, context)
+
     def test_get_image(self):
-        data = self.execute('get /image/png')
+        data = self.execute_redirection('get /image/png')
         self.assertTrue(data)
         self.assertEqual(hashlib.sha1(data).hexdigest(),
                          '379f5137831350c900e757b39e525b9db1426d53')
 
     def test_get_querystring(self):
-        data = self.execute('get /get id==1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'get /get id==1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['args'], {
             'id': '1234'
@@ -1028,7 +1047,8 @@ class TestHttpBin(TempAppDirTestCase):
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
     def test_post_json(self):
-        data = self.execute('post /post id=1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'post /post id=1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['json'], {
             'id': '1234'
@@ -1036,12 +1056,26 @@ class TestHttpBin(TempAppDirTestCase):
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
 
     def test_post_form(self):
-        data = self.execute('post /post --form id=1234 X-Custom-Header:5678')
+        data = self.execute_redirection(
+            'post /post --form id=1234 X-Custom-Header:5678')
         data = json.loads(data.decode('utf-8'))
         self.assertEqual(data['form'], {
             'id': '1234'
         })
         self.assertEqual(data['headers']['X-Custom-Header'], '5678')
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
+    def test_get_and_tee(self):
+        filename = self.make_tempfile()
+        self.execute_pipe('get /get hello==world | tee %s' % filename)
+
+        with open(filename) as f:
+            data = json.load(f)
+        self.assertEqual(data['args'], {'hello': 'world'})
+
+        printed_msg = self.get_stdout()
+        data = json.loads(printed_msg)
+        self.assertEqual(data['args'], {'hello': 'world'})
 
 
 class TestCommandPreview(ExecutionTestCase):
@@ -1090,6 +1124,170 @@ class TestCommandPreview(ExecutionTestCase):
         self.assert_stdout('http GET http://localhost foo==1 foo==2 foo==3\n')
         self.assertEqual(self.context.url, 'http://localhost')
         self.assertFalse(self.context.querystring_params)
+
+
+class TestPipe(ExecutionTestCase):
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
+    def test_httpie_sed(self):
+        execute("httpie get some==data | sed 's/data$/input/'", self.context)
+        self.assert_stdout('http GET http://localhost some==input\n')
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
+    def test_httpie_sed_with_echo(self):
+        execute("httpie post | `echo \"sed 's/localhost$/127.0.0.1/'\"`",
+                self.context)
+        self.assert_stdout("http POST http://127.0.0.1\n")
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
+    def test_env_grep(self):
+        self.context.body_params = {
+            'username': 'jane',
+            'name': 'Jane',
+            'password': '1234'
+        }
+        execute('env | grep name', self.context)
+        self.assert_stdout('name=Jane\nusername=jane\n')
+
+
+class TestShellSubstitution(ExecutionTestCase):
+
+    def test_unquoted_option(self):
+        execute("--auth `echo user:pass`", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_unquoted_option(self):
+        execute("--auth user:`echo pass`", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_squoted_option(self):
+        execute("--auth='user:`echo pass`'", self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_partial_dquoted_option(self):
+        execute('--auth="user:`echo pass`"', self.context)
+        self.assertEqual(self.context.options, {
+            '--auth': 'user:pass'
+        })
+
+    def test_unquoted_header(self):
+        execute("`echo 'X-Greeting'`:`echo 'hello world'`", self.context)
+        if sys.platform == 'win32':
+            expected_key = "'X-Greeting'"
+            expected_value = "'hello world'"
+        else:
+            expected_key = 'X-Greeting'
+            expected_value = 'hello world'
+
+        self.assertEqual(self.context.headers, {
+            expected_key: expected_value
+        })
+
+    def test_full_squoted_header(self):
+        execute("'`echo X-Greeting`:`echo hello`'", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_full_dquoted_header(self):
+        execute('"`echo X-Greeting`:`echo hello`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_value_squoted_header(self):
+        execute("`echo X-Greeting`:'`echo hello`'", self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_value_dquoted_header(self):
+        execute('`echo X-Greeting`:"`echo hello`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'X-Greeting': 'hello'
+        })
+
+    def test_partial_value_dquoted_header(self):
+        execute('Authorization:"Bearer `echo OAUTH TOKEN`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'Bearer OAUTH TOKEN'
+        })
+
+    def test_partial_full_dquoted_header(self):
+        execute('"Authorization:Bearer `echo OAUTH TOKEN`"', self.context)
+        self.assertEqual(self.context.headers, {
+            'Authorization': 'Bearer OAUTH TOKEN'
+        })
+
+    def test_unquoted_querystring(self):
+        execute("`echo greeting`==`echo 'hello world'`", self.context)
+        expected = ("'hello world'"
+                    if sys.platform == 'win32' else 'hello world')
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': [expected]
+        })
+
+    def test_full_squoted_querystring(self):
+        execute("'`echo greeting`==`echo hello`'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': ['hello']
+        })
+
+    def test_value_squoted_querystring(self):
+        execute("`echo greeting`=='`echo hello`'", self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': ['hello']
+        })
+
+    def test_value_dquoted_querystring(self):
+        execute('`echo greeting`=="`echo hello`"', self.context)
+        self.assertEqual(self.context.querystring_params, {
+            'greeting': ['hello']
+        })
+
+    def test_unquoted_body_param(self):
+        execute("`echo greeting`=`echo 'hello world'`", self.context)
+        expected = ("'hello world'"
+                    if sys.platform == 'win32' else 'hello world')
+        self.assertEqual(self.context.body_params, {
+            'greeting': expected
+        })
+
+    def test_full_squoted_body_param(self):
+        execute("'`echo greeting`=`echo hello`'", self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_value_squoted_body_param(self):
+        execute("`echo greeting`='`echo hello`'", self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_full_dquoted_body_param(self):
+        execute('"`echo greeting`=`echo hello`"', self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello'
+        })
+
+    def test_bad_command(self):
+        execute("name=`bad command test`", self.context)
+        self.assertEqual(self.context.body_params, {'name': ''})
+
+    @pytest.mark.skipif(sys.platform == 'win32', reason="Unix only")
+    def test_pipe_and_grep(self):
+        execute("greeting=`echo 'hello world\nhihi\n' | grep hello`",
+                self.context)
+        self.assertEqual(self.context.body_params, {
+            'greeting': 'hello world'
+        })
 
 
 class TestCommandPreviewRedirection(ExecutionTestCase):
