@@ -13,11 +13,11 @@ https://github.com/eliangcs/http-prompt/issues
 Developer Guide
 ---------------
 
-This guide is for developers who want to contribute code to this project. This
-project follows the common conventions of a Python/GitHub project. So if you're
-already an experienced Python/GitHub user, it should be straightforward for you
-to set up your development environment and send patches. Generally, the steps
-include:
+This section is for developers who want to contribute code to this project.
+This project follows the common conventions of a Python/GitHub project. So if
+you're already an experienced Python/GitHub user, it should be straightforward
+for you to set up your development environment and send patches. Generally, the
+steps include:
 
 1. Fork and clone the repo
 2. Create a virtualenv for this project
@@ -58,7 +58,8 @@ projects, virtualenv creates an isolated Python environment exclusively for a
 Python project.
 
 There are several tools you can use for managing virtualenvs. In this guide,
-I'll show you how to use pyenv_ and pyenv-virtualenv_, which I use personally.
+we'll show you how to use pyenv_ and pyenv-virtualenv_, which is one of the
+most popular virtualenv management tools.
 
 Make sure you have installed pyenv_ and pyenv-virtualenv_ first.
 
@@ -94,8 +95,13 @@ Refer to pyenv_ and pyenv-virtualenv_ if anything else is unclear.
 Installing Dependent Packages
 -----------------------------
 
-Make sure you activate your virtualenv first. It is also recommended to use
-the latest version of pip. You can upgrade it with::
+The dependent packages should be installed on a virtualenv, so make sure you
+activate your virtualenv first. If not, do::
+
+    $ pyenv activate http-prompt
+
+It is also recommended to use the latest version of pip. You can upgrade it
+with::
 
     $ pip install -U pip
 
@@ -104,11 +110,11 @@ Install HTTP Prompt with its dependent packages::
     $ cd ~/Projects/http-prompt
     $ pip install -e .
 
-``pip install -e .`` means install the package in editable mode (or developer
-mode). This allows you to edit code directly in ``~/Projects/http-prompt``
-without reinstalling the package. Without the ``-e`` option, the package will
-be installed to Python's ``site-packages`` directory, which is not convenient
-for developing.
+``pip install -e .`` means install the ``http-prompt`` package in editable mode
+(or developer mode). This allows you to edit code directly in
+``~/Projects/http-prompt`` without reinstalling the package. Without the ``-e``
+option, the package will be installed to Python's ``site-packages`` directory,
+which is not convenient for developing.
 
 
 Installing Test Dependent Packages
@@ -131,14 +137,14 @@ Always lint your code with Flake8_. You can set it up in your code editor or
 simply use ``flake8`` in the command line.
 
 `The Hitchhiker’s Guide to Python`_ provides the best Python coding practices.
-I recommend anyone who wants to write good Python code to read it.
+We recommend anyone who wants to write good Python code to read it.
 
 Adding Features
 ~~~~~~~~~~~~~~~
 
 Before you add a new feature, make sure you create an issue making a proposal
-first, because you don't want to waste your time on something that I don't
-agree upon.
+first, because you don't want to waste your time on something that the
+community don't agree upon.
 
 Python 2 and 3 Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,10 +229,11 @@ Code Review
 -----------
 
 Once you made changes and all the tests pass, push your modified code to your
-GitHub account. Submit a pull request (PR) on GitHub for me to review. If the
-patch is good, I'll merge it to the master branch and ship the new code in the
-next release. If the patch needs improvements, I'll give you feedback so you
-can modify accordingly and resubmit it to the PR.
+GitHub account. Submit a pull request (PR) on GitHub for the maintainers to
+review. If the patch is good, The maintainers will merge it to the master
+branch and ship the new code in the next release. If the patch needs
+improvements, we'll give you feedback so you can modify accordingly and
+resubmit it to the PR.
 
 
 .. _Flake8: http://flake8.pycqa.org/en/latest/index.html
