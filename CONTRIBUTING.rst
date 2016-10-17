@@ -24,7 +24,7 @@ include:
 3. Install dependent packages with ``pip install -e .``
 4. Install test dependent packages with ``pip install -r requirements-test.txt``
 5. Make your changes to the code
-6. Run tests with ``py.test`` and ``tox``
+6. Run tests with ``pytest`` and ``tox``
 7. Commit and push your changes
 8. Send a pull request
 9. Wait to be reviewed and get merged!
@@ -157,9 +157,9 @@ Single Python Version
 Make sure your virtualenv is activated. To run tests, do::
 
     $ cd ~/Projects/http-prompt
-    $ py.test
+    $ pytest
 
-``py.test`` runs the tests with your virtualenv's Python version. This is good
+``pytest`` runs the tests with your virtualenv's Python version. This is good
 for fast testing. To test the code against multiple Python versions, you use
 Tox_.
 
