@@ -101,8 +101,8 @@ requests.
     > httpie
     http http://localhost
 
-Besides ``httpie`` command, you can also use ``env`` to print the current
-session:
+Since v0.6.0, apart from ``httpie`` command, you can also use ``env`` to print
+the current session:
 
 .. code-block:: bash
 
@@ -163,6 +163,8 @@ To exit a session, simply enter:
 
 Output Redirection
 ------------------
+
+*New in v0.6.0.*
 
 You can redirect the output of a command to a file by using the syntax:
 
@@ -226,6 +228,8 @@ larger text or binary data, you may want to save the response to a file. Usage:
 Pipeline
 --------
 
+*New in v0.7.0.*
+
 HTTP Prompt supports simplified pipeline syntax, where you can pipe the output
 to a shell command:
 
@@ -259,6 +263,8 @@ Another cool trick is to use jq_ to parse JSON data:
 Shell Substitution
 ------------------
 
+*New in v0.7.0.*
+
 Shell substitution happens when you put a shell command between two backticks
 like ``\`...\```. This syntax allows you compute a value from the shell
 environment and assign the value to a parameter::
@@ -270,13 +276,15 @@ environment and assign the value to a parameter::
 
     # Get password from a file. Suppose the file has a content of
     # "secret_api_key".
-    > password==``cat ./apikey.txt``
+    > password==`cat ./apikey.txt`
     > httpie
     http http://localhost:8000 apikey==secret_api_key
 
 
 Configuration
 -------------
+
+*New in v0.4.0.*
 
 When launched for the first time, HTTP Prompt creates a user config file at
 ``$XDG_CONFIG_HOME/http-prompt/config.py`` (or ``%LOCALAPPDATA%/http-prompt/config.py``
@@ -290,6 +298,8 @@ up with a text editor and follow the guidance inside.
 
 Persistent Context
 ------------------
+
+*New in v0.4.0.*
 
 HTTP Prompt keeps a data structure called *context* to represent your current
 session. Every time you enter a command modifying your context, HTTP Prompt
