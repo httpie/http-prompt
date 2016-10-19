@@ -645,6 +645,7 @@ class TestExecution_rm(ExecutionTestCase):
     def test_non_existing_key_unicode(self):  # See #25
         execute(u'rm -q abcd', self.context)
         self.assert_stderr("Key 'abcd' not found")
+
     def test_body_reset(self):
         self.context.body_params.update({
             'first_name': 'alice',
