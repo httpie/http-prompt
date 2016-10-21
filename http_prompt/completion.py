@@ -18,9 +18,13 @@ ROOT_COMMANDS = OrderedDict([
     ('httpie', 'Preview HTTPie command'),
     ('rm *', 'Remove all options and parameters'),
     ('rm -b', 'Remove body parameter'),
+    ('rm -b *', 'Remove all body parameters'),
     ('rm -h', 'Remove header'),
+    ('rm -h *', 'Remove all headers'),
     ('rm -o', 'Remove HTTPie option'),
+    ('rm -o *', 'Remove all HTTPie options'),
     ('rm -q', 'Remove querystring parameter'),
+    ('rm -q *', 'Remove all querystring parameters'),
     ('source', 'Load environment from a file'),
 ])
 

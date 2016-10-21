@@ -244,7 +244,10 @@ class ExecutionVisitor(NodeVisitor):
             assert kind == '-o'
             target = self.context.options
 
-        del target[name]
+        if name == '*':
+            target.clear()
+        else:
+            del target[name]
         return node
 
     def visit_help(self, node, children):

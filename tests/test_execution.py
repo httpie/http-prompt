@@ -646,6 +646,38 @@ class TestExecution_rm(ExecutionTestCase):
         execute(u'rm -q abcd', self.context)
         self.assert_stderr("Key 'abcd' not found")
 
+    def test_body_reset(self):
+        self.context.body_params.update({
+            'first_name': 'alice',
+            'last_name': 'bryne'
+        })
+        execute('rm -b *', self.context)
+        self.assertFalse(self.context.body_params)
+
+    def test_querystring_reset(self):
+        self.context.querystring_params.update({
+            'first_name': 'alice',
+            'last_name': 'bryne'
+        })
+        execute('rm -q *', self.context)
+        self.assertFalse(self.context.querystring_params)
+
+    def test_headers_reset(self):
+        self.context.headers.update({
+            'Content-Type': 'text/html',
+            'Accept': 'application/json'
+        })
+        execute('rm -h *', self.context)
+        self.assertFalse(self.context.headers)
+
+    def test_options_reset(self):
+        self.context.options.update({
+            '--form': None,
+            '--body': None
+        })
+        execute('rm -o *', self.context)
+        self.assertFalse(self.context.options)
+
     def test_reset(self):
         self.context.options.update({
             '--form': None,

@@ -161,6 +161,12 @@ class TestLexer_rm(LexerTestCase):
             (String, '--json')
         ])
 
+    def test_reset(self):
+        self.assertEqual(self.get_tokens('rm *'), [
+            (Keyword, 'rm'),
+            (Name, '*')
+        ])
+
     def test_option_leading_trailing_spaces(self):
         self.assertEqual(self.get_tokens('  rm  -o    --json   '), [
             (Keyword, 'rm'),
