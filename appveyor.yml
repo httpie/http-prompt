@@ -26,4 +26,4 @@ install:
 test_script:
   - "%PYTHON%/Scripts/pip.exe --version"
   - "%PYTHON%/Scripts/http.exe --debug"
-  - "%PYTHON%/Scripts/py.test.exe"
+  - "%PYTHON%/Scripts/pytest.exe"

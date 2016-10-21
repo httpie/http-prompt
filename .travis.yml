@@ -57,7 +57,7 @@ script:
     if [[ $TRAVIS_OS_NAME == 'osx' ]]; then
       PATH="/usr/local/bin:$PATH" tox -e "$TOXENV"
     else
-      py.test
+      pytest
     fi
 
 after_success:
