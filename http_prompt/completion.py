@@ -32,6 +32,7 @@ ACTIONS = OrderedDict([
     ('delete', 'DELETE request'),
     ('get', 'GET request'),
     ('head', 'HEAD request'),
+    ('options', 'OPTIONS request'),
     ('patch', 'GET request'),
     ('post', 'POST request'),
     ('put', 'PUT request'),

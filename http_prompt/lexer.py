@@ -43,7 +43,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'action'),
 
-            (r'(?i)(get|head|post|put|patch|delete)(\s*)',
+            (r'(?i)(get|head|post|put|patch|delete|options)(\s*)',
              bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
 
             (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
