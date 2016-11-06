@@ -18,6 +18,15 @@ class LexerTestCase(unittest.TestCase):
         return tokens
 
 
+class TestLexer_param_mutation(LexerTestCase):
+    def test_parameter_name_including_http_method_name(self):
+        self.assertEqual(self.get_tokens('heading==hello'), [
+            (Name, 'heading'),
+            (Operator, '=='),
+            (String, 'hello')
+        ])
+
+
 class TestLexer_cd(LexerTestCase):
 
     def test_simple(self):
