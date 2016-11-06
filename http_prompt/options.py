@@ -66,3 +66,5 @@ OPTION_VALUE_CHOICES = {
     '-p': PRETTY_CHOICES,
     '-s': STYLE_CHOICES,
 }
+
+HTTP_METHODS = ('get', 'head', 'post', 'put', 'patch', 'delete', 'options')
