@@ -12,7 +12,8 @@ __all__ = ['HttpPromptLexer']
 
 FLAG_OPTIONS = [name for name, _ in opt.FLAG_OPTIONS]
 VALUE_OPTIONS = [name for name, _ in opt.VALUE_OPTIONS]
-HTTP_METHODS = opt.HTTP_METHODS
+HTTP_METHODS = ('get', 'head', 'post', 'put', 'patch', 'delete', 'options')
+
 
 def string_rules(state):
     return [
