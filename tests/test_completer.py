@@ -69,3 +69,7 @@ class TestCompleter(unittest.TestCase):
     def test_header_with_spanish(self):
         result = self.get_completions('X-Custom-Header:Jesú')
         self.assertFalse(result)
+
+    def test_options_method(self):
+        result = self.get_completions('opt')
+        self.assertEqual(result[0], 'options')

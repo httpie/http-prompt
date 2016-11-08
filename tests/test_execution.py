@@ -997,6 +997,10 @@ class TestHttpAction(ExecutionTestCase):
         execute('HEAD', self.context)
         self.assert_httpie_main_called_with(['HEAD', 'http://localhost'])
 
+    def test_options(self):
+        execute('options', self.context)
+        self.assert_httpie_main_called_with(['OPTIONS', 'http://localhost'])
+
 
 class TestHttpActionRedirection(ExecutionTestCase):
 

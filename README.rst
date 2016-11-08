@@ -122,6 +122,7 @@ To actually send an HTTP request, enter one of the HTTP methods:
     > patch
     > delete
     > head
+    > options (*new in v0.8.0*)
 
 The above HTTP methods also support temporary overriding:
 

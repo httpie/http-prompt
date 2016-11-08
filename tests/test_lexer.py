@@ -1,6 +1,6 @@
 import unittest
 
-from pygments.token import Keyword, String, Text, Error, Name, Operator, Literal
+from pygments.token import Keyword, String, Text, Error, Name, Operator
 
 from http_prompt.lexer import HttpPromptLexer
 
@@ -296,6 +296,12 @@ class TestLexerPreview(LexerTestCase):
             (Name, '--form')
         ])
 
+    def test_httpie_options(self):
+        self.assertEqual(self.get_tokens('httpie options test --body'), [
+            (Keyword, 'httpie'), (Keyword, 'options'),
+            (String, 'test'), (Name, '--body')
+        ])
+
 
 class TestShellCode(LexerTestCase):
 
@@ -561,6 +567,11 @@ class TestLexerAction(LexerTestCase):
             (Keyword, 'post'), (Name, 'name'), (Operator, '='),
             (Text, '"'), (String, 'john doe'), (Text, '"'),
             (Name, 'username'), (Operator, '='), (String, 'john')
+        ])
+
+    def test_options(self):
+        self.assertEqual(self.get_tokens('options'), [
+            (Keyword, 'options')
         ])
 
 
