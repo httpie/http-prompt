@@ -296,6 +296,12 @@ class TestLexerPreview(LexerTestCase):
             (Name, '--form')
         ])
 
+    def test_httpie_options(self):
+        self.assertEqual(self.get_tokens('httpie options test --body'), [
+            (Keyword, 'httpie'), (Keyword, 'options'),
+            (String, 'test'), (Name, '--body')
+        ])
+
 
 class TestShellCode(LexerTestCase):
 

@@ -155,8 +155,9 @@ class HttpPromptLexer(RegexLexer):
 
             (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)", bygroups(Text, String)),
 
-            (r'([^\-]([^\s"\'\\=:]|(\\.))+)(\s+|$)',
-             String, combined('concat_mut', 'redir_out', 'pipe')),
+            (r'([^\-](?:[^\s"\'\\=:]|(\\.))+)(\s+|$)',
+             bygroups(String, Text),
+             combined('concat_mut', 'redir_out', 'pipe')),
 
             (r'', Text,
              combined('concat_mut', 'redir_out', 'pipe'))
