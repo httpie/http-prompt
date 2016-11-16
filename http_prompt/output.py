@@ -10,7 +10,10 @@ class Printer(object):
     def write(self, data):
         if isinstance(data, six.binary_type):
             data = data.decode('utf-8')
-        click.echo_via_pager(data)
+
+        # echo_via_pager() already appends a '\n' at the end of text,
+        # so we use rstrip() to remove extra newlines (#89)
+        click.echo_via_pager(data.rstrip())
 
     def flush(self):
         pass

@@ -42,7 +42,9 @@ class ExecutionTestCase(TempAppDirTestCase):
         self.assertEqual(self.httpie_main.call_args[0][0], args)
 
     def assert_stdout(self, expected_msg):
-        printed_msg = self.echo_via_pager.call_args[0][0]
+        # Append '\n' to simulate behavior of click.echo_via_pager(),
+        # which we use whenever we want to output anything to stdout
+        printed_msg = self.echo_via_pager.call_args[0][0] + '\n'
         self.assertEqual(printed_msg, expected_msg)
 
     def assert_stdout_startswith(self, expected_prefix):
