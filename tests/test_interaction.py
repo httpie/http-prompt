@@ -51,6 +51,8 @@ class TestInteraction(TempAppDirTestCase):
         child.expect_exact('Goodbye!', timeout=20)
         child.close()
 
+    @pytest.mark.skipif(sys.platform == 'win32',
+                        reason="pexpect doesn't work well on Windows")
     @pytest.mark.slow
     def test_vi_mode(self):
         self.write_config('vi = True\n')
@@ -68,7 +70,7 @@ class TestInteraction(TempAppDirTestCase):
 
         child.expect_exact('http http://localhost:8000')
 
-        # Insert 'exit'
+        # Enter 'exit'
         child.send('\x1b')
         child.send('i')
         child.sendline('exit')
