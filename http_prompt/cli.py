@@ -122,7 +122,7 @@ def cli(url, http_options):
             text = prompt('%s> ' % context.url, completer=completer,
                           lexer=lexer, style=style, history=history,
                           auto_suggest=AutoSuggestFromHistory(),
-                          on_abort=AbortAction.RETRY)
+                          on_abort=AbortAction.RETRY, vi_mode=cfg['vi'])
         except EOFError:
             break  # Control-D pressed
         else:
