@@ -19,3 +19,8 @@ pager = 'less'
 # 'ask': ask the user if they want to set the cookie
 # 'off': do nothing with the 'Set-Cookie' header
 set_cookies = 'auto'
+
+# Enable Vi editor mode? Available values: True / False.
+# When Vi mode is enabled, you use Vi-like keybindings to edit your commands.
+# When it is disabled, you use Emacs keybindings.
+vi = False
