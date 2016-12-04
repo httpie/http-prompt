@@ -1,7 +1,7 @@
 HTTP Prompt
 ===========
 
-|PyPI| |Travis| |Appveyor| |Coverage|
+|Gitter| |PyPI| |Travis| |Appveyor| |Coverage|
 
 HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
 and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
@@ -333,10 +333,21 @@ Roadmap
 * HTTP/2 support
 
 
+User Support
+------------
+
+We'd love to hear more from our users! Please use the following channels for
+bug reports, feature requests, and questions:
+
+* `GitHub issues`_
+* `Gitter chat room`_
+
+
 Contributing
 ------------
 
-See CONTRIBUTING.rst_.
+Are you a developer and interested in contributing to HTTP Prompt? See
+CONTRIBUTING.rst_.
 
 
 Thanks
@@ -348,6 +359,9 @@ Thanks
 * pgcli_: for the inspiration of this project
 * Contributors_: for improving this project
 
+
+.. |Gitter| image:: https://badges.gitter.im/http-prompt/http-prompt.svg
+    :target: https://gitter.im/http-prompt/http-prompt
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
     :target: https://pypi.python.org/pypi/http-prompt
@@ -361,8 +375,11 @@ Thanks
 .. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
     :target: https://coveralls.io/github/eliangcs/http-prompt?branch=master
 
+
 .. _CONTRIBUTING.rst: https://github.com/eliangcs/http-prompt/blob/master/CONTRIBUTING.rst
 .. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
+.. _GitHub issues: https://github.com/eliangcs/http-prompt/issues
+.. _Gitter chat room: https://gitter.im/http-prompt/http-prompt
 .. _HTTPie: https://github.com/jkbrzt/httpie
 .. _jq: https://stedolan.github.io/jq/
 .. _Parsimonious: https://github.com/erikrose/parsimonious
