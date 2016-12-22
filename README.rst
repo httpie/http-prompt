@@ -32,7 +32,7 @@ For find out more, please visit the following links:
     :target: https://gitter.im/http-prompt/http-prompt
 
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
-    :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1
+    :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=2
 
 .. _HTTPie: https://httpie.org
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit

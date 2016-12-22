@@ -57,7 +57,7 @@ Thanks
 
 
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
-    :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1
+    :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=2
 
 .. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
 .. _GitHub issues: https://github.com/eliangcs/http-prompt/issues
