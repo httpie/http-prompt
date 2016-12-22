@@ -10,8 +10,7 @@ and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
 
 For find out more, please visit the following links:
 
-* Home: https://http-prompt.com
-* Documentation: https://docs.http-prompt.com
+* Documentation: http://docs.http-prompt.com
 * GitHub: https://github.com/eliangcs/http-prompt
 * Gitter: https://gitter.im/http-prompt/http-prompt
 

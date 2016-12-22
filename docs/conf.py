@@ -168,8 +168,8 @@ html_sidebars = {
 
 html_theme_options = {
     'extra_nav_links': OrderedDict([
-        ('Home', 'https://http-prompt.com'),
-        ('Themes', 'https://http-prompt.com/themes'),
+        # ('Home', 'http://http-prompt.com'),
+        # ('Themes', 'https://http-prompt.com/themes'),
         ('Gitter', 'https://gitter.im/http-prompt/http-prompt'),
         ('GitHub', 'https://github.com/eliangcs/http-prompt'),
     ])
