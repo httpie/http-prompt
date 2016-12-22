@@ -145,6 +145,20 @@ HTTP Prompt is compatible with Python 2 and 3. Keep in mind that you're coding
 for Python 2 and 3 at the same time. You can use Tox_ (see below) to make sure
 the code is runnable on both Python 2 and 3.
 
+Documentation
+~~~~~~~~~~~~~
+
+Documentation is written in Sphinx_. To build documentation, you need to
+install Sphinx_ first::
+
+    $ pip install sphinx
+
+To build and view documentation in HTML, do::
+
+    $ cd ~/Projects/http-prompt/docs
+    $ make html
+    $ open _build/html/index.html
+
 
 Running Tests
 -------------
@@ -232,5 +246,6 @@ resubmit it to the PR.
 .. _Forking Projects: https://guides.github.com/activities/forking/
 .. _pyenv-virtualenv: https://github.com/yyuu/pyenv-virtualenv
 .. _pyenv: https://github.com/yyuu/pyenv
+.. _Sphinx: http://www.sphinx-doc.org/
 .. _The Hitchhiker’s Guide to Python: http://docs.python-guide.org/en/latest/
 .. _Tox: https://tox.readthedocs.io/en/latest/
