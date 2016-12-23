@@ -1,7 +1,7 @@
 HTTP Prompt
 ===========
 
-|PyPI| |Travis| |Appveyor| |Coverage| |Gitter|
+|PyPI| |Docs| |Travis| |Appveyor| |Coverage| |Gitter|
 
 HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
 and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
@@ -17,6 +17,9 @@ For find out more, please visit the following links:
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
     :target: https://pypi.python.org/pypi/http-prompt
+
+.. |Docs| image:: https://img.shields.io/badge/docs-latest-brightgreen.svg?style=flat
+    :target: http://docs.http-prompt.com/en/latest/?badge=latest
 
 .. |Travis| image:: https://api.travis-ci.org/eliangcs/http-prompt.svg?branch=master
     :target: https://travis-ci.org/eliangcs/http-prompt
