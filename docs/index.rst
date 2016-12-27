@@ -61,7 +61,7 @@ Thanks
 
 .. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
 .. _GitHub issues: https://github.com/eliangcs/http-prompt/issues
-.. _Gitter chat room: https://gitter.im/http-prompt/http-prompt
+.. _Gitter chat room: https://gitter.im/eliangcs/http-prompt
 .. _HTTPie: https://httpie.org
 .. _Parsimonious: https://github.com/erikrose/parsimonious
 .. _pgcli: http://pgcli.com

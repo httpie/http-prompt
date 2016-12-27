@@ -169,7 +169,7 @@ html_theme_options = {
     'extra_nav_links': OrderedDict([
         # ('Home', 'http://http-prompt.com'),
         # ('Themes', 'https://http-prompt.com/themes'),
-        ('Gitter', 'https://gitter.im/http-prompt/http-prompt'),
+        ('Gitter', 'https://gitter.im/eliangcs/http-prompt'),
         ('GitHub', 'https://github.com/eliangcs/http-prompt'),
     ])
 }
