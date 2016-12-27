@@ -12,7 +12,7 @@ For find out more, please visit the following links:
 
 * Documentation: http://docs.http-prompt.com
 * GitHub: https://github.com/eliangcs/http-prompt
-* Gitter: https://gitter.im/http-prompt/http-prompt
+* Gitter: https://gitter.im/eliangcs/http-prompt
 
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
@@ -30,8 +30,8 @@ For find out more, please visit the following links:
 .. |Coverage| image:: https://coveralls.io/repos/github/eliangcs/http-prompt/badge.svg?branch=master
     :target: https://coveralls.io/github/eliangcs/http-prompt?branch=master
 
-.. |Gitter| image:: https://badges.gitter.im/http-prompt/http-prompt.svg
-    :target: https://gitter.im/http-prompt/http-prompt
+.. |Gitter| image:: https://badges.gitter.im/eliangcs/http-prompt.svg
+    :target: https://gitter.im/eliangcs/http-prompt
 
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
     :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=2
