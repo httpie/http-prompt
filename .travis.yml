@@ -5,12 +5,14 @@ python:
   - "3.3"
   - "3.4"
   - "3.5"
+  - "3.6"
   - "pypy"
-  - "pypy3"
+  # pypy3 seem to fail due to a bug on pypy3's curses
+  # - "pypy3"
 
 env:
   global:
-    - NEWEST_PYTHON=3.5
+    - NEWEST_PYTHON=3.6
 
 matrix:
 
@@ -36,7 +38,7 @@ matrix:
     - os: osx
       language: generic
       env:
-        - TOXENV=py35
+        - TOXENV=py36
         - BREW_INSTALL=python3
 
 install:
