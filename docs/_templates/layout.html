@@ -1,8 +1,1 @@
 {%- extends "!layout.html" %}
-
-{% block extrahead %}
-	{{ super() }}
-	{% if READTHEDOCS %}
-	  {% include "analytics.html" %}
-	{% endif %}
-{% endblock %}

@@ -160,8 +160,7 @@ texinfo_documents = [
 html_sidebars = {
     '**': [
         'localtoc.html',
-        'navigation.html',
-        'searchbox.html',
+        'navigation.html'
     ]
 }
 
