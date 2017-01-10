@@ -1,4 +1,5 @@
 import io
+import json
 import re
 import sys
 
@@ -56,7 +57,7 @@ grammar = r"""
     full_dquoted_mut = _ '"' dquoted_mutkey mutop dquoted_mutval '"' _
     value_squoted_mut = _ unquoted_mutkey mutop "'" squoted_mutval "'" _
     value_dquoted_mut = _ unquoted_mutkey mutop '"' dquoted_mutval '"' _
-    mutop = ":" / "==" / "="
+    mutop = ":=" / ":" / "==" / "="
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
     unquoted_mutkey_item = shell_subs / unquoted_mutkey_char / escapeseq
@@ -303,7 +304,9 @@ class ExecutionVisitor(NodeVisitor):
         return children[0]
 
     def _mutate(self, node, key, op, val):
-        if op == ':':
+        if op == ':=':
+            self.context_override.body_json_params[key] = json.loads(val)
+        elif op == ':':
             self.context_override.headers[key] = val
         elif op == '=':
             self.context_override.body_params[key] = val

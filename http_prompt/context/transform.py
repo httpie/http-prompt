@@ -1,5 +1,7 @@
 """Functions that transform a Context object to a different representation."""
 
+import json
+
 import six
 
 from http_prompt.utils import smart_quote
@@ -45,6 +47,7 @@ def _extract_httpie_request_items(context, quote=False):
     operators_and_items = [
         # (separator, dict_of_request_items)
         ('==', context.querystring_params),
+        (':=', context.body_json_params),
         ('=', context.body_params),
         (':', context.headers)
     ]
@@ -54,6 +57,11 @@ def _extract_httpie_request_items(context, quote=False):
                 for v in value:
                     item = quote_func('%s%s%s' % (k, sep, v))
                     items.append(item)
+            elif isinstance(value, dict):
+                json_str = json.dumps(value,
+                                      sort_keys=True).replace("'", "\\'")
+                item = quote_func('%s%s%s' % (k, sep, json_str))
+                items.append(item)
             else:
                 item = quote_func('%s%s%s' % (k, sep, value))
                 items.append(item)

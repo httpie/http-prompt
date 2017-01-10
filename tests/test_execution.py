@@ -918,6 +918,23 @@ class TestMutation(ExecutionTestCase):
             'name': ['jane']
         })
 
+    def test_raw_json_object(self):
+        execute("""definition:='{"id": 819, "name": "ML"}'""", self.context)
+        self.assertEqual(self.context.body_json_params, {
+            'definition': {
+                'id': 819,
+                'name': 'ML'
+            }
+        })
+
+    def test_raw_json_integer(self):
+        execute('number:=999', self.context)
+        self.assertEqual(self.context.body_json_params, {'number': 999})
+
+    def test_raw_json_string(self):
+        execute("""name:='"john doe"'""", self.context)
+        self.assertEqual(self.context.body_json_params, {'name': 'john doe'})
+
 
 class TestHttpAction(ExecutionTestCase):
 
@@ -974,6 +991,14 @@ class TestHttpAction(ExecutionTestCase):
         self.assert_httpie_main_called_with(['POST', 'http://localhost',
                                              'content=text'])
         self.assertFalse(self.context.body_params)
+
+    def test_post_raw_json(self):
+        execute("""post definition:='{"id": 819, "name": "ML"}'""",
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost',
+            """definition:={"id": 819, "name": "ML"}"""])
+        self.assertFalse(self.context.body_json_params)
 
     def test_delete(self):
         execute('delete', self.context)
