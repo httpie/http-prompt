@@ -230,6 +230,7 @@ class ExecutionVisitor(NodeVisitor):
             for target in [self.context.headers,
                            self.context.querystring_params,
                            self.context.body_params,
+                           self.context.body_json_params,
                            self.context.options]:
                 target.clear()
             return node
@@ -239,16 +240,26 @@ class ExecutionVisitor(NodeVisitor):
             target = self.context.headers
         elif kind == '-q':
             target = self.context.querystring_params
-        elif kind == '-b':
-            target = self.context.body_params
-        else:
-            assert kind == '-o'
+        elif kind == '-o':
             target = self.context.options
+        else:
+            assert kind == '-b'
+            # TODO: This is kind of ugly, will fix it
+            if name == '*':
+                self.context.body_params.clear()
+                self.context.body_json_params.clear()
+            else:
+                try:
+                    del self.context.body_params[name]
+                except KeyError:
+                    del self.context.body_json_params[name]
+            return node
 
         if name == '*':
             target.clear()
         else:
             del target[name]
+
         return node
 
     def visit_help(self, node, children):

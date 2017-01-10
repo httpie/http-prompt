@@ -18,7 +18,54 @@ class LexerTestCase(unittest.TestCase):
         return tokens
 
 
-class TestLexer_param_mutation(LexerTestCase):
+class TestLexer_mutation(LexerTestCase):
+
+    def test_querystring(self):
+        self.assertEqual(self.get_tokens('foo==bar'), [
+            (Name, 'foo'),
+            (Operator, '=='),
+            (String, 'bar')
+        ])
+
+    def test_body_param(self):
+        self.assertEqual(self.get_tokens('foo=bar'), [
+            (Name, 'foo'),
+            (Operator, '='),
+            (String, 'bar')
+        ])
+
+    def test_header(self):
+        self.assertEqual(self.get_tokens('Accept:application/json'), [
+            (Name, 'Accept'),
+            (Operator, ':'),
+            (String, 'application/json')
+        ])
+
+    def test_json_integer(self):
+        self.assertEqual(self.get_tokens('number:=1'), [
+            (Name, 'number'),
+            (Operator, ':='),
+            (String, '1')
+        ])
+
+    def test_json_string(self):
+        self.assertEqual(self.get_tokens('name:="foo bar"'), [
+            (Name, 'name'),
+            (Operator, ':='),
+            (Text, '"'),
+            (String, 'foo bar'),
+            (Text, '"')
+        ])
+
+    def test_json_object(self):
+        self.assertEqual(self.get_tokens("""object:='{"id": 123}'"""), [
+            (Name, 'object'),
+            (Operator, ':='),
+            (Text, "'"),
+            (String, '{"id": 123}'),
+            (Text, "'")
+        ])
+
     def test_parameter_name_including_http_method_name(self):
         self.assertEqual(self.get_tokens('heading==hello'), [
             (Name, 'heading'),

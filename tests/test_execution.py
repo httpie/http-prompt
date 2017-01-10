@@ -614,6 +614,11 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -b name', self.context)
         self.assertFalse(self.context.body_params)
 
+    def test_body_json_param(self):
+        self.context.body_json_params['name'] = 'bob'
+        execute('rm -b name', self.context)
+        self.assertFalse(self.context.body_json_params)
+
     def test_header_single_quoted(self):
         self.context.headers['Content-Type'] = 'text/html'
         execute("rm -h 'Content-Type'", self.context)
@@ -697,6 +702,9 @@ class TestExecution_rm(ExecutionTestCase):
             'name': 'dontcare',
             'email': 'dontcare'
         })
+        self.context.body_json_params.update({
+            'name': 'dontcare'
+        })
 
         execute('rm *', self.context)
 
@@ -704,6 +712,7 @@ class TestExecution_rm(ExecutionTestCase):
         self.assertFalse(self.context.headers)
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.body_params)
+        self.assertFalse(self.context.body_json_params)
 
 
 class TestMutation(ExecutionTestCase):
