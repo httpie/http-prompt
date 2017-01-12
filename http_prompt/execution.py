@@ -101,7 +101,7 @@ grammar = r"""
     unquoted_stringitem = shell_subs / unquoted_stringchar / escapeseq
     dquoted_stringchar = ~r'[^\r\n"\\]'
     squoted_stringchar = ~r"[^\r\n'\\]"
-    unquoted_stringchar = ~r"[^\s'\"\\]"
+    unquoted_stringchar = ~r"[^\s'\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
 

@@ -53,15 +53,15 @@ def _extract_httpie_request_items(context, quote=False):
     ]
     for sep, item_dict in operators_and_items:
         for k, value in sorted(six.iteritems(item_dict)):
-            if isinstance(value, (list, tuple)):
+            if sep == ':=':
+                json_str = json.dumps(value,
+                                      sort_keys=True).replace("'", "\\'")
+                item = quote_func('%s:=%s' % (k, json_str))
+                items.append(item)
+            elif isinstance(value, (list, tuple)):
                 for v in value:
                     item = quote_func('%s%s%s' % (k, sep, v))
                     items.append(item)
-            elif isinstance(value, dict):
-                json_str = json.dumps(value,
-                                      sort_keys=True).replace("'", "\\'")
-                item = quote_func('%s%s%s' % (k, sep, json_str))
-                items.append(item)
             else:
                 item = quote_func('%s%s%s' % (k, sep, value))
                 items.append(item)

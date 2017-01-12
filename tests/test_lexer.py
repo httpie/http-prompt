@@ -48,6 +48,13 @@ class TestLexer_mutation(LexerTestCase):
             (String, '1')
         ])
 
+    def test_json_boolean(self):
+        self.assertEqual(self.get_tokens('enabled:=true'), [
+            (Name, 'enabled'),
+            (Operator, ':='),
+            (String, 'true')
+        ])
+
     def test_json_string(self):
         self.assertEqual(self.get_tokens('name:="foo bar"'), [
             (Name, 'name'),
@@ -57,7 +64,30 @@ class TestLexer_mutation(LexerTestCase):
             (Text, '"')
         ])
 
+    def test_json_array(self):
+        self.assertEqual(self.get_tokens('list:=[1,"two"]'), [
+            (Name, 'list'),
+            (Operator, ':='),
+            (String, '[1,"two"]'),
+        ])
+
+    def test_json_array_quoted(self):
+        self.assertEqual(self.get_tokens("""list:='[1,"two"]'"""), [
+            (Name, 'list'),
+            (Operator, ':='),
+            (Text, "'"),
+            (String, '[1,"two"]'),
+            (Text, "'"),
+        ])
+
     def test_json_object(self):
+        self.assertEqual(self.get_tokens('object:={"id":123,"name":"foo"}'), [
+            (Name, 'object'),
+            (Operator, ':='),
+            (String, '{"id":123,"name":"foo"}'),
+        ])
+
+    def test_json_object_quoted(self):
         self.assertEqual(self.get_tokens("""object:='{"id": 123}'"""), [
             (Name, 'object'),
             (Operator, ':='),

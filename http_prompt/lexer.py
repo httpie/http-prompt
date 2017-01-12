@@ -27,7 +27,7 @@ def string_rules(state):
 
         (r"(')((?:[^\r\n'\\]|(?:\\.))+)", bygroups(Text, String), state),
 
-        (r'([^\s"\'\\]|(\\.))+', String, state)
+        (r'([^\s\'\\]|(\\.))+', String, state)
     ]
 
 
