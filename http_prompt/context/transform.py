@@ -56,7 +56,7 @@ def _extract_httpie_request_items(context, quote=False):
             if sep == ':=':
                 json_str = json.dumps(value,
                                       sort_keys=True).replace("'", "\\'")
-                if isinstance(value, six.string_types):
+                if isinstance(value, six.string_types) and quote:
                     json_str = "'" + json_str + "'"
                 item = quote_func('%s:=%s' % (k, json_str))
                 items.append(item)
