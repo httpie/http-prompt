@@ -138,3 +138,14 @@ def test_format_to_http_prompt_2():
                       "'full name=Jane Doe'\n"
                       "Accept:text/html\n"
                       "'Authorization:ApiKey 1234'\n")
+
+
+def test_format_raw_json_string_to_http_prompt():
+    c = Context('http://localhost/things')
+    c.body_json_params.update({
+        'bar': 'baz',
+    })
+
+    output = t.format_to_http_prompt(c)
+    assert output == ("cd http://localhost/things\n"
+                      "bar:='\"baz\"'\n")
