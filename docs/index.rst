@@ -22,7 +22,7 @@ Contents
 Roadmap
 -------
 
-* Support for advanced HTTPie syntax, e.g, ``field:=json`` and ``field=@file.json``
+* Support for advanced HTTPie syntax, e.g, ``field=@file.json``
 * Support for cURL command and raw format preview
 * Improve autocomplete
 * Python syntax evaluation
