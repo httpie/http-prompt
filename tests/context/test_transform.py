@@ -40,6 +40,23 @@ def test_extract_args_for_httpie_main_post():
                     'Accept:text/html', 'Authorization:ApiKey 1234']
 
 
+def test_extract_raw_json_args_for_httpie_main_post():
+    c = Context('http://localhost/things')
+    c.body_json_params.update({
+        'enabled': True,
+        'items': ['foo', 'bar'],
+        'object': {
+            'id': 10,
+            'name': 'test'
+        }
+    })
+
+    args = t.extract_args_for_httpie_main(c, method='post')
+    assert args == ['POST', 'http://localhost/things',
+                    'enabled:=true', 'items:=["foo", "bar"]',
+                    'object:={"id": 10, "name": "test"}']
+
+
 def test_format_to_httpie_get():
     c = Context('http://localhost/things')
     c.headers.update({
@@ -121,3 +138,14 @@ def test_format_to_http_prompt_2():
                       "'full name=Jane Doe'\n"
                       "Accept:text/html\n"
                       "'Authorization:ApiKey 1234'\n")
+
+
+def test_format_raw_json_string_to_http_prompt():
+    c = Context('http://localhost/things')
+    c.body_json_params.update({
+        'bar': 'baz',
+    })
+
+    output = t.format_to_http_prompt(c)
+    assert output == ("cd http://localhost/things\n"
+                      "bar:='\"baz\"'\n")

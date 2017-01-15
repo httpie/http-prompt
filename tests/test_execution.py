@@ -614,6 +614,11 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -b name', self.context)
         self.assertFalse(self.context.body_params)
 
+    def test_body_json_param(self):
+        self.context.body_json_params['name'] = 'bob'
+        execute('rm -b name', self.context)
+        self.assertFalse(self.context.body_json_params)
+
     def test_header_single_quoted(self):
         self.context.headers['Content-Type'] = 'text/html'
         execute("rm -h 'Content-Type'", self.context)
@@ -697,6 +702,9 @@ class TestExecution_rm(ExecutionTestCase):
             'name': 'dontcare',
             'email': 'dontcare'
         })
+        self.context.body_json_params.update({
+            'name': 'dontcare'
+        })
 
         execute('rm *', self.context)
 
@@ -704,6 +712,7 @@ class TestExecution_rm(ExecutionTestCase):
         self.assertFalse(self.context.headers)
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.body_params)
+        self.assertFalse(self.context.body_json_params)
 
 
 class TestMutation(ExecutionTestCase):
@@ -918,6 +927,44 @@ class TestMutation(ExecutionTestCase):
             'name': ['jane']
         })
 
+    def test_raw_json_object(self):
+        execute("""definition:={"id":819,"name":"ML"}""", self.context)
+        self.assertEqual(self.context.body_json_params, {
+            'definition': {
+                'id': 819,
+                'name': 'ML'
+            }
+        })
+
+    def test_raw_json_object_quoted(self):
+        execute("""definition:='{"id": 819, "name": "ML"}'""", self.context)
+        self.assertEqual(self.context.body_json_params, {
+            'definition': {
+                'id': 819,
+                'name': 'ML'
+            }
+        })
+
+    def test_raw_json_array(self):
+        execute("""names:=["foo","bar"]""", self.context)
+        self.assertEqual(self.context.body_json_params, {
+            'names': ["foo", "bar"]
+        })
+
+    def test_raw_json_array_quoted(self):
+        execute("""names:='["foo", "bar"]'""", self.context)
+        self.assertEqual(self.context.body_json_params, {
+            'names': ["foo", "bar"]
+        })
+
+    def test_raw_json_integer(self):
+        execute('number:=999', self.context)
+        self.assertEqual(self.context.body_json_params, {'number': 999})
+
+    def test_raw_json_string(self):
+        execute("""name:='"john doe"'""", self.context)
+        self.assertEqual(self.context.body_json_params, {'name': 'john doe'})
+
 
 class TestHttpAction(ExecutionTestCase):
 
@@ -974,6 +1021,52 @@ class TestHttpAction(ExecutionTestCase):
         self.assert_httpie_main_called_with(['POST', 'http://localhost',
                                              'content=text'])
         self.assertFalse(self.context.body_params)
+
+    def test_post_raw_json_object(self):
+        execute("""post definition:={"id":819,"name":"ML"}""",
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost',
+            """definition:={"id": 819, "name": "ML"}"""])
+        self.assertFalse(self.context.body_json_params)
+
+    def test_post_raw_json_object_quoted(self):
+        execute("""post definition:='{"id": 819, "name": "ML"}'""",
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost',
+            'definition:={"id": 819, "name": "ML"}'])
+        self.assertFalse(self.context.body_json_params)
+
+    def test_post_raw_json_array(self):
+        execute("""post hobbies:=["foo","bar"]""",
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost',
+            'hobbies:=["foo", "bar"]'])
+        self.assertFalse(self.context.body_json_params)
+
+    def test_post_raw_json_array_quoted(self):
+        execute("""post hobbies:='["foo", "bar"]'""",
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost',
+            'hobbies:=["foo", "bar"]'])
+        self.assertFalse(self.context.body_json_params)
+
+    def test_post_raw_json_integer(self):
+        execute('post number:=123',
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost', 'number:=123'])
+        self.assertFalse(self.context.body_json_params)
+
+    def test_post_raw_json_boolean(self):
+        execute('post foo:=true',
+                self.context)
+        self.assert_httpie_main_called_with([
+            'POST', 'http://localhost', 'foo:=true'])
+        self.assertFalse(self.context.body_json_params)
 
     def test_delete(self):
         execute('delete', self.context)

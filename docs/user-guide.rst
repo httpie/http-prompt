@@ -59,16 +59,34 @@ The following are all valid:
 
 .. code-block:: bash
 
-    > Content-Type:application/json username=john
-    > 'name=John Doe' apikey==abc
-    > Authorization:"Bearer auth_token"
+    # Header
+    > Content-Type:application/json
+
+    # Querystring parameter
+    > page==2
+
+    # Body parameters
+    > username=foo
+    > full_name='foo bar'
+
+    # Body parameters in raw JSON
+    > number:=1234
+    > is_ok:=true
+    > names:=["foo","bar"]
+    > user:='{"username": "foo", "password": "bar"}'
+
+    # Write them in one line
+    > Content-Type:application/json page==2 username=foo
 
 You can also add HTTPie_ options like this:
 
 .. code-block:: bash
 
     > --form --auth user:pass
-    > --verify=no username=jane
+    > --verify=no
+
+    # HTTPie options and request parameters in one line
+    > --form --auth user:pass username=foo Content-Type:application/json
 
 To preview how HTTP Prompt is going to call HTTPie_, do:
 
@@ -138,9 +156,16 @@ HTTPie_ option:
 
 .. code-block:: bash
 
+    # Remove a header
     > rm -h Content-Type
+
+    # Remove a querystring parameter
     > rm -q apikey
+
+    # Remove a body parameter
     > rm -b username
+
+    # Remove an HTTPie option
     > rm -o --auth
 
 To reset the session, i.e., clear all parameters and options:
@@ -175,7 +200,8 @@ where ``COMMAND`` can be one of the following:
 
 * ``env``
 * ``httpie``
-* HTTP actions: ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``
+* HTTP actions: ``get``, ``post``, ``put``, ``patch``, ``delete``, ``head``,
+  ``options``
 
 
 Saving and Loading Sessions
@@ -200,7 +226,7 @@ Usage:
     # Update the current session
     > source /path/to/file
 
-    # Overwrite the current session completely
+    # Wipe out the current session and load from a file
     > exec /path/to/file
 
 
@@ -261,7 +287,7 @@ Shell Substitution
 *New in v0.7.0.*
 
 Shell substitution happens when you put a shell command between two backticks
-like ``\`...\```. This syntax allows you compute a value from the shell
+like ```...```. This syntax allows you compute a value from the shell
 environment and assign the value to a parameter::
 
     # Set date to current time
@@ -317,5 +343,5 @@ replaced by ``env``, ``exec`` and ``source`` commands. See the discussion in
 `issue #70 <https://github.com/eliangcs/http-prompt/issues/70>`_ for detail.
 
 
-.. _HTTPie: https://github.com/jkbrzt/httpie
+.. _HTTPie: https://httpie.org
 .. _jq: https://stedolan.github.io/jq/

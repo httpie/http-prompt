@@ -27,7 +27,7 @@ def string_rules(state):
 
         (r"(')((?:[^\r\n'\\]|(?:\\.))+)", bygroups(Text, String), state),
 
-        (r'([^\s"\'\\]|(\\.))+', String, state)
+        (r'([^\s\'\\]|(\\.))+', String, state)
     ]
 
 
@@ -85,17 +85,17 @@ class HttpPromptLexer(RegexLexer):
 
             # Unquoted or value-quoted request mutation,
             # such as (name="John Doe") and (name=John\ Doe)
-            (r'((?:[^\s\'"\\=:]|(?:\\.))*)(:|==|=)',
+            (r'((?:[^\s\'"\\=:]|(?:\\.))*)(:=|:|==|=)',
              bygroups(Name, Operator),
              combined('shell_command', 'unquoted_mut')),
 
             # Full single-quoted request mutation, such as ('name=John Doe')
-            (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(:|==|=)",
+            (r"(')((?:[^\r\n'\\=:]|(?:\\.))+)(:=|:|==|=)",
              bygroups(Text, Name, Operator),
              combined('shell_command', 'squoted_mut')),
 
             # Full double-quoted request mutation, such as ("name=John Doe")
-            (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(:|==|=)',
+            (r'(")((?:[^\r\n"\\=:]|(?:\\.))+)(:=|:|==|=)',
              bygroups(Text, Name, Operator),
              combined('shell_command', 'dquoted_mut'))
         ],

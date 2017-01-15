@@ -1,4 +1,5 @@
 import io
+import json
 import re
 import sys
 
@@ -56,7 +57,7 @@ grammar = r"""
     full_dquoted_mut = _ '"' dquoted_mutkey mutop dquoted_mutval '"' _
     value_squoted_mut = _ unquoted_mutkey mutop "'" squoted_mutval "'" _
     value_dquoted_mut = _ unquoted_mutkey mutop '"' dquoted_mutval '"' _
-    mutop = ":" / "==" / "="
+    mutop = ":=" / ":" / "==" / "="
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
     unquoted_mutkey_item = shell_subs / unquoted_mutkey_char / escapeseq
@@ -100,7 +101,7 @@ grammar = r"""
     unquoted_stringitem = shell_subs / unquoted_stringchar / escapeseq
     dquoted_stringchar = ~r'[^\r\n"\\]'
     squoted_stringchar = ~r"[^\r\n'\\]"
-    unquoted_stringchar = ~r"[^\s'\"\\]"
+    unquoted_stringchar = ~r"[^\s'\\]"
     escapeseq = ~r"\\."
     _ = ~r"\s*"
 
@@ -229,6 +230,7 @@ class ExecutionVisitor(NodeVisitor):
             for target in [self.context.headers,
                            self.context.querystring_params,
                            self.context.body_params,
+                           self.context.body_json_params,
                            self.context.options]:
                 target.clear()
             return node
@@ -238,16 +240,26 @@ class ExecutionVisitor(NodeVisitor):
             target = self.context.headers
         elif kind == '-q':
             target = self.context.querystring_params
-        elif kind == '-b':
-            target = self.context.body_params
-        else:
-            assert kind == '-o'
+        elif kind == '-o':
             target = self.context.options
+        else:
+            assert kind == '-b'
+            # TODO: This is kind of ugly, will fix it
+            if name == '*':
+                self.context.body_params.clear()
+                self.context.body_json_params.clear()
+            else:
+                try:
+                    del self.context.body_params[name]
+                except KeyError:
+                    del self.context.body_json_params[name]
+            return node
 
         if name == '*':
             target.clear()
         else:
             del target[name]
+
         return node
 
     def visit_help(self, node, children):
@@ -303,7 +315,9 @@ class ExecutionVisitor(NodeVisitor):
         return children[0]
 
     def _mutate(self, node, key, op, val):
-        if op == ':':
+        if op == ':=':
+            self.context_override.body_json_params[key] = json.loads(val)
+        elif op == ':':
             self.context_override.headers[key] = val
         elif op == '=':
             self.context_override.body_params[key] = val
