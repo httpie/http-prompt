@@ -69,7 +69,7 @@ The following are all valid:
     > username=foo
     > full_name='foo bar'
 
-    # Body parameters in raw JSON
+    # Body parameters in raw JSON (new in v0.9.0)
     > number:=1234
     > is_ok:=true
     > names:=["foo","bar"]
