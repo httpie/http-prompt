@@ -12,8 +12,9 @@ For find out more, please visit the following links:
 
 * Home: http://http-prompt.com
 * Documentation: http://docs.http-prompt.com
-* GitHub: https://github.com/eliangcs/http-prompt
-* Gitter: https://gitter.im/eliangcs/http-prompt
+* Code: https://github.com/eliangcs/http-prompt
+* Chat: https://gitter.im/eliangcs/http-prompt
+* Sponsor: https://patreon.com/eliangcs
 
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg

@@ -17,6 +17,7 @@ Contents
 
    user-guide
    contributor-guide
+   sponsors
 
 
 Roadmap
@@ -46,6 +47,13 @@ Are you a developer and interested in contributing to HTTP Prompt? See
 :ref:`Contributor Guide <contributor-guide>`.
 
 
+Sponsoring
+----------
+
+If HTTP Prompt has been helpful for your team or you individually, consider
+`making a pledge`_ to support this project.
+
+
 Thanks
 ------
 
@@ -54,6 +62,7 @@ Thanks
 * Parsimonious_: for the PEG parser used by this project
 * pgcli_: for the inspiration of this project
 * Contributors_: for improving this project
+* :ref:`Sponsors <sponsors>`: for supporting this project
 
 
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
@@ -63,6 +72,7 @@ Thanks
 .. _GitHub issues: https://github.com/eliangcs/http-prompt/issues
 .. _Gitter chat room: https://gitter.im/eliangcs/http-prompt
 .. _HTTPie: https://httpie.org
+.. _making a pledge: https://www.patreon.com/eliangcs
 .. _Parsimonious: https://github.com/erikrose/parsimonious
 .. _pgcli: http://pgcli.com
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit
