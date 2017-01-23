@@ -1,5 +1,6 @@
 """Serialization and deserialization of a Context object."""
 
+import io
 import os
 
 from . import xdg
@@ -23,7 +24,7 @@ def load_context(context):
     """Load a Context object in place from user data directory."""
     file_path = _get_context_filepath()
     if os.path.exists(file_path):
-        with open(file_path) as f:
+        with io.open(file_path, encoding='utf-8') as f:
             for line in f:
                 execute(line, context)
 
@@ -32,5 +33,5 @@ def save_context(context):
     """Save a Context object to user data directory."""
     file_path = _get_context_filepath()
     content = format_to_http_prompt(context, excluded_options=EXCLUDED_OPTIONS)
-    with open(file_path, 'w') as f:
+    with io.open(file_path, 'w', encoding='utf-8') as f:
         f.write(content)
