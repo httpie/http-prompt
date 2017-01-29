@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import json
 import os
 import sys
 
@@ -15,6 +16,7 @@ from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.request import urlopen
 
 from . import __version__
 from . import config
@@ -73,10 +75,11 @@ class ExecutionListener(object):
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
+@click.option('--spec', help="API specification file in Swagger format.")
 @click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
-def cli(url, http_options):
+def cli(spec, url, http_options):
     click.echo('Version: %s' % __version__)
 
     copied, config_path = config.initialize()
@@ -90,8 +93,18 @@ def cli(url, http_options):
     os.environ['PAGER'] = cfg['pager']
     os.environ['LESS'] = '-RXF'
 
+    if spec:
+        with urlopen(spec) as f:
+            content = f.read().decode('utf-8')
+            try:
+                spec = json.loads(content)
+            except json.JSONDecodeError:
+                click.secho("Warning: Specification file '%s' is not JSON" %
+                            spec, err=True, fg='red')
+                pass
+
     url = fix_incomplete_url(url)
-    context = Context(url)
+    context = Context(url, spec=spec)
 
     output_style = cfg.get('output_style')
     if output_style:
