@@ -1,6 +1,6 @@
 class Context(object):
 
-    def __init__(self, url=None):
+    def __init__(self, url=None, spec=None):
         self.url = url
         self.headers = {}
         self.querystring_params = {}
@@ -8,6 +8,7 @@ class Context(object):
         self.body_json_params = {}
         self.options = {}
         self.should_exit = False
+        self.spec = spec
 
     def __eq__(self, other):
         return (self.url == other.url and

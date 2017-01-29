@@ -29,7 +29,7 @@ grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / env / help / exit / exec / source / _
+    immutation = preview / action / ls / env / help / exit / exec / source / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -41,6 +41,7 @@ grammar = r"""
 
     help = _ "help" _
     exit = _ "exit" _
+    ls = _ "ls" _ (redir_out)?
     env  = _ "env" _ (redir_out)?
     source = _ "source" _ filepath _
     exec = _ "exec" _ filepath _
@@ -298,6 +299,13 @@ class ExecutionVisitor(NodeVisitor):
         with io.open(path, encoding='utf-8') as f:
             for line in f:
                 execute(line, self.context, self.listener)
+        return node
+
+    def visit_ls(self, node, chlidren):
+        if self.context.spec:
+            paths = self.context.spec.get('paths')
+            for path in paths:
+                self.output.write(path + '\n')
         return node
 
     def visit_env(self, node, children):
