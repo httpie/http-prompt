@@ -47,6 +47,11 @@ class TestCompleter(unittest.TestCase):
         result = self.get_completions('rm -b ')
         self.assertEqual(result[0], 'my_name')
 
+    def test_rm_body_json_param(self):
+        self.context.body_json_params['number'] = 2
+        result = self.get_completions('rm -b ')
+        self.assertEqual(result[0], 'number')
+
     def test_rm_querystring_param(self):
         self.context.querystring_params['my_name'] = 'dont_care'
         result = self.get_completions('rm -q ')
