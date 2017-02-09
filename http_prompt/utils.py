@@ -4,7 +4,7 @@ import re
 
 def smart_quote(s):
     # TODO: Escape
-    if ' ' in s:
+    if ' ' in s or r'\:' in s:
         s = "'" + s + "'"
     return s
 
@@ -20,5 +20,9 @@ def unquote(s):
     return s
 
 
-def unescape(s):
-    return re.sub(r'\\(.)', r'\1', s)
+def unescape(s, exclude=None):
+    if exclude:
+        char = '[^%s]' % exclude
+    else:
+        char = '.'
+    return re.sub(r'\\(%s)' % char, r'\1', s)

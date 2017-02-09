@@ -965,6 +965,18 @@ class TestMutation(ExecutionTestCase):
         execute("""name:='"john doe"'""", self.context)
         self.assertEqual(self.context.body_json_params, {'name': 'john doe'})
 
+    def test_escape_colon(self):
+        execute(r'where[id\:gt]:=2', self.context)
+        self.assertEqual(self.context.body_json_params, {
+            r'where[id\:gt]': 2
+        })
+
+    def test_escape_equal(self):
+        execute(r'foo\=bar=hello', self.context)
+        self.assertEqual(self.context.body_params, {
+            r'foo\=bar': 'hello'
+        })
+
 
 class TestHttpAction(ExecutionTestCase):
 
