@@ -10,12 +10,12 @@ class LexerTestCase(unittest.TestCase):
     def setUp(self):
         self.lexer = HttpPromptLexer()
 
-    def get_tokens(self, text):
-        tokens = []
-        for ttype, value in self.lexer.get_tokens(text):
-            if value.strip():
-                tokens.append((ttype, value))
-        return tokens
+    def get_tokens(self, text, filter_spaces=True):
+        tokens = self.lexer.get_tokens(text)
+        tokens = filter(lambda t: t[1], tokens)
+        if filter_spaces:
+            tokens = filter(lambda t: t[1].strip(), tokens)
+        return list(tokens)
 
 
 class TestLexer_mutation(LexerTestCase):
@@ -402,6 +402,16 @@ class TestLexerPreview(LexerTestCase):
             (String, 'test'), (Name, '--body')
         ])
 
+    def test_httpie_relative_path(self):
+        tokens = self.get_tokens('httpie /api/test name==foo',
+                                 filter_spaces=False)
+        self.assertEqual(tokens, [
+            (Keyword, 'httpie'), (Text, ' '),
+            (String, '/api/test'), (Text, ' '),
+            (Name, 'name'), (Operator, '=='), (String, 'foo'),
+            (Text, '\n')
+        ])
+
 
 class TestShellCode(LexerTestCase):
 
@@ -672,6 +682,16 @@ class TestLexerAction(LexerTestCase):
     def test_options(self):
         self.assertEqual(self.get_tokens('options'), [
             (Keyword, 'options')
+        ])
+
+    def test_post_relative_path(self):
+        tokens = self.get_tokens('post /api/test name=foo',
+                                 filter_spaces=False)
+        self.assertEqual(tokens, [
+            (Keyword, 'post'), (Text, ' '),
+            (String, '/api/test'), (Text, ' '),
+            (Name, 'name'), (Operator, '='), (String, 'foo'),
+            (Text, '\n')
         ])
 
 
