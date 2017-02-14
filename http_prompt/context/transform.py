@@ -33,7 +33,7 @@ def _extract_httpie_options(context, quote=False, join_key_value=False,
                 new_opts = form_new_opts(k, v)
             else:
                 new_opts = [k]
-        opts += new_opts
+            opts += new_opts
     return opts
 
 
