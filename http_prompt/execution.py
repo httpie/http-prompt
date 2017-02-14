@@ -352,7 +352,7 @@ class ExecutionVisitor(NodeVisitor):
         return self._mutate(node, key, op, val)
 
     def _visit_mut_key_or_val(self, node, children):
-        return unescape(''.join([c for c in children]))
+        return unescape(''.join([c for c in children]), exclude=':=')
 
     visit_unquoted_mutkey = _visit_mut_key_or_val
     visit_unquoted_mutval = _visit_mut_key_or_val

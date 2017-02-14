@@ -644,6 +644,16 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -b family\ name', self.context)
         self.assertFalse(self.context.body_params)
 
+    def test_body_json_param_escaped_colon(self):
+        self.context.body_json_params[r'where[id\:gt]'] = 2
+        execute(r'rm -b where[id\:gt]', self.context)
+        self.assertFalse(self.context.body_json_params)
+
+    def test_body_param_escaped_equal(self):
+        self.context.body_params[r'foo\=bar'] = 'hello'
+        execute(r'rm -b foo\=bar', self.context)
+        self.assertFalse(self.context.body_params)
+
     def test_non_existing_key(self):
         execute('rm -q abcd', self.context)
         self.assert_stderr("Key 'abcd' not found")
@@ -964,6 +974,18 @@ class TestMutation(ExecutionTestCase):
     def test_raw_json_string(self):
         execute("""name:='"john doe"'""", self.context)
         self.assertEqual(self.context.body_json_params, {'name': 'john doe'})
+
+    def test_escape_colon(self):
+        execute(r'where[id\:gt]:=2', self.context)
+        self.assertEqual(self.context.body_json_params, {
+            r'where[id\:gt]': 2
+        })
+
+    def test_escape_equal(self):
+        execute(r'foo\=bar=hello', self.context)
+        self.assertEqual(self.context.body_params, {
+            r'foo\=bar': 'hello'
+        })
 
 
 class TestHttpAction(ExecutionTestCase):

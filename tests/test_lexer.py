@@ -96,6 +96,20 @@ class TestLexer_mutation(LexerTestCase):
             (Text, "'")
         ])
 
+    def test_json_escaped_colon(self):
+        self.assertEqual(self.get_tokens(r'where[id\:gt]:=2'), [
+            (Name, r'where[id\:gt]'),
+            (Operator, ':='),
+            (String, '2')
+        ])
+
+    def test_body_param_escaped_equal(self):
+        self.assertEqual(self.get_tokens(r'foo\=bar=hello'), [
+            (Name, r'foo\=bar'),
+            (Operator, '='),
+            (String, 'hello')
+        ])
+
     def test_parameter_name_including_http_method_name(self):
         self.assertEqual(self.get_tokens('heading==hello'), [
             (Name, 'heading'),

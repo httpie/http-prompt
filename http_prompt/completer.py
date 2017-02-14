@@ -104,8 +104,9 @@ class CompletionGenerator(object):
         )
 
     def existing_body_params(self, context, match):
-        return self._generic_generate(context.body_params.keys(),
-                                      context.body_params, 'Body parameter')
+        params = context.body_params.copy()
+        params.update(context.body_json_params)
+        return self._generic_generate(params.keys(), params, 'Body parameter')
 
     def existing_querystring_params(self, context, match):
         return self._generic_generate(
@@ -131,6 +132,7 @@ class CompletionGenerator(object):
                 if value is None:
                     desc += ' (on)'
                 else:
+                    value = six.text_type(value)
                     if len(value) > 16:
                         value = value[:13] + '...'
                     desc += ' (=%s)' % value
