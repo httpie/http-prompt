@@ -149,3 +149,14 @@ def test_format_raw_json_string_to_http_prompt():
     output = t.format_to_http_prompt(c)
     assert output == ("cd http://localhost/things\n"
                       "bar:='\"baz\"'\n")
+
+
+def test_extract_httpie_options():
+    c = Context('http://localhost')
+    c.options.update({
+        '--verify': 'no',
+        '--form': None
+    })
+
+    output = t._extract_httpie_options(c, excluded_keys=['--form'])
+    assert output == ['--verify', 'no']
