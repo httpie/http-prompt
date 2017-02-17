@@ -1,5 +1,10 @@
 from __future__ import unicode_literals
+
+import math
 import re
+
+from prompt_toolkit.shortcuts import create_output
+from six.moves import range
 
 
 def smart_quote(s):
@@ -26,3 +31,50 @@ def unescape(s, exclude=None):
     else:
         char = '.'
     return re.sub(r'\\(%s)' % char, r'\1', s)
+
+
+def get_terminal_size():
+    return create_output().get_size()
+
+
+def colformat(strings, num_sep_spaces=1, terminal_width=None):
+    """Format a list of strings like ls does multi-column output."""
+    if terminal_width is None:
+        terminal_width = get_terminal_size().columns
+
+    if not strings:
+        return []
+
+    num_items = len(strings)
+    max_len = max([len(s) for s in strings])
+
+    num_columns = min(
+        int((terminal_width + num_sep_spaces) / (max_len + num_sep_spaces)),
+        num_items)
+    num_columns = max(1, num_columns)
+
+    num_lines = int(math.ceil(float(num_items) / num_columns))
+
+    num_elements_last_column = num_items % num_lines
+    if num_elements_last_column == 0:
+        num_elements_last_column = num_lines
+
+    lines = []
+    for i in range(num_lines):
+        line_width = num_columns
+        if i >= num_elements_last_column:
+            line_width -= 1
+        lines.append([None] * line_width)
+
+    for i, line in enumerate(lines):
+        line_size = len(line)
+        for j in range(line_size):
+            k = i + num_lines * j
+            item = strings[k]
+            if j % line_size != line_size - 1:
+                item = item.ljust(max_len)
+            line[j] = item
+
+    sep = ' ' * num_sep_spaces
+    for line in lines:
+        yield sep.join(line)
