@@ -1,3 +1,6 @@
+from http_prompt.tree import TreeTraveler, Node
+
+
 class Context(object):
 
     def __init__(self, url=None, spec=None):
@@ -8,7 +11,19 @@ class Context(object):
         self.body_json_params = {}
         self.options = {}
         self.should_exit = False
-        self.spec = spec
+
+        # Additional data structure for supporting API spec and ls command.
+        # The TreeTraveler should be updated whenever URL is changed.
+        # TODO: The update is done outside of Context class. We should move it
+        # here for cleaner code.
+        root = Node('root')
+        if spec:
+            paths = spec.get('paths')
+            if paths:
+                for path in paths:
+                    path = list(filter(lambda s: s, path.split('/')))
+                    root.add_path(*path)
+        self.traveler = TreeTraveler(root)
 
     def __eq__(self, other):
         return (self.url == other.url and

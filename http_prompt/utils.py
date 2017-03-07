@@ -43,7 +43,7 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
         terminal_width = get_terminal_size().columns
 
     if not strings:
-        return []
+        return
 
     num_items = len(strings)
     max_len = max([len(s) for s in strings])
@@ -54,6 +54,7 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
     num_columns = max(1, num_columns)
 
     num_lines = int(math.ceil(float(num_items) / num_columns))
+    num_columns = int(math.ceil(float(num_items) / num_lines))
 
     num_elements_last_column = num_items % num_lines
     if num_elements_last_column == 0:
@@ -61,10 +62,10 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
 
     lines = []
     for i in range(num_lines):
-        line_width = num_columns
+        line_size = num_columns
         if i >= num_elements_last_column:
-            line_width -= 1
-        lines.append([None] * line_width)
+            line_size -= 1
+        lines.append([None] * line_size)
 
     for i, line in enumerate(lines):
         line_size = len(line)

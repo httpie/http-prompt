@@ -53,6 +53,7 @@ class HttpPromptLexer(RegexLexer):
              combined('redir_out', 'pipe')),
             (r'(source)(\s*)', bygroups(Keyword, Text), 'file_path'),
             (r'(exec)(\s*)', bygroups(Keyword, Text), 'file_path'),
+            (r'(ls)(\s*)', bygroups(Keyword, Text)),
             (r'', Text, 'concat_mut')
         ],
 

@@ -22,7 +22,7 @@ from .context.transform import (
     format_to_httpie,
     format_to_http_prompt)
 from .output import Printer, TextWriter
-from .utils import unescape, unquote
+from .utils import unescape, unquote, colformat
 
 
 grammar = r"""
@@ -172,6 +172,9 @@ class DummyExecutionListener(object):
     def response_returned(self, context, response):
         pass
 
+    def url_changed(self, old_url, new_url):
+        pass
+
 
 class ExecutionVisitor(NodeVisitor):
 
@@ -219,7 +222,8 @@ class ExecutionVisitor(NodeVisitor):
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
-
+        if self.context.url != self.context_override.url:
+            self.listener.url_changed(self.context, self.context_override.url)
         return node
 
     def visit_rm(self, node, children):
@@ -302,10 +306,14 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
     def visit_ls(self, node, chlidren):
-        if self.context.spec:
-            paths = self.context.spec.get('paths')
-            for path in paths:
-                self.output.write(path + '\n')
+        names = [c.name for c in self.context.traveler.cur.children]
+        names = list(sorted(names))
+        if self.output.isatty():
+            lines = colformat(names)
+        else:
+            lines = names
+        for line in lines:
+            self.output.write(line + '\n')
         return node
 
     def visit_env(self, node, children):

@@ -78,3 +78,15 @@ def test_colformat_long_short_mixed():
         '1122334455667788 b                yeah',
         'hello world      8877665544332211'
     ]
+
+
+def test_colformat_github_top_endpoints():
+    items = ['emojis', 'events', 'feeds', 'gists', 'gitignore', 'issues',
+             'legacy', 'markdown', 'meta', 'networks', 'notifications',
+             'orgs', 'rate_limit', 'repos', 'repositories', 'search',
+             'teams', 'user', 'users']
+    assert list(utils.colformat(items, terminal_width=136)) == [
+        'emojis        gists         legacy        networks      rate_limit''    search        users',  # noqa
+        'events        gitignore     markdown      notifications repos         teams',  # noqa
+        'feeds         issues        meta          orgs          repositories  user'  # noqa
+    ]
