@@ -7,6 +7,9 @@ from prompt_toolkit.shortcuts import create_output
 from six.moves import range
 
 
+RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')
+
+
 def smart_quote(s):
     # TODO: Escape
     if ' ' in s or r'\:' in s:
@@ -37,6 +40,10 @@ def get_terminal_size():
     return create_output().get_size()
 
 
+def strip_ansi_escapes(text):
+    return RE_ANSI_ESCAPE.sub('', text)
+
+
 def colformat(strings, num_sep_spaces=1, terminal_width=None):
     """Format a list of strings like ls does multi-column output."""
     if terminal_width is None:
@@ -46,7 +53,7 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
         return
 
     num_items = len(strings)
-    max_len = max([len(s) for s in strings])
+    max_len = max([len(strip_ansi_escapes(s)) for s in strings])
 
     num_columns = min(
         int((terminal_width + num_sep_spaces) / (max_len + num_sep_spaces)),
@@ -73,7 +80,8 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
             k = i + num_lines * j
             item = strings[k]
             if j % line_size != line_size - 1:
-                item = item.ljust(max_len)
+                item_len = len(strip_ansi_escapes(item))
+                item = item + ' ' * (max_len - item_len)
             line[j] = item
 
     sep = ' ' * num_sep_spaces

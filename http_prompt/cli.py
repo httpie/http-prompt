@@ -72,12 +72,6 @@ class ExecutionListener(object):
             context.headers['Cookie'] = new_cookie
             click.secho('Cookies set: %s' % new_cookie)
 
-    def url_changed(self, context, new_url):
-        path = urlparse(new_url).path
-        if not path:
-            path = '/'
-        context.traveler.goto(path)
-
 
 def normalize_url(ctx, param, value):
     if value:
@@ -131,11 +125,10 @@ def cli(spec, url, http_options):
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
     try:
-        style = get_style_by_name(cfg['command_style'])
+        style_class = get_style_by_name(cfg['command_style'])
     except ClassNotFound:
-        style = style_from_pygments(Solarized256Style)
-    else:
-        style = style_from_pygments(style)
+        style_class = Solarized256Style
+    style = style_from_pygments(style_class)
 
     listener = ExecutionListener(cfg)
 
@@ -155,7 +148,7 @@ def cli(spec, url, http_options):
         except EOFError:
             break  # Control-D pressed
         else:
-            execute(text, context, listener=listener)
+            execute(text, context, listener=listener, style=style_class)
             if context.should_exit:
                 break
 

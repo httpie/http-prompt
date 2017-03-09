@@ -17,47 +17,50 @@ class Node(object):
     def __str__(self):
         return self.name
 
-    def add_path(self, *path):
+    def __repr__(self):
+        return "Node('{}', '{}')".format(self.name, self.data.get('type'))
+
+    def __lt__(self, other):
+        ta = self.data.get('type')
+        tb = other.data.get('type')
+        if ta != tb:
+            return ta < tb
+        return self.name < other.name
+
+    def __eq__(self, other):
+        return self.name == other.name and self.data == other.data
+
+    def __hash__(self):
+        return hash((self.name, self.data.get('type')))
+
+    def add_path(self, *path, node_type='dir'):
         name = path[0]
-        child = self.find_child(name)
+        tail = path[1:]
+        child = self.find_child(name, wildcard=False)
         if not child:
-            child = Node(name, parent=self)
+            data = {'type': 'dir' if tail else node_type}
+            child = Node(name, data=data, parent=self)
             self.children.add(child)
 
-        tail = path[1:]
         if tail:
-            child.add_path(*tail)
+            child.add_path(*tail, node_type=node_type)
 
-    def find_child(self, name):
+    def find_child(self, name, wildcard=True):
         for child in self.children:
             if child.name == name:
                 return child
 
-        # Attempt to match placeholder like /users/{user_id}
-        for child in self.children:
-            if child.name.startswith('{') and child.name.endswith('}'):
-                return child
+        # Attempt to match wildcard like /users/{user_id}
+        if wildcard:
+            for child in self.children:
+                if child.name.startswith('{') and child.name.endswith('}'):
+                    return child
 
         return None
 
-
-class TreeTraveler(object):
-
-    def __init__(self, root):
-        self.root = root
-        self.cur = root
-
-    def goto(self, path):
-        if path.startswith('/'):
-            self.cur = self.root
-            path = path[1:]
-
-        path = list(filter(lambda s: s, path.split('/')))
-        if not path:
-            return self.root
-
+    def ls(self, *path):
         success = True
-        cur = self.cur
+        cur = self
         for name in path:
             if name == '.':
                 continue
@@ -72,5 +75,5 @@ class TreeTraveler(object):
                     success = False
                     break
         if success:
-            self.cur = cur
-        return success
+            for node in sorted(cur.children):
+                yield node

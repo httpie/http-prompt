@@ -12,7 +12,9 @@ from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from six.moves.urllib.parse import urljoin
+from pygments.token import String
+from six.moves import StringIO
+from six.moves.urllib.parse import urljoin, urlparse
 
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
@@ -41,7 +43,7 @@ grammar = r"""
 
     help = _ "help" _
     exit = _ "exit" _
-    ls = _ "ls" _ (redir_out)?
+    ls = _ "ls" _ (urlpath _)? (redir_out)?
     env  = _ "env" _ (redir_out)?
     source = _ "source" _ filepath _
     exec = _ "exec" _ filepath _
@@ -130,6 +132,13 @@ else:
 grammar = Grammar(grammar)
 
 
+if Environment.colors == 256:
+    from pygments.formatters.terminal256 import (
+        Terminal256Formatter as TerminalFormatter)
+else:
+    from pygments.formatters.terminal import TerminalFormatter
+
+
 def urljoin2(base, path, **kwargs):
     if not base.endswith('/'):
         base += '/'
@@ -172,15 +181,12 @@ class DummyExecutionListener(object):
     def response_returned(self, context, response):
         pass
 
-    def url_changed(self, old_url, new_url):
-        pass
-
 
 class ExecutionVisitor(NodeVisitor):
 
     unwrapped_exceptions = (CalledProcessError,)
 
-    def __init__(self, context, listener=None):
+    def __init__(self, context, listener=None, style=None):
         super(ExecutionVisitor, self).__init__()
         self.context = context
 
@@ -199,6 +205,12 @@ class ExecutionVisitor(NodeVisitor):
 
         # Last response object returned by HTTPie
         self.last_response = None
+
+        # Pygments formatter, used to render output with colors in some cases
+        if style:
+            self.formatter = TerminalFormatter(style=style)
+        else:
+            self.formatter = None
 
     @property
     def output(self):
@@ -222,8 +234,6 @@ class ExecutionVisitor(NodeVisitor):
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
         self.context_override.url = urljoin2(self.context_override.url, path)
-        if self.context.url != self.context_override.url:
-            self.listener.url_changed(self.context, self.context_override.url)
         return node
 
     def visit_rm(self, node, children):
@@ -305,15 +315,30 @@ class ExecutionVisitor(NodeVisitor):
                 execute(line, self.context, self.listener)
         return node
 
-    def visit_ls(self, node, chlidren):
-        names = [c.name for c in self.context.traveler.cur.children]
-        names = list(sorted(names))
+    def _colorize(self, text, token_type):
+        if not self.formatter:
+            return text
+
+        out = StringIO()
+        self.formatter.format([(token_type, text)], out)
+        return out.getvalue()
+
+    def visit_ls(self, node, children):
+        path = urlparse(self.context_override.url).path
+        path = filter(None, path.split('/'))
+        nodes = self.context.root.ls(*path)
         if self.output.isatty():
-            lines = colformat(names)
+            names = []
+            for node in nodes:
+                if node.data.get('type') == 'dir':
+                    name = self._colorize(node.name, String)
+                else:
+                    name = node.name
+                names.append(name)
+            lines = colformat(list(names))
         else:
-            lines = names
-        for line in lines:
-            self.output.write(line + '\n')
+            lines = [n.name for n in nodes]
+        self.output.write('\n'.join(lines))
         return node
 
     def visit_env(self, node, children):
@@ -507,7 +532,7 @@ class ExecutionVisitor(NodeVisitor):
         return node
 
 
-def execute(command, context, listener=None):
+def execute(command, context, listener=None, style=None):
     try:
         root = grammar.parse(command)
     except ParseError as err:
@@ -515,7 +540,7 @@ def execute(command, context, listener=None):
         part = command[err.pos:err.pos + 10]
         click.secho('Syntax error near "%s"' % part, err=True, fg='red')
     else:
-        visitor = ExecutionVisitor(context, listener=listener)
+        visitor = ExecutionVisitor(context, listener=listener, style=style)
         try:
             visitor.visit(root)
         except VisitationError as err:

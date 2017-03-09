@@ -1,13 +1,13 @@
 import unittest
 
-from http_prompt.tree import Node, TreeTraveler
+from http_prompt.tree import Node
 
 
 class TestNode(unittest.TestCase):
 
     def setUp(self):
         # Make a tree like this:
-        #         root
+        #          root
         #     a             h
         #  b     d        i   n
         # c f   e g     k     o
@@ -29,6 +29,25 @@ class TestNode(unittest.TestCase):
     def test_str(self):
         node = Node('my node')
         self.assertEqual(str(node), 'my node')
+
+    def test_cmp_same_type(self):
+        a = Node('a', data={'type': 'dir'})
+        b = Node('b', data={'type': 'dir'})
+        self.assertLess(a, b)
+
+    def test_cmp_different_type(self):
+        a = Node('a', data={'type': 'file'})
+        b = Node('b', data={'type': 'dir'})
+        self.assertLess(b, a)
+
+    def test_eq(self):
+        a = Node('a', data={'type': 'file'})
+        b = Node('b', data={'type': 'dir'})
+        self.assertNotEqual(a, b)
+
+        a = Node('a', data={'type': 'file'})
+        b = Node('a', data={'type': 'file'})
+        self.assertEqual(a, b)
 
     def test_add_path_and_find_child(self):
         # Level 1 (root)
@@ -55,105 +74,58 @@ class TestNode(unittest.TestCase):
         # Return None if child can't be found
         self.assertFalse(node_c.find_child('x'))
 
-
-class TestTreeTraveler(unittest.TestCase):
-
-    def setUp(self):
-        # Make a tree like this:
-        #         root
-        #     a             h
-        #  b     d        i   n
-        # c f   e g     k     o
-        #             l m p
+    def test_find_child_wildcard(self):
         root = Node('root')
-        root.add_path('a', 'b', 'c')
-        root.add_path('a', 'b', 'f')
-        root.add_path('a', 'd', 'e')
-        root.add_path('a', 'd', 'g')
-        root.add_path('h', 'i', 'k', 'l')
-        root.add_path('h', 'i', 'k', 'm')
-        root.add_path('h', 'i', 'k', 'p')
-        root.add_path('h', 'n', 'o')
+        root.add_path('a')
+        root.add_path('{b}')
+        root.add_path('c')
 
-        self.traveler = TreeTraveler(root)
+        self.assertEqual(root.find_child('a').name, 'a')
+        self.assertEqual(root.find_child('c').name, 'c')
+        self.assertEqual(root.find_child('x').name, '{b}')
+        self.assertFalse(root.find_child('x', wildcard=False))
 
-    def test_initial_state(self):
-        self.assertEqual(self.traveler.root.name, 'root')
-        self.assertEqual(self.traveler.cur.name, 'root')
+    def test_ls(self):
+        self.assertEqual([n.name for n in self.root.ls('a')], list('bd'))
+        self.assertEqual([n.name for n in self.root.ls('a', 'b')], list('cf'))
+        self.assertEqual([n.name for n in self.root.ls('a', 'b', 'c')], [])
+        self.assertEqual([n.name for n in self.root.ls('h', 'i', 'k')],
+                         list('lmp'))
 
-    def test_goto_relative(self):
-        self.assertTrue(self.traveler.goto('a'))
-        self.assertEqual(self.traveler.cur.name, 'a')
+    def test_ls_root(self):
+        self.assertEqual([n.name for n in self.root.ls()], list('ah'))
 
-        self.assertTrue(self.traveler.goto('b/f'))
-        self.assertEqual(self.traveler.cur.name, 'f')
+    def test_ls_non_existing(self):
+        self.assertEqual([n.name for n in self.root.ls('x')], [])
+        self.assertEqual([n.name for n in self.root.ls('a', 'b', 'x')], [])
 
-    def test_goto_root(self):
-        self.assertTrue(self.traveler.goto('a/b/c'))
-        self.assertEqual(self.traveler.cur.name, 'c')
+    def test_ls_parent(self):
+        self.assertEqual([n.name for n in self.root.ls('..')], list('ah'))
+        self.assertEqual([n.name for n in self.root.ls('..', '..', '..')],
+                         list('ah'))
+        self.assertEqual([n.name for n in self.root.ls('..', '..', 'h')],
+                         list('in'))
+        self.assertEqual(
+            [n.name for n in self.root.ls('..', '..', 'h', '..', 'a')],
+            list('bd'))
 
-        self.assertTrue(self.traveler.goto('/'))
-        self.assertEqual(self.traveler.cur.name, 'root')
+    def test_ls_dot(self):
+        self.assertEqual([n.name for n in self.root.ls('.')], list('ah'))
+        self.assertEqual([n.name for n in self.root.ls('.', '.', '.')],
+                         list('ah'))
+        self.assertEqual([n.name for n in self.root.ls('.', 'a', 'b')],
+                         list('cf'))
+        self.assertEqual([n.name for n in self.root.ls('.', 'h', '.')],
+                         list('in'))
+        self.assertEqual(
+            [n.name for n in self.root.ls('.', 'h', '.', '.', 'n')], ['o'])
 
-    def test_goto_non_existing(self):
-        self.assertFalse(self.traveler.goto('x'))
-        self.assertEqual(self.traveler.cur.name, 'root')
+    def test_ls_sort_by_types(self):
+        self.root.add_path('q', 'r')
+        self.root.add_path('q', 's', node_type='file')
+        self.root.add_path('q', 't', node_type='file')
+        self.root.add_path('q', 'u')
+        self.root.add_path('q', 'v', node_type='file')
 
-        self.assertFalse(self.traveler.goto('a/b/x'))
-        self.assertEqual(self.traveler.cur.name, 'root')
-
-    def test_goto_absolute(self):
-        self.assertTrue(self.traveler.goto('a/b/c'))
-        self.assertEqual(self.traveler.cur.name, 'c')
-
-        self.assertFalse(self.traveler.goto('h/i'))
-        self.assertEqual(self.traveler.cur.name, 'c')
-
-        self.assertTrue(self.traveler.goto('/h/i'))
-        self.assertEqual(self.traveler.cur.name, 'i')
-
-    def test_goto_extra_slashes(self):
-        self.assertTrue(self.traveler.goto('a/b/c/'))
-        self.assertEqual(self.traveler.cur.name, 'c')
-
-        self.assertTrue(self.traveler.goto('/////h//////i//////'))
-        self.assertEqual(self.traveler.cur.name, 'i')
-
-    def test_goto_parent(self):
-        self.assertTrue(self.traveler.goto('h/i/k/l'))
-        self.assertEqual(self.traveler.cur.name, 'l')
-
-        self.assertTrue(self.traveler.goto('..'))
-        self.assertEqual(self.traveler.cur.name, 'k')
-
-        self.assertTrue(self.traveler.goto('../../n/o'))
-        self.assertEqual(self.traveler.cur.name, 'o')
-
-        self.assertTrue(self.traveler.goto('../../////i/k/../../../a'))
-        self.assertEqual(self.traveler.cur.name, 'a')
-
-    def test_goto_parent_to_root(self):
-        self.assertTrue(self.traveler.goto('../../../../..'))
-        self.assertEqual(self.traveler.cur.name, 'root')
-
-        self.assertTrue(self.traveler.goto('a/b'))
-        self.assertEqual(self.traveler.cur.name, 'b')
-
-        self.assertTrue(self.traveler.goto('../../../../..'))
-        self.assertEqual(self.traveler.cur.name, 'root')
-
-        self.assertTrue(self.traveler.goto('/../../../../a/b'))
-        self.assertEqual(self.traveler.cur.name, 'b')
-
-    def test_goto_dot(self):
-        self.assertTrue(self.traveler.goto('.'))
-        self.assertEqual(self.traveler.cur.name, 'root')
-
-        self.assertTrue(self.traveler.goto('./a/b'))
-        self.assertEqual(self.traveler.cur.name, 'b')
-
-        self.assertTrue(self.traveler.goto('./c'))
-        self.assertEqual(self.traveler.cur.name, 'c')
-
-        self.assertTrue(self.traveler.goto('./././.'))
-        self.assertEqual(self.traveler.cur.name, 'c')
+        self.assertEqual([n.name for n in self.root.ls('q')],
+                         list('rustv'))
