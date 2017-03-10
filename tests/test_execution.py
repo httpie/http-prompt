@@ -759,6 +759,36 @@ class TestExecution_ls(ExecutionTestCase):
         execute('ls /orgs/1', self.context)
         self.assert_stdout('events  members\n')
 
+    def test_redirect_write(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('ls > %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'orgs\nusers')
+
+    def test_redirect_append(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('ls >> %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'hello world\norgs\nusers')
+
+    def test_grep(self):
+        execute('ls | grep users', self.context)
+        self.assert_stdout('users\n')
+
 
 class TestMutation(ExecutionTestCase):
 

@@ -12,7 +12,7 @@ from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
-from pygments.token import String
+from pygments.token import String, Name
 from six.moves import StringIO
 from six.moves.urllib.parse import urljoin, urlparse
 
@@ -330,15 +330,14 @@ class ExecutionVisitor(NodeVisitor):
         if self.output.isatty():
             names = []
             for node in nodes:
-                if node.data.get('type') == 'dir':
-                    name = self._colorize(node.name, String)
-                else:
-                    name = node.name
+                token_type = String if node.data.get('type') == 'dir' else Name
+                name = self._colorize(node.name, token_type)
                 names.append(name)
-            lines = colformat(list(names))
+            lines = list(colformat(list(names)))
         else:
             lines = [n.name for n in nodes]
-        self.output.write('\n'.join(lines))
+        if lines:
+            self.output.write('\n'.join(lines))
         return node
 
     def visit_env(self, node, children):
