@@ -33,12 +33,12 @@ class TestNode(unittest.TestCase):
     def test_cmp_same_type(self):
         a = Node('a', data={'type': 'dir'})
         b = Node('b', data={'type': 'dir'})
-        self.assertLess(a, b)
+        self.assertTrue(a < b)
 
     def test_cmp_different_type(self):
         a = Node('a', data={'type': 'file'})
         b = Node('b', data={'type': 'dir'})
-        self.assertLess(b, a)
+        self.assertTrue(b < a)
 
     def test_eq(self):
         a = Node('a', data={'type': 'file'})

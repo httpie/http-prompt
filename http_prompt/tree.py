@@ -33,7 +33,8 @@ class Node(object):
     def __hash__(self):
         return hash((self.name, self.data.get('type')))
 
-    def add_path(self, *path, node_type='dir'):
+    def add_path(self, *path, **kwargs):
+        node_type = kwargs.get('node_type', 'dir')
         name = path[0]
         tail = path[1:]
         child = self.find_child(name, wildcard=False)
