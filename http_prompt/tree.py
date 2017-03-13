@@ -62,7 +62,7 @@ class Node(object):
         success = True
         cur = self
         for name in path:
-            if name == '.':
+            if not name or name == '.':
                 continue
             elif name == '..':
                 if cur.parent:
