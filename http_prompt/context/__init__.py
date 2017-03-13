@@ -25,9 +25,10 @@ class Context(object):
                         params = info.get('parameters')
                         if params:
                             for param in params:
-                                full_path = path_tokens + [param['name']]
-                                self.root.add_path(*full_path,
-                                                   node_type='file')
+                                if param.get('in') != 'path':
+                                    full_path = path_tokens + [param['name']]
+                                    self.root.add_path(*full_path,
+                                                       node_type='file')
 
     def __eq__(self, other):
         return (self.url == other.url and
