@@ -163,6 +163,42 @@ class TestLexer_cd(LexerTestCase):
         ])
 
 
+class TestLexer_ls(LexerTestCase):
+
+    def test_no_path(self):
+        self.assertEqual(self.get_tokens('ls'), [
+            (Keyword, 'ls')
+        ])
+
+    def test_path(self):
+        self.assertEqual(self.get_tokens('ls api/v1'), [
+            (Keyword, 'ls'),
+            (String, 'api/v1')
+        ])
+
+    def test_second_path(self):
+        self.assertEqual(self.get_tokens(r"ls api v1"), [
+            (Keyword, 'ls'),
+            (String, 'api'),
+            (Error, 'v'),
+            (Error, '1')
+        ])
+
+    def test_leading_trailing_spaces(self):
+        self.assertEqual(self.get_tokens('   ls   api/v1  '), [
+            (Keyword, 'ls'),
+            (String, 'api/v1')
+        ])
+
+    def test_redirect(self):
+        self.assertEqual(self.get_tokens('ls api/v1 > endpoints.txt'), [
+            (Keyword, 'ls'),
+            (String, 'api/v1'),
+            (Operator, '>'),
+            (String, 'endpoints.txt')
+        ])
+
+
 class TestLexer_env(LexerTestCase):
 
     def test_env_simple(self):
