@@ -12,6 +12,7 @@ except ImportError:  # For Python 2.6, nocover
 from itertools import chain
 
 from prompt_toolkit.completion import Completer, Completion
+from six.moves.urllib.parse import urlparse
 
 from .completion import (ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES,
                          HEADER_VALUES)
@@ -28,6 +29,13 @@ RULES = [
     (r'rm\s+\-h\s+', 'existing_header_names'),
     (r'rm\s+\-o\s+', 'existing_option_names'),
     (r'rm\s+\-q\s+', 'existing_querystring_params'),
+
+    # The last two captures are full URL path and the last part of the URL
+    # path. For example:
+    # '/foo/bar' => ('/foo/bar', 'bar')
+    # '/foo/bar/' => ('/foo/bar/', '')
+    # 'foo/bar' => ('foo/bar', 'bar')
+    (r'(ls|cd)\s+(/?(?:[^/]+/)*([^/]*)/?)$', 'urlpaths'),
     (r'^\s*[^\s]*$', 'root_commands')
 ]
 
@@ -120,6 +128,20 @@ class CompletionGenerator(object):
     def existing_option_names(self, context, match):
         return self._generic_generate(context.options.keys(),
                                       context.options, OPTION_NAMES)
+
+    def urlpaths(self, context, match):
+        path = urlparse(context.url).path.split('/')
+        overrided_path = match.group(2)
+        if overrided_path:
+            if overrided_path.startswith('/'):
+                # Absolute path
+                path = []
+            path += overrided_path.split('/')[:-1]
+        names = [
+            node.name for node in context.root.ls(*path)
+            if node.data.get('type') == 'dir'
+        ]
+        return self._generic_generate(names, {}, 'Endpoint')
 
     def _generic_generate(self, names, values, descs):
         for name in sorted(names):

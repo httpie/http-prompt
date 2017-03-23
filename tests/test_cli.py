@@ -1,3 +1,4 @@
+import json
 import os
 import sys
 import unittest
@@ -148,6 +149,20 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.querystring_params, {})
         self.assertEqual(context.body_params, {'name': 'John Doe'})
         self.assertEqual(context.headers, {'Authorization': 'Bearer API KEY'})
+
+    def test_spec(self):
+        spec_filepath = self.make_tempfile(json.dumps({
+            'paths': {
+                '/users': {},
+                '/orgs': {}
+            }
+        }))
+        result, context = run_and_exit(['example.com', "--spec",
+                                        spec_filepath])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(set([n.name for n in context.root.children]),
+                         set(['users', 'orgs']))
 
     @patch('http_prompt.cli.prompt')
     @patch('http_prompt.cli.execute')

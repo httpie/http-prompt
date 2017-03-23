@@ -13,7 +13,18 @@ from http_prompt.context import Context
 class TestCompleter(unittest.TestCase):
 
     def setUp(self):
-        self.context = Context()
+        self.context = Context('http://localhost', spec={
+            'paths': {
+                '/users': {},
+                '/users/{username}': {},
+                '/users/{username}/events': {},
+                '/users/{username}/orgs': {},
+                '/orgs': {},
+                '/orgs/{org}': {},
+                '/orgs/{org}/events': {},
+                '/orgs/{org}/members': {}
+            }
+        })
         self.completer = HttpPromptCompleter(self.context)
         self.completer_event = None
 
@@ -78,3 +89,45 @@ class TestCompleter(unittest.TestCase):
     def test_options_method(self):
         result = self.get_completions('opt')
         self.assertEqual(result[0], 'options')
+
+    def test_ls_no_path(self):
+        result = self.get_completions('ls ')
+        self.assertEqual(result, ['orgs', 'users'])
+
+    def test_ls_no_path_substring(self):
+        result = self.get_completions('ls o')
+        self.assertEqual(result, ['orgs'])
+
+    def test_ls_absolute_path(self):
+        result = self.get_completions('ls /users/1/')
+        self.assertEqual(result, ['events', 'orgs'])
+
+    def test_ls_absolute_path_substring(self):
+        result = self.get_completions('ls /users/1/e')
+        self.assertEqual(result, ['events'])
+
+    def test_ls_relative_path(self):
+        self.context.url = 'http://localhost/orgs'
+        result = self.get_completions('ls 1/')
+        self.assertEqual(result, ['events', 'members'])
+
+    def test_cd_no_path(self):
+        result = self.get_completions('cd ')
+        self.assertEqual(result, ['orgs', 'users'])
+
+    def test_cd_no_path_substring(self):
+        result = self.get_completions('cd o')
+        self.assertEqual(result, ['orgs'])
+
+    def test_cd_absolute_path(self):
+        result = self.get_completions('cd /users/1/')
+        self.assertEqual(result, ['events', 'orgs'])
+
+    def test_cd_absolute_path_substring(self):
+        result = self.get_completions('cd /users/1/e')
+        self.assertEqual(result, ['events'])
+
+    def test_cd_relative_path(self):
+        self.context.url = 'http://localhost/orgs'
+        result = self.get_completions('cd 1/')
+        self.assertEqual(result, ['events', 'members'])

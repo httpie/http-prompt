@@ -62,3 +62,47 @@ def test_update():
         'name': 'John Smith',
         'email': 'john@example.com'
     }
+
+
+def test_spec():
+    c = Context('http://localhost', spec={
+        'paths': {
+            '/users': {
+                'get': {
+                    'parameters': [
+                        {'name': 'username', 'in': 'path'},
+                        {'name': 'since', 'in': 'query'},
+                        {'name': 'Accept'}
+                    ]
+                }
+            },
+            '/orgs/{org}': {
+                'get': {
+                    'parameters': [
+                        {'name': 'org', 'in': 'path'},
+                        {'name': 'featured', 'in': 'query'},
+                        {'name': 'X-Foo', 'in': 'header'}
+                    ]
+                }
+            }
+        }
+    })
+    assert c.url == 'http://localhost'
+
+    root_children = list(sorted(c.root.children))
+    assert len(root_children) == 2
+    assert root_children[0].name == 'orgs'
+    assert root_children[1].name == 'users'
+
+    orgs_children = list(sorted(root_children[0].children))
+    assert len(orgs_children) == 1
+
+    org_children = list(sorted(list(orgs_children)[0].children))
+    assert len(org_children) == 2
+    assert org_children[0].name == 'X-Foo'
+    assert org_children[1].name == 'featured'
+
+    users_children = list(sorted(root_children[1].children))
+    assert len(users_children) == 2
+    assert users_children[0].name == 'Accept'
+    assert users_children[1].name == 'since'
