@@ -1,20 +1,28 @@
 HTTP Prompt
 ===========
 
-|PyPI| |Docs| |Travis| |Appveyor| |Coverage| |Gitter| |Patreon|
+|PyPI| |Docs| |Travis| |Appveyor| |Coverage| |Gitter|
 
 HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
 and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
 
 |Asciinema|
 
-For find out more, please visit the following links:
+
+Links
+-----
 
 * Home: http://http-prompt.com
 * Documentation: http://docs.http-prompt.com
 * Code: https://github.com/eliangcs/http-prompt
 * Chat: https://gitter.im/eliangcs/http-prompt
-* Sponsor: https://patreon.com/eliangcs
+
+
+Early Access
+------------
+
+HTTP Prompt's latest release is only available via paid subscription. Visit
+http://http-prompt.com/early-access to find out more.
 
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
@@ -34,9 +42,6 @@ For find out more, please visit the following links:
 
 .. |Gitter| image:: https://badges.gitter.im/eliangcs/http-prompt.svg
     :target: https://gitter.im/eliangcs/http-prompt
-
-.. |Patreon| image:: https://img.shields.io/badge/patreon-sponsor-ff69b4.svg
-    :target: https://patreon.com/eliangcs
 
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
     :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=1.5
