@@ -104,14 +104,17 @@ def cli(spec, url, http_options):
     os.environ['LESS'] = '-RXF'
 
     if spec:
-        with urlopen(spec) as f:
-            content = f.read().decode('utf-8')
+        f = urlopen(spec)
         try:
-            spec = json.loads(content)
-        except json.JSONDecodeError:
-            click.secho("Warning: Specification file '%s' is not JSON" %
-                        spec, err=True, fg='red')
-            spec = None
+            content = f.read().decode('utf-8')
+            try:
+                spec = json.loads(content)
+            except json.JSONDecodeError:
+                click.secho("Warning: Specification file '%s' is not JSON" %
+                            spec, err=True, fg='red')
+                spec = None
+        finally:
+            f.close()
 
     url = fix_incomplete_url(url)
     context = Context(url, spec=spec)
