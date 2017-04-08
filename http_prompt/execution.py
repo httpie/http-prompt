@@ -12,6 +12,7 @@ from httpie.core import main as httpie_main
 from parsimonious.exceptions import ParseError, VisitationError
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
+from parsimonious.nodes import Node
 from pygments.token import String, Name
 from six.moves import StringIO
 from six.moves.urllib.parse import urljoin, urlparse
@@ -87,7 +88,7 @@ grammar = r"""
                     "--auth-type" / "--auth" / "-a" / "--proxy" / "--verify" /
                     "--cert" / "--cert-key" / "--timeout"
 
-    cd = _ "cd" _ string _
+    cd = _ "cd" _ string? _
     rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
     tool = "httpie" / "curl"
     method = ~r"get"i / ~r"head"i / ~r"post"i / ~r"put"i / ~r"delete"i /
@@ -233,7 +234,14 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_cd(self, node, children):
         _, _, _, path, _ = children
-        self.context_override.url = urljoin2(self.context_override.url, path)
+
+        if isinstance(path, Node):
+            seg = urlparse(self.context_override.url)
+            self.context_override.url = seg.scheme + "://" + seg.netloc
+        else:
+            self.context_override.url = urljoin2(
+                self.context_override.url, path)
+
         return node
 
     def visit_rm(self, node, children):

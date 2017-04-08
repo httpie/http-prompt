@@ -609,6 +609,10 @@ class TestExecution_cd(ExecutionTestCase):
         execute('cd movie/1/', self.context)
         self.assertEqual(self.context.url, 'http://localhost/api/movie/1/')
 
+    def test_without_url(self):
+        execute('cd', self.context)
+        self.assertEqual(self.context.url, 'http://localhost')
+
 
 class TestExecution_rm(ExecutionTestCase):
 
