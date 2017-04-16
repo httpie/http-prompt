@@ -18,13 +18,6 @@ Links
 * Chat: https://gitter.im/eliangcs/http-prompt
 
 
-Early Access
-------------
-
-HTTP Prompt's latest release is only available via paid subscription. Visit
-http://http-prompt.com/early-access to find out more.
-
-
 .. |PyPI| image:: https://img.shields.io/pypi/v/http-prompt.svg
     :target: https://pypi.python.org/pypi/http-prompt
 
