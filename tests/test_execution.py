@@ -10,6 +10,8 @@ import sys
 import pytest
 import six
 
+from collections import namedtuple
+
 from mock import patch
 
 from http_prompt.context import Context
@@ -26,12 +28,28 @@ class ExecutionTestCase(TempAppDirTestCase):
             ('httpie_main', patch('http_prompt.execution.httpie_main')),
             ('echo_via_pager',
              patch('http_prompt.output.click.echo_via_pager')),
-            ('secho', patch('http_prompt.execution.click.secho'))
+            ('secho', patch('http_prompt.execution.click.secho')),
+            ('get_terminal_size', patch('http_prompt.utils.get_terminal_size'))
         ]
         for attr_name, patcher in self.patchers:
             setattr(self, attr_name, patcher.start())
 
-        self.context = Context('http://localhost')
+        self.context = Context('http://localhost', spec={
+            'paths': {
+                '/users': {},
+                '/users/{username}': {},
+                '/users/{username}/events': {},
+                '/users/{username}/orgs': {},
+                '/orgs': {},
+                '/orgs/{org}': {},
+                '/orgs/{org}/events': {},
+                '/orgs/{org}/members': {}
+            }
+        })
+
+        # pytest mocks to capture stdout so we can't really get_terminal_size()
+        Size = namedtuple('Size', ['columns', 'rows'])
+        self.get_terminal_size.return_value = Size(80, 30)
 
     def tearDown(self):
         super(ExecutionTestCase, self).tearDown()
@@ -723,6 +741,53 @@ class TestExecution_rm(ExecutionTestCase):
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.body_json_params)
+
+
+class TestExecution_ls(ExecutionTestCase):
+
+    def test_root(self):
+        execute('ls', self.context)
+        self.assert_stdout('orgs  users\n')
+
+    def test_relative_path(self):
+        self.context.url = 'http://localhost/users'
+        execute('ls 101', self.context)
+        self.assert_stdout('events orgs\n')
+
+    def test_absolute_path(self):
+        self.context.url = 'http://localhost/users'
+        execute('ls /orgs/1', self.context)
+        self.assert_stdout('events  members\n')
+
+    def test_redirect_write(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('ls > %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'orgs\nusers')
+
+    def test_redirect_append(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w') as f:
+            f.write('hello world\n')
+
+        execute('ls >> %s' % filename, self.context)
+
+        with open(filename) as f:
+            content = f.read()
+        self.assertEqual(content, 'hello world\norgs\nusers')
+
+    def test_grep(self):
+        execute('ls | grep users', self.context)
+        self.assert_stdout('users\n')
 
 
 class TestMutation(ExecutionTestCase):

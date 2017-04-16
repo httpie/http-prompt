@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import json
 import os
 import sys
 
@@ -15,6 +16,8 @@ from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 from six.moves.http_cookies import SimpleCookie
+from six.moves.urllib.parse import urlparse
+from six.moves.urllib.request import urlopen
 
 from . import __version__
 from . import config
@@ -70,13 +73,23 @@ class ExecutionListener(object):
             click.secho('Cookies set: %s' % new_cookie)
 
 
+def normalize_url(ctx, param, value):
+    if value:
+        if not urlparse(value).scheme:
+            value = 'file://' + os.path.abspath(value)
+        return value
+    return None
+
+
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
+@click.option('--spec', help="OpenAPI/Swagger specification file.",
+              callback=normalize_url)
 @click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
-def cli(url, http_options):
+def cli(spec, url, http_options):
     click.echo('Version: %s' % __version__)
 
     copied, config_path = config.initialize()
@@ -90,8 +103,21 @@ def cli(url, http_options):
     os.environ['PAGER'] = cfg['pager']
     os.environ['LESS'] = '-RXF'
 
+    if spec:
+        f = urlopen(spec)
+        try:
+            content = f.read().decode('utf-8')
+            try:
+                spec = json.loads(content)
+            except json.JSONDecodeError:
+                click.secho("Warning: Specification file '%s' is not JSON" %
+                            spec, err=True, fg='red')
+                spec = None
+        finally:
+            f.close()
+
     url = fix_incomplete_url(url)
-    context = Context(url)
+    context = Context(url, spec=spec)
 
     output_style = cfg.get('output_style')
     if output_style:
@@ -102,11 +128,10 @@ def cli(url, http_options):
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
     try:
-        style = get_style_by_name(cfg['command_style'])
+        style_class = get_style_by_name(cfg['command_style'])
     except ClassNotFound:
-        style = style_from_pygments(Solarized256Style)
-    else:
-        style = style_from_pygments(style)
+        style_class = Solarized256Style
+    style = style_from_pygments(style_class)
 
     listener = ExecutionListener(cfg)
 
@@ -126,7 +151,7 @@ def cli(url, http_options):
         except EOFError:
             break  # Control-D pressed
         else:
-            execute(text, context, listener=listener)
+            execute(text, context, listener=listener, style=style_class)
             if context.should_exit:
                 break
 
