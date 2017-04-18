@@ -150,9 +150,12 @@ def cli(spec, url, http_options):
                           on_abort=AbortAction.RETRY, vi_mode=cfg['vi'])
         except EOFError:
             break  # Control-D pressed
+        except KeyboardInterrupt:
+            break  # Control-C pressed
         else:
             execute(text, context, listener=listener, style=style_class)
             if context.should_exit:
                 break
 
+    execute("httpie", context)
     click.echo("Goodbye!")
