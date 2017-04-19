@@ -1,0 +1,661 @@
+<style>
+body {
+	font-family: "DejaVu Sans Mono", "Consolas", "Menlo", monospace;
+}
+pre {
+	font-size: 12px;
+	font-family: "DejaVu Sans Mono", "Consolas", "Menlo", monospace;
+	margin: 0;
+	padding: 5px 5px 5px;
+	line-height: 1.4em !important;
+}
+</style>
+
+<h1>algol</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold; text-decoration: underline">cd</span> <span style="color: #666666; font-style: italic">http://httpbin.org/headers</span>
+<span style="font-weight: bold; text-decoration: underline">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="font-weight: bold; text-decoration: underline">get</span> --auth <span style="color: #666666; font-style: italic">user:pass</span> &#39;name=<span style="color: #666666; font-style: italic">John Doe</span>&#39; Accept:<span style="color: #666666; font-style: italic">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold; text-decoration: underline">HTTP</span>/1.1 200 OK
+Connection: <span style="color: #666666; font-style: italic">keep-alive</span>
+Content-Type: <span style="color: #666666; font-style: italic">application/json</span>
+Server: <span style="color: #666666; font-style: italic">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    &quot;headers&quot;: {
+        &quot;Accept&quot;: <span style="color: #666666; font-style: italic">&quot;application/json&quot;</span>,
+        &quot;Authorization&quot;: <span style="color: #666666; font-style: italic">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        &quot;Content-Type&quot;: <span style="color: #666666; font-style: italic">&quot;application/json&quot;</span>,
+        &quot;Host&quot;: <span style="color: #666666; font-style: italic">&quot;httpbin.org&quot;</span>,
+        &quot;User-Agent&quot;: <span style="color: #666666; font-style: italic">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>algol_nu</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">cd</span> <span style="color: #666666; font-style: italic">http://httpbin.org/headers</span>
+<span style="font-weight: bold">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="font-weight: bold">get</span> --auth <span style="color: #666666; font-style: italic">user:pass</span> &#39;name=<span style="color: #666666; font-style: italic">John Doe</span>&#39; Accept:<span style="color: #666666; font-style: italic">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">HTTP</span>/1.1 200 OK
+Connection: <span style="color: #666666; font-style: italic">keep-alive</span>
+Content-Type: <span style="color: #666666; font-style: italic">application/json</span>
+Server: <span style="color: #666666; font-style: italic">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    &quot;headers&quot;: {
+        &quot;Accept&quot;: <span style="color: #666666; font-style: italic">&quot;application/json&quot;</span>,
+        &quot;Authorization&quot;: <span style="color: #666666; font-style: italic">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        &quot;Content-Type&quot;: <span style="color: #666666; font-style: italic">&quot;application/json&quot;</span>,
+        &quot;Host&quot;: <span style="color: #666666; font-style: italic">&quot;httpbin.org&quot;</span>,
+        &quot;User-Agent&quot;: <span style="color: #666666; font-style: italic">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>autumn</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000aa">cd</span> <span style="color: #aa5500">http://httpbin.org/headers</span>
+<span style="color: #0000aa">rm</span> <span style="color: #FF0000; background-color: #FFAAAA">invalid command</span>
+<span style="color: #0000aa">get</span> --auth <span style="color: #aa5500">user:pass</span> &#39;name=<span style="color: #aa5500">John Doe</span>&#39; Accept:<span style="color: #aa5500">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000aa">HTTP</span>/<span style="color: #009999">1.1</span> <span style="color: #009999">200</span> OK
+<span style="color: #1e90ff">Connection</span>: <span style="color: #aa5500">keep-alive</span>
+<span style="color: #1e90ff">Content-Type</span>: <span style="color: #aa5500">application/json</span>
+<span style="color: #1e90ff">Server</span>: <span style="color: #aa5500">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #1e90ff; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #1e90ff; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #aa5500">&quot;application/json&quot;</span>,
+        <span style="color: #1e90ff; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #aa5500">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #1e90ff; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #aa5500">&quot;application/json&quot;</span>,
+        <span style="color: #1e90ff; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #aa5500">&quot;httpbin.org&quot;</span>,
+        <span style="color: #1e90ff; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #aa5500">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>borland</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #000080; font-weight: bold">cd</span> <span style="color: #0000FF">http://httpbin.org/headers</span>
+<span style="color: #000080; font-weight: bold">rm</span> <span style="color: #a61717; background-color: #e3d2d2">invalid command</span>
+<span style="color: #000080; font-weight: bold">get</span> --auth <span style="color: #0000FF">user:pass</span> &#39;name=<span style="color: #0000FF">John Doe</span>&#39; Accept:<span style="color: #0000FF">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #000080; font-weight: bold">HTTP</span>/<span style="color: #0000FF">1.1</span> <span style="color: #0000FF">200</span> OK
+<span style="color: #FF0000">Connection</span>: <span style="color: #0000FF">keep-alive</span>
+<span style="color: #FF0000">Content-Type</span>: <span style="color: #0000FF">application/json</span>
+<span style="color: #FF0000">Server</span>: <span style="color: #0000FF">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #000080; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #000080; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #0000FF">&quot;application/json&quot;</span>,
+        <span style="color: #000080; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #0000FF">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #000080; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #0000FF">&quot;application/json&quot;</span>,
+        <span style="color: #000080; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #0000FF">&quot;httpbin.org&quot;</span>,
+        <span style="color: #000080; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #0000FF">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>bw</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">cd</span> <span style="font-style: italic">http://httpbin.org/headers</span>
+<span style="font-weight: bold">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="font-weight: bold">get</span> --auth <span style="font-style: italic">user:pass</span> &#39;name=<span style="font-style: italic">John Doe</span>&#39; Accept:<span style="font-style: italic">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">HTTP</span>/1.1 200 <span style="font-weight: bold">OK</span>
+Connection: <span style="font-style: italic">keep-alive</span>
+Content-Type: <span style="font-style: italic">application/json</span>
+Server: <span style="font-style: italic">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="font-weight: bold">&quot;Accept&quot;</span>: <span style="font-style: italic">&quot;application/json&quot;</span>,
+        <span style="font-weight: bold">&quot;Authorization&quot;</span>: <span style="font-style: italic">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="font-weight: bold">&quot;Content-Type&quot;</span>: <span style="font-style: italic">&quot;application/json&quot;</span>,
+        <span style="font-weight: bold">&quot;Host&quot;</span>: <span style="font-style: italic">&quot;httpbin.org&quot;</span>,
+        <span style="font-weight: bold">&quot;User-Agent&quot;</span>: <span style="font-style: italic">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>colorful</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008800; font-weight: bold">cd</span> <span style="background-color: #fff0f0">http://httpbin.org/headers</span>
+<span style="color: #008800; font-weight: bold">rm</span> <span style="color: #FF0000; background-color: #FFAAAA">invalid command</span>
+<span style="color: #008800; font-weight: bold">get</span> --auth<span style="color: #333333"> </span><span style="background-color: #fff0f0">user:pass</span> &#39;name<span style="color: #333333">=</span><span style="background-color: #fff0f0">John Doe</span>&#39; Accept<span style="color: #333333">:</span><span style="background-color: #fff0f0">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008800; font-weight: bold">HTTP</span><span style="color: #333333">/</span><span style="color: #6600EE; font-weight: bold">1.1</span> <span style="color: #6600EE; font-weight: bold">200</span> <span style="color: #FF0000; font-weight: bold">OK</span>
+<span style="color: #0000CC">Connection</span><span style="color: #333333">:</span> <span style="background-color: #fff0f0">keep-alive</span>
+<span style="color: #0000CC">Content-Type</span><span style="color: #333333">:</span> <span style="background-color: #fff0f0">application/json</span>
+<span style="color: #0000CC">Server</span><span style="color: #333333">:</span> <span style="background-color: #fff0f0">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #007700">&quot;headers&quot;</span>: {
+        <span style="color: #007700">&quot;Accept&quot;</span>: <span style="background-color: #fff0f0">&quot;application/json&quot;</span>,
+        <span style="color: #007700">&quot;Authorization&quot;</span>: <span style="background-color: #fff0f0">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #007700">&quot;Content-Type&quot;</span>: <span style="background-color: #fff0f0">&quot;application/json&quot;</span>,
+        <span style="color: #007700">&quot;Host&quot;</span>: <span style="background-color: #fff0f0">&quot;httpbin.org&quot;</span>,
+        <span style="color: #007700">&quot;User-Agent&quot;</span>: <span style="background-color: #fff0f0">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>default</h1>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">cd</span> <span style="color: #BA2121">http://httpbin.org/headers</span>
+<span style="color: #008000; font-weight: bold">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="color: #008000; font-weight: bold">get</span> --auth<span style="color: #666666"> </span><span style="color: #BA2121">user:pass</span> &#39;name<span style="color: #666666">=</span><span style="color: #BA2121">John Doe</span>&#39; Accept<span style="color: #666666">:</span><span style="color: #BA2121">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #008000; font-weight: bold">HTTP</span><span style="color: #666666">/1.1</span> <span style="color: #666666">200</span> <span style="color: #D2413A; font-weight: bold">OK</span>
+<span style="color: #7D9029">Connection</span><span style="color: #666666">:</span> <span style="color: #BA2121">keep-alive</span>
+<span style="color: #7D9029">Content-Type</span><span style="color: #666666">:</span> <span style="color: #BA2121">application/json</span>
+<span style="color: #7D9029">Server</span><span style="color: #666666">:</span> <span style="color: #BA2121">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #008000; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #008000; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #BA2121">&quot;application/json&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #BA2121">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #BA2121">&quot;application/json&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #BA2121">&quot;httpbin.org&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #BA2121">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>emacs</h1>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #AA22FF; font-weight: bold">cd</span> <span style="color: #BB4444">http://httpbin.org/headers</span>
+<span style="color: #AA22FF; font-weight: bold">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="color: #AA22FF; font-weight: bold">get</span> --auth<span style="color: #666666"> </span><span style="color: #BB4444">user:pass</span> &#39;name<span style="color: #666666">=</span><span style="color: #BB4444">John Doe</span>&#39; Accept<span style="color: #666666">:</span><span style="color: #BB4444">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #AA22FF; font-weight: bold">HTTP</span><span style="color: #666666">/1.1</span> <span style="color: #666666">200</span> <span style="color: #D2413A; font-weight: bold">OK</span>
+<span style="color: #BB4444">Connection</span><span style="color: #666666">:</span> <span style="color: #BB4444">keep-alive</span>
+<span style="color: #BB4444">Content-Type</span><span style="color: #666666">:</span> <span style="color: #BB4444">application/json</span>
+<span style="color: #BB4444">Server</span><span style="color: #666666">:</span> <span style="color: #BB4444">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #008000; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #008000; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #BB4444">&quot;application/json&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #BB4444">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #BB4444">&quot;application/json&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #BB4444">&quot;httpbin.org&quot;</span>,
+        <span style="color: #008000; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #BB4444">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>friendly</h1>
+
+<div class="highlight" style="background: #f0f0f0"><pre style="line-height: 125%"><span></span><span style="color: #007020; font-weight: bold">cd</span> <span style="color: #4070a0">http://httpbin.org/headers</span>
+<span style="color: #007020; font-weight: bold">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="color: #007020; font-weight: bold">get</span> --auth<span style="color: #666666"> </span><span style="color: #4070a0">user:pass</span> &#39;name<span style="color: #666666">=</span><span style="color: #4070a0">John Doe</span>&#39; Accept<span style="color: #666666">:</span><span style="color: #4070a0">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #f0f0f0"><pre style="line-height: 125%"><span></span><span style="color: #007020; font-weight: bold">HTTP</span><span style="color: #666666">/</span><span style="color: #40a070">1.1</span> <span style="color: #40a070">200</span> <span style="color: #007020">OK</span>
+<span style="color: #4070a0">Connection</span><span style="color: #666666">:</span> <span style="color: #4070a0">keep-alive</span>
+<span style="color: #4070a0">Content-Type</span><span style="color: #666666">:</span> <span style="color: #4070a0">application/json</span>
+<span style="color: #4070a0">Server</span><span style="color: #666666">:</span> <span style="color: #4070a0">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #f0f0f0"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #062873; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #062873; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #4070a0">&quot;application/json&quot;</span>,
+        <span style="color: #062873; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #4070a0">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #062873; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #4070a0">&quot;application/json&quot;</span>,
+        <span style="color: #062873; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #4070a0">&quot;httpbin.org&quot;</span>,
+        <span style="color: #062873; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #4070a0">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>fruity</h1>
+
+<div class="highlight" style="background: #111111"><pre style="line-height: 125%"><span></span><span style="color: #fb660a; font-weight: bold">cd</span> <span style="color: #0086d2">http://httpbin.org/headers</span>
+<span style="color: #fb660a; font-weight: bold">rm</span> <span style="color: #ffffff">invalid command</span>
+<span style="color: #fb660a; font-weight: bold">get</span> <span style="color: #ffffff">--auth </span><span style="color: #0086d2">user:pass</span> &#39;<span style="color: #ffffff">name=</span><span style="color: #0086d2">John Doe</span>&#39; <span style="color: #ffffff">Accept:</span><span style="color: #0086d2">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #111111"><pre style="line-height: 125%"><span></span><span style="color: #fb660a; font-weight: bold">HTTP</span><span style="color: #ffffff">/</span><span style="color: #0086f7; font-weight: bold">1.1</span> <span style="color: #0086f7; font-weight: bold">200</span> <span style="color: #ffffff">OK</span>
+<span style="color: #ff0086; font-weight: bold">Connection</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">keep-alive</span>
+<span style="color: #ff0086; font-weight: bold">Content-Type</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">application/json</span>
+<span style="color: #ff0086; font-weight: bold">Server</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #111111"><pre style="line-height: 125%"><span></span><span style="color: #ffffff">{</span>
+    <span style="color: #fb660a; font-weight: bold">&quot;headers&quot;</span><span style="color: #ffffff">:</span> <span style="color: #ffffff">{</span>
+        <span style="color: #fb660a; font-weight: bold">&quot;Accept&quot;</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">&quot;application/json&quot;</span><span style="color: #ffffff">,</span>
+        <span style="color: #fb660a; font-weight: bold">&quot;Authorization&quot;</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #ffffff">,</span>
+        <span style="color: #fb660a; font-weight: bold">&quot;Content-Type&quot;</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">&quot;application/json&quot;</span><span style="color: #ffffff">,</span>
+        <span style="color: #fb660a; font-weight: bold">&quot;Host&quot;</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">&quot;httpbin.org&quot;</span><span style="color: #ffffff">,</span>
+        <span style="color: #fb660a; font-weight: bold">&quot;User-Agent&quot;</span><span style="color: #ffffff">:</span> <span style="color: #0086d2">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #ffffff">}</span>
+<span style="color: #ffffff">}</span>
+</pre></div>
+
+<h1>igor</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000FF">cd</span> <span style="color: #009C00">http://httpbin.org/headers</span>
+<span style="color: #0000FF">rm</span> invalid command
+<span style="color: #0000FF">get</span> --auth <span style="color: #009C00">user:pass</span> &#39;name=<span style="color: #009C00">John Doe</span>&#39; Accept:<span style="color: #009C00">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000FF">HTTP</span>/1.1 200 OK
+Connection: <span style="color: #009C00">keep-alive</span>
+Content-Type: <span style="color: #009C00">application/json</span>
+Server: <span style="color: #009C00">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    &quot;headers&quot;: {
+        &quot;Accept&quot;: <span style="color: #009C00">&quot;application/json&quot;</span>,
+        &quot;Authorization&quot;: <span style="color: #009C00">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        &quot;Content-Type&quot;: <span style="color: #009C00">&quot;application/json&quot;</span>,
+        &quot;Host&quot;: <span style="color: #009C00">&quot;httpbin.org&quot;</span>,
+        &quot;User-Agent&quot;: <span style="color: #009C00">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>lovelace</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2838b0">cd</span> <span style="color: #b83838">http://httpbin.org/headers</span>
+<span style="color: #2838b0">rm</span> <span style="background-color: #a848a8">invalid command</span>
+<span style="color: #2838b0">get</span> --auth<span style="color: #666666"> </span><span style="color: #b83838">user:pass</span> &#39;name<span style="color: #666666">=</span><span style="color: #b83838">John Doe</span>&#39; Accept<span style="color: #666666">:</span><span style="color: #b83838">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #2838b0">HTTP</span><span style="color: #666666">/</span><span style="color: #444444">1.1</span> <span style="color: #444444">200</span> <span style="color: #908828">OK</span>
+<span style="color: #388038">Connection</span><span style="color: #666666">:</span> <span style="color: #b83838">keep-alive</span>
+<span style="color: #388038">Content-Type</span><span style="color: #666666">:</span> <span style="color: #b83838">application/json</span>
+<span style="color: #388038">Server</span><span style="color: #666666">:</span> <span style="color: #b83838">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #888888">{</span>
+    <span style="color: #2838b0">&quot;headers&quot;</span><span style="color: #888888">:</span> <span style="color: #888888">{</span>
+        <span style="color: #2838b0">&quot;Accept&quot;</span><span style="color: #888888">:</span> <span style="color: #b83838">&quot;application/json&quot;</span><span style="color: #888888">,</span>
+        <span style="color: #2838b0">&quot;Authorization&quot;</span><span style="color: #888888">:</span> <span style="color: #b83838">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #888888">,</span>
+        <span style="color: #2838b0">&quot;Content-Type&quot;</span><span style="color: #888888">:</span> <span style="color: #b83838">&quot;application/json&quot;</span><span style="color: #888888">,</span>
+        <span style="color: #2838b0">&quot;Host&quot;</span><span style="color: #888888">:</span> <span style="color: #b83838">&quot;httpbin.org&quot;</span><span style="color: #888888">,</span>
+        <span style="color: #2838b0">&quot;User-Agent&quot;</span><span style="color: #888888">:</span> <span style="color: #b83838">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #888888">}</span>
+<span style="color: #888888">}</span>
+</pre></div>
+
+<h1>manni</h1>
+
+<div class="highlight" style="background: #f0f3f3"><pre style="line-height: 125%"><span></span><span style="color: #006699; font-weight: bold">cd</span> <span style="color: #CC3300">http://httpbin.org/headers</span>
+<span style="color: #006699; font-weight: bold">rm</span> <span style="color: #AA0000; background-color: #FFAAAA">invalid command</span>
+<span style="color: #006699; font-weight: bold">get</span> --auth<span style="color: #555555"> </span><span style="color: #CC3300">user:pass</span> &#39;name<span style="color: #555555">=</span><span style="color: #CC3300">John Doe</span>&#39; Accept<span style="color: #555555">:</span><span style="color: #CC3300">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #f0f3f3"><pre style="line-height: 125%"><span></span><span style="color: #006699; font-weight: bold">HTTP</span><span style="color: #555555">/</span><span style="color: #FF6600">1.1</span> <span style="color: #FF6600">200</span> <span style="color: #CC0000; font-weight: bold">OK</span>
+<span style="color: #330099">Connection</span><span style="color: #555555">:</span> <span style="color: #CC3300">keep-alive</span>
+<span style="color: #330099">Content-Type</span><span style="color: #555555">:</span> <span style="color: #CC3300">application/json</span>
+<span style="color: #330099">Server</span><span style="color: #555555">:</span> <span style="color: #CC3300">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #f0f3f3"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #330099; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #330099; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #CC3300">&quot;application/json&quot;</span>,
+        <span style="color: #330099; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #CC3300">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #330099; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #CC3300">&quot;application/json&quot;</span>,
+        <span style="color: #330099; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #CC3300">&quot;httpbin.org&quot;</span>,
+        <span style="color: #330099; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #CC3300">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>monokai</h1>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span></span><span style="color: #66d9ef">cd</span> <span style="color: #e6db74">http://httpbin.org/headers</span>
+<span style="color: #66d9ef">rm</span> <span style="color: #960050; background-color: #1e0010">invalid command</span>
+<span style="color: #66d9ef">get</span> <span style="color: #f8f8f2">--auth</span><span style="color: #f92672"> </span><span style="color: #e6db74">user:pass</span> &#39;<span style="color: #f8f8f2">name</span><span style="color: #f92672">=</span><span style="color: #e6db74">John Doe</span>&#39; <span style="color: #f8f8f2">Accept</span><span style="color: #f92672">:</span><span style="color: #e6db74">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span></span><span style="color: #66d9ef">HTTP</span><span style="color: #f92672">/</span><span style="color: #ae81ff">1.1</span> <span style="color: #ae81ff">200</span> <span style="color: #a6e22e">OK</span>
+<span style="color: #a6e22e">Connection</span><span style="color: #f92672">:</span> <span style="color: #e6db74">keep-alive</span>
+<span style="color: #a6e22e">Content-Type</span><span style="color: #f92672">:</span> <span style="color: #e6db74">application/json</span>
+<span style="color: #a6e22e">Server</span><span style="color: #f92672">:</span> <span style="color: #e6db74">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #272822"><pre style="line-height: 125%"><span></span><span style="color: #f8f8f2">{</span>
+    <span style="color: #f92672">&quot;headers&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #f8f8f2">{</span>
+        <span style="color: #f92672">&quot;Accept&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;application/json&quot;</span><span style="color: #f8f8f2">,</span>
+        <span style="color: #f92672">&quot;Authorization&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #f8f8f2">,</span>
+        <span style="color: #f92672">&quot;Content-Type&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;application/json&quot;</span><span style="color: #f8f8f2">,</span>
+        <span style="color: #f92672">&quot;Host&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;httpbin.org&quot;</span><span style="color: #f8f8f2">,</span>
+        <span style="color: #f92672">&quot;User-Agent&quot;</span><span style="color: #f8f8f2">:</span> <span style="color: #e6db74">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #f8f8f2">}</span>
+<span style="color: #f8f8f2">}</span>
+</pre></div>
+
+<h1>murphy</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #228899; font-weight: bold">cd</span> <span style="background-color: #e0e0ff">http://httpbin.org/headers</span>
+<span style="color: #228899; font-weight: bold">rm</span> <span style="color: #FF0000; background-color: #FFAAAA">invalid command</span>
+<span style="color: #228899; font-weight: bold">get</span> --auth<span style="color: #333333"> </span><span style="background-color: #e0e0ff">user:pass</span> &#39;name<span style="color: #333333">=</span><span style="background-color: #e0e0ff">John Doe</span>&#39; Accept<span style="color: #333333">:</span><span style="background-color: #e0e0ff">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #228899; font-weight: bold">HTTP</span><span style="color: #333333">/</span><span style="color: #6600EE; font-weight: bold">1.1</span> <span style="color: #6600EE; font-weight: bold">200</span> <span style="color: #FF0000; font-weight: bold">OK</span>
+<span style="color: #000077">Connection</span><span style="color: #333333">:</span> <span style="background-color: #e0e0ff">keep-alive</span>
+<span style="color: #000077">Content-Type</span><span style="color: #333333">:</span> <span style="background-color: #e0e0ff">application/json</span>
+<span style="color: #000077">Server</span><span style="color: #333333">:</span> <span style="background-color: #e0e0ff">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #007700">&quot;headers&quot;</span>: {
+        <span style="color: #007700">&quot;Accept&quot;</span>: <span style="background-color: #e0e0ff">&quot;application/json&quot;</span>,
+        <span style="color: #007700">&quot;Authorization&quot;</span>: <span style="background-color: #e0e0ff">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #007700">&quot;Content-Type&quot;</span>: <span style="background-color: #e0e0ff">&quot;application/json&quot;</span>,
+        <span style="color: #007700">&quot;Host&quot;</span>: <span style="background-color: #e0e0ff">&quot;httpbin.org&quot;</span>,
+        <span style="color: #007700">&quot;User-Agent&quot;</span>: <span style="background-color: #e0e0ff">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>native</h1>
+
+<div class="highlight" style="background: #202020"><pre style="line-height: 125%"><span></span><span style="color: #6ab825; font-weight: bold">cd</span> <span style="color: #ed9d13">http://httpbin.org/headers</span>
+<span style="color: #6ab825; font-weight: bold">rm</span> <span style="color: #a61717; background-color: #e3d2d2">invalid command</span>
+<span style="color: #6ab825; font-weight: bold">get</span> <span style="color: #d0d0d0">--auth </span><span style="color: #ed9d13">user:pass</span> &#39;<span style="color: #d0d0d0">name=</span><span style="color: #ed9d13">John Doe</span>&#39; <span style="color: #d0d0d0">Accept:</span><span style="color: #ed9d13">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #202020"><pre style="line-height: 125%"><span></span><span style="color: #6ab825; font-weight: bold">HTTP</span><span style="color: #d0d0d0">/</span><span style="color: #3677a9">1.1</span> <span style="color: #3677a9">200</span> <span style="color: #bbbbbb">OK</span>
+<span style="color: #bbbbbb">Connection</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">keep-alive</span>
+<span style="color: #bbbbbb">Content-Type</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">application/json</span>
+<span style="color: #bbbbbb">Server</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #202020"><pre style="line-height: 125%"><span></span><span style="color: #d0d0d0">{</span>
+    <span style="color: #6ab825; font-weight: bold">&quot;headers&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #d0d0d0">{</span>
+        <span style="color: #6ab825; font-weight: bold">&quot;Accept&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">&quot;application/json&quot;</span><span style="color: #d0d0d0">,</span>
+        <span style="color: #6ab825; font-weight: bold">&quot;Authorization&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #d0d0d0">,</span>
+        <span style="color: #6ab825; font-weight: bold">&quot;Content-Type&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">&quot;application/json&quot;</span><span style="color: #d0d0d0">,</span>
+        <span style="color: #6ab825; font-weight: bold">&quot;Host&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">&quot;httpbin.org&quot;</span><span style="color: #d0d0d0">,</span>
+        <span style="color: #6ab825; font-weight: bold">&quot;User-Agent&quot;</span><span style="color: #d0d0d0">:</span> <span style="color: #ed9d13">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #d0d0d0">}</span>
+<span style="color: #d0d0d0">}</span>
+</pre></div>
+
+<h1>paraiso-dark</h1>
+
+<div class="highlight" style="background: #2f1e2e"><pre style="line-height: 125%"><span></span><span style="color: #815ba4">cd</span> <span style="color: #48b685">http://httpbin.org/headers</span>
+<span style="color: #815ba4">rm</span> <span style="color: #ef6155">invalid command</span>
+<span style="color: #815ba4">get</span> <span style="color: #e7e9db">--auth</span><span style="color: #5bc4bf"> </span><span style="color: #48b685">user:pass</span> &#39;<span style="color: #e7e9db">name</span><span style="color: #5bc4bf">=</span><span style="color: #48b685">John Doe</span>&#39; <span style="color: #e7e9db">Accept</span><span style="color: #5bc4bf">:</span><span style="color: #48b685">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #2f1e2e"><pre style="line-height: 125%"><span></span><span style="color: #815ba4">HTTP</span><span style="color: #5bc4bf">/</span><span style="color: #f99b15">1.1</span> <span style="color: #f99b15">200</span> <span style="color: #ef6155">OK</span>
+<span style="color: #06b6ef">Connection</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">keep-alive</span>
+<span style="color: #06b6ef">Content-Type</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">application/json</span>
+<span style="color: #06b6ef">Server</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #2f1e2e"><pre style="line-height: 125%"><span></span><span style="color: #e7e9db">{</span>
+    <span style="color: #5bc4bf">&quot;headers&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #e7e9db">{</span>
+        <span style="color: #5bc4bf">&quot;Accept&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #48b685">&quot;application/json&quot;</span><span style="color: #e7e9db">,</span>
+        <span style="color: #5bc4bf">&quot;Authorization&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #48b685">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #e7e9db">,</span>
+        <span style="color: #5bc4bf">&quot;Content-Type&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #48b685">&quot;application/json&quot;</span><span style="color: #e7e9db">,</span>
+        <span style="color: #5bc4bf">&quot;Host&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #48b685">&quot;httpbin.org&quot;</span><span style="color: #e7e9db">,</span>
+        <span style="color: #5bc4bf">&quot;User-Agent&quot;</span><span style="color: #e7e9db">:</span> <span style="color: #48b685">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #e7e9db">}</span>
+<span style="color: #e7e9db">}</span>
+</pre></div>
+
+<h1>paraiso-light</h1>
+
+<div class="highlight" style="background: #e7e9db"><pre style="line-height: 125%"><span></span><span style="color: #815ba4">cd</span> <span style="color: #48b685">http://httpbin.org/headers</span>
+<span style="color: #815ba4">rm</span> <span style="color: #ef6155">invalid command</span>
+<span style="color: #815ba4">get</span> <span style="color: #2f1e2e">--auth</span><span style="color: #5bc4bf"> </span><span style="color: #48b685">user:pass</span> &#39;<span style="color: #2f1e2e">name</span><span style="color: #5bc4bf">=</span><span style="color: #48b685">John Doe</span>&#39; <span style="color: #2f1e2e">Accept</span><span style="color: #5bc4bf">:</span><span style="color: #48b685">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #e7e9db"><pre style="line-height: 125%"><span></span><span style="color: #815ba4">HTTP</span><span style="color: #5bc4bf">/</span><span style="color: #f99b15">1.1</span> <span style="color: #f99b15">200</span> <span style="color: #ef6155">OK</span>
+<span style="color: #06b6ef">Connection</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">keep-alive</span>
+<span style="color: #06b6ef">Content-Type</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">application/json</span>
+<span style="color: #06b6ef">Server</span><span style="color: #5bc4bf">:</span> <span style="color: #48b685">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #e7e9db"><pre style="line-height: 125%"><span></span><span style="color: #2f1e2e">{</span>
+    <span style="color: #5bc4bf">&quot;headers&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #2f1e2e">{</span>
+        <span style="color: #5bc4bf">&quot;Accept&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #48b685">&quot;application/json&quot;</span><span style="color: #2f1e2e">,</span>
+        <span style="color: #5bc4bf">&quot;Authorization&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #48b685">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #2f1e2e">,</span>
+        <span style="color: #5bc4bf">&quot;Content-Type&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #48b685">&quot;application/json&quot;</span><span style="color: #2f1e2e">,</span>
+        <span style="color: #5bc4bf">&quot;Host&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #48b685">&quot;httpbin.org&quot;</span><span style="color: #2f1e2e">,</span>
+        <span style="color: #5bc4bf">&quot;User-Agent&quot;</span><span style="color: #2f1e2e">:</span> <span style="color: #48b685">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #2f1e2e">}</span>
+<span style="color: #2f1e2e">}</span>
+</pre></div>
+
+<h1>pastie</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008800; font-weight: bold">cd</span> <span style="color: #dd2200; background-color: #fff0f0">http://httpbin.org/headers</span>
+<span style="color: #008800; font-weight: bold">rm</span> <span style="color: #a61717; background-color: #e3d2d2">invalid command</span>
+<span style="color: #008800; font-weight: bold">get</span> --auth <span style="color: #dd2200; background-color: #fff0f0">user:pass</span> &#39;name=<span style="color: #dd2200; background-color: #fff0f0">John Doe</span>&#39; Accept:<span style="color: #dd2200; background-color: #fff0f0">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #008800; font-weight: bold">HTTP</span>/<span style="color: #0000DD; font-weight: bold">1.1</span> <span style="color: #0000DD; font-weight: bold">200</span> <span style="color: #bb0066; font-weight: bold">OK</span>
+<span style="color: #336699">Connection</span>: <span style="color: #dd2200; background-color: #fff0f0">keep-alive</span>
+<span style="color: #336699">Content-Type</span>: <span style="color: #dd2200; background-color: #fff0f0">application/json</span>
+<span style="color: #336699">Server</span>: <span style="color: #dd2200; background-color: #fff0f0">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #bb0066; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #bb0066; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #dd2200; background-color: #fff0f0">&quot;application/json&quot;</span>,
+        <span style="color: #bb0066; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #dd2200; background-color: #fff0f0">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #bb0066; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #dd2200; background-color: #fff0f0">&quot;application/json&quot;</span>,
+        <span style="color: #bb0066; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #dd2200; background-color: #fff0f0">&quot;httpbin.org&quot;</span>,
+        <span style="color: #bb0066; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #dd2200; background-color: #fff0f0">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>perldoc</h1>
+
+<div class="highlight" style="background: #eeeedd"><pre style="line-height: 125%"><span></span><span style="color: #8B008B; font-weight: bold">cd</span> <span style="color: #CD5555">http://httpbin.org/headers</span>
+<span style="color: #8B008B; font-weight: bold">rm</span> <span style="color: #a61717; background-color: #e3d2d2">invalid command</span>
+<span style="color: #8B008B; font-weight: bold">get</span> --auth <span style="color: #CD5555">user:pass</span> &#39;name=<span style="color: #CD5555">John Doe</span>&#39; Accept:<span style="color: #CD5555">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #eeeedd"><pre style="line-height: 125%"><span></span><span style="color: #8B008B; font-weight: bold">HTTP</span>/<span style="color: #B452CD">1.1</span> <span style="color: #B452CD">200</span> <span style="color: #008b45; font-weight: bold">OK</span>
+<span style="color: #658b00">Connection</span>: <span style="color: #CD5555">keep-alive</span>
+<span style="color: #658b00">Content-Type</span>: <span style="color: #CD5555">application/json</span>
+<span style="color: #658b00">Server</span>: <span style="color: #CD5555">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #eeeedd"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #8B008B; font-weight: bold">&quot;headers&quot;</span>: {
+        <span style="color: #8B008B; font-weight: bold">&quot;Accept&quot;</span>: <span style="color: #CD5555">&quot;application/json&quot;</span>,
+        <span style="color: #8B008B; font-weight: bold">&quot;Authorization&quot;</span>: <span style="color: #CD5555">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #8B008B; font-weight: bold">&quot;Content-Type&quot;</span>: <span style="color: #CD5555">&quot;application/json&quot;</span>,
+        <span style="color: #8B008B; font-weight: bold">&quot;Host&quot;</span>: <span style="color: #CD5555">&quot;httpbin.org&quot;</span>,
+        <span style="color: #8B008B; font-weight: bold">&quot;User-Agent&quot;</span>: <span style="color: #CD5555">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>rrt</h1>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span><span style="color: #ff0000">cd</span> <span style="color: #87ceeb">http://httpbin.org/headers</span>
+<span style="color: #ff0000">rm</span> invalid command
+<span style="color: #ff0000">get</span> --auth <span style="color: #87ceeb">user:pass</span> &#39;name=<span style="color: #87ceeb">John Doe</span>&#39; Accept:<span style="color: #87ceeb">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span><span style="color: #ff0000">HTTP</span>/1.1 200 OK
+Connection: <span style="color: #87ceeb">keep-alive</span>
+Content-Type: <span style="color: #87ceeb">application/json</span>
+Server: <span style="color: #87ceeb">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span>{
+    &quot;headers&quot;: {
+        &quot;Accept&quot;: <span style="color: #87ceeb">&quot;application/json&quot;</span>,
+        &quot;Authorization&quot;: <span style="color: #87ceeb">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        &quot;Content-Type&quot;: <span style="color: #87ceeb">&quot;application/json&quot;</span>,
+        &quot;Host&quot;: <span style="color: #87ceeb">&quot;httpbin.org&quot;</span>,
+        &quot;User-Agent&quot;: <span style="color: #87ceeb">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>solarized</h1>
+
+<div class="highlight" style="background: #1c1c1c"><pre style="line-height: 125%"><span></span><span style="color: #5f8700">cd</span> <span style="color: #00afaf">http://httpbin.org/headers</span>
+<span style="color: #5f8700">rm</span> <span style="color: #8a8a8a">invalid command</span>
+<span style="color: #5f8700">get</span> <span style="color: #8a8a8a">--auth </span><span style="color: #00afaf">user:pass</span> &#39;<span style="color: #8a8a8a">name=</span><span style="color: #00afaf">John Doe</span>&#39; <span style="color: #8a8a8a">Accept:</span><span style="color: #00afaf">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #1c1c1c"><pre style="line-height: 125%"><span></span><span style="color: #0087ff">HTTP</span><span style="color: #8a8a8a">/</span><span style="color: #00afaf">1.1</span> <span style="color: #00afaf">200</span> <span style="color: #af8700">OK</span>
+<span style="color: #8a8a8a">Connection:</span> <span style="color: #00afaf">keep-alive</span>
+<span style="color: #8a8a8a">Content-Type:</span> <span style="color: #00afaf">application/json</span>
+<span style="color: #8a8a8a">Server:</span> <span style="color: #00afaf">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #1c1c1c"><pre style="line-height: 125%"><span></span><span style="color: #8a8a8a">{</span>
+    <span style="color: #0087ff">&quot;headers&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #8a8a8a">{</span>
+        <span style="color: #0087ff">&quot;Accept&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #00afaf">&quot;application/json&quot;</span><span style="color: #8a8a8a">,</span>
+        <span style="color: #0087ff">&quot;Authorization&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #00afaf">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #8a8a8a">,</span>
+        <span style="color: #0087ff">&quot;Content-Type&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #00afaf">&quot;application/json&quot;</span><span style="color: #8a8a8a">,</span>
+        <span style="color: #0087ff">&quot;Host&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #00afaf">&quot;httpbin.org&quot;</span><span style="color: #8a8a8a">,</span>
+        <span style="color: #0087ff">&quot;User-Agent&quot;</span><span style="color: #8a8a8a">:</span> <span style="color: #00afaf">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #8a8a8a">}</span>
+<span style="color: #8a8a8a">}</span>
+</pre></div>
+
+<h1>tango</h1>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #204a87; font-weight: bold">cd</span> <span style="color: #4e9a06">http://httpbin.org/headers</span>
+<span style="color: #204a87; font-weight: bold">rm</span> <span style="color: #a40000; border: 1px solid #ef2929">invalid command</span>
+<span style="color: #204a87; font-weight: bold">get</span> <span style="color: #000000">--auth</span><span style="color: #ce5c00; font-weight: bold"> </span><span style="color: #4e9a06">user:pass</span> &#39;<span style="color: #000000">name</span><span style="color: #ce5c00; font-weight: bold">=</span><span style="color: #4e9a06">John Doe</span>&#39; <span style="color: #000000">Accept</span><span style="color: #ce5c00; font-weight: bold">:</span><span style="color: #4e9a06">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #204a87; font-weight: bold">HTTP</span><span style="color: #ce5c00; font-weight: bold">/</span><span style="color: #0000cf; font-weight: bold">1.1</span> <span style="color: #0000cf; font-weight: bold">200</span> <span style="color: #cc0000; font-weight: bold">OK</span>
+<span style="color: #c4a000">Connection</span><span style="color: #ce5c00; font-weight: bold">:</span> <span style="color: #4e9a06">keep-alive</span>
+<span style="color: #c4a000">Content-Type</span><span style="color: #ce5c00; font-weight: bold">:</span> <span style="color: #4e9a06">application/json</span>
+<span style="color: #c4a000">Server</span><span style="color: #ce5c00; font-weight: bold">:</span> <span style="color: #4e9a06">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%"><span></span><span style="color: #000000; font-weight: bold">{</span>
+    <span style="color: #204a87; font-weight: bold">&quot;headers&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #000000; font-weight: bold">{</span>
+        <span style="color: #204a87; font-weight: bold">&quot;Accept&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #4e9a06">&quot;application/json&quot;</span><span style="color: #000000; font-weight: bold">,</span>
+        <span style="color: #204a87; font-weight: bold">&quot;Authorization&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #4e9a06">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #000000; font-weight: bold">,</span>
+        <span style="color: #204a87; font-weight: bold">&quot;Content-Type&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #4e9a06">&quot;application/json&quot;</span><span style="color: #000000; font-weight: bold">,</span>
+        <span style="color: #204a87; font-weight: bold">&quot;Host&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #4e9a06">&quot;httpbin.org&quot;</span><span style="color: #000000; font-weight: bold">,</span>
+        <span style="color: #204a87; font-weight: bold">&quot;User-Agent&quot;</span><span style="color: #000000; font-weight: bold">:</span> <span style="color: #4e9a06">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #000000; font-weight: bold">}</span>
+<span style="color: #000000; font-weight: bold">}</span>
+</pre></div>
+
+<h1>trac</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">cd</span> <span style="color: #bb8844">http://httpbin.org/headers</span>
+<span style="font-weight: bold">rm</span> <span style="color: #a61717; background-color: #e3d2d2">invalid command</span>
+<span style="font-weight: bold">get</span> --auth<span style="font-weight: bold"> </span><span style="color: #bb8844">user:pass</span> &#39;name<span style="font-weight: bold">=</span><span style="color: #bb8844">John Doe</span>&#39; Accept<span style="font-weight: bold">:</span><span style="color: #bb8844">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="font-weight: bold">HTTP/</span><span style="color: #009999">1.1</span> <span style="color: #009999">200</span> <span style="color: #990000; font-weight: bold">OK</span>
+<span style="color: #008080">Connection</span><span style="font-weight: bold">:</span> <span style="color: #bb8844">keep-alive</span>
+<span style="color: #008080">Content-Type</span><span style="font-weight: bold">:</span> <span style="color: #bb8844">application/json</span>
+<span style="color: #008080">Server</span><span style="font-weight: bold">:</span> <span style="color: #bb8844">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #000080">&quot;headers&quot;</span>: {
+        <span style="color: #000080">&quot;Accept&quot;</span>: <span style="color: #bb8844">&quot;application/json&quot;</span>,
+        <span style="color: #000080">&quot;Authorization&quot;</span>: <span style="color: #bb8844">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #000080">&quot;Content-Type&quot;</span>: <span style="color: #bb8844">&quot;application/json&quot;</span>,
+        <span style="color: #000080">&quot;Host&quot;</span>: <span style="color: #bb8844">&quot;httpbin.org&quot;</span>,
+        <span style="color: #000080">&quot;User-Agent&quot;</span>: <span style="color: #bb8844">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>vim</h1>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span><span style="color: #cdcd00">cd</span> <span style="color: #cd0000">http://httpbin.org/headers</span>
+<span style="color: #cdcd00">rm</span> <span style="color: #cccccc; border: 1px solid #FF0000">invalid command</span>
+<span style="color: #cdcd00">get</span> <span style="color: #cccccc">--auth</span><span style="color: #3399cc"> </span><span style="color: #cd0000">user:pass</span> &#39;<span style="color: #cccccc">name</span><span style="color: #3399cc">=</span><span style="color: #cd0000">John Doe</span>&#39; <span style="color: #cccccc">Accept</span><span style="color: #3399cc">:</span><span style="color: #cd0000">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span><span style="color: #cdcd00">HTTP</span><span style="color: #3399cc">/</span><span style="color: #cd00cd">1.1</span> <span style="color: #cd00cd">200</span> <span style="color: #666699; font-weight: bold">OK</span>
+<span style="color: #cccccc">Connection</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">keep-alive</span>
+<span style="color: #cccccc">Content-Type</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">application/json</span>
+<span style="color: #cccccc">Server</span><span style="color: #3399cc">:</span> <span style="color: #cd0000">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #000000"><pre style="line-height: 125%"><span></span><span style="color: #cccccc">{</span>
+    <span style="color: #cccccc">&quot;headers&quot;:</span> <span style="color: #cccccc">{</span>
+        <span style="color: #cccccc">&quot;Accept&quot;:</span> <span style="color: #cd0000">&quot;application/json&quot;</span><span style="color: #cccccc">,</span>
+        <span style="color: #cccccc">&quot;Authorization&quot;:</span> <span style="color: #cd0000">&quot;Basic dXNlcjpwYXNz&quot;</span><span style="color: #cccccc">,</span>
+        <span style="color: #cccccc">&quot;Content-Type&quot;:</span> <span style="color: #cd0000">&quot;application/json&quot;</span><span style="color: #cccccc">,</span>
+        <span style="color: #cccccc">&quot;Host&quot;:</span> <span style="color: #cd0000">&quot;httpbin.org&quot;</span><span style="color: #cccccc">,</span>
+        <span style="color: #cccccc">&quot;User-Agent&quot;:</span> <span style="color: #cd0000">&quot;HTTPie/0.9.3&quot;</span>
+    <span style="color: #cccccc">}</span>
+<span style="color: #cccccc">}</span>
+</pre></div>
+
+<h1>vs</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">cd</span> <span style="color: #a31515">http://httpbin.org/headers</span>
+<span style="color: #0000ff">rm</span> <span style="border: 1px solid #FF0000">invalid command</span>
+<span style="color: #0000ff">get</span> --auth <span style="color: #a31515">user:pass</span> &#39;name=<span style="color: #a31515">John Doe</span>&#39; Accept:<span style="color: #a31515">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #0000ff">HTTP</span>/1.1 200 OK
+Connection: <span style="color: #a31515">keep-alive</span>
+Content-Type: <span style="color: #a31515">application/json</span>
+Server: <span style="color: #a31515">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    &quot;headers&quot;: {
+        &quot;Accept&quot;: <span style="color: #a31515">&quot;application/json&quot;</span>,
+        &quot;Authorization&quot;: <span style="color: #a31515">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        &quot;Content-Type&quot;: <span style="color: #a31515">&quot;application/json&quot;</span>,
+        &quot;Host&quot;: <span style="color: #a31515">&quot;httpbin.org&quot;</span>,
+        &quot;User-Agent&quot;: <span style="color: #a31515">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
+<h1>xcode</h1>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #A90D91">cd</span> <span style="color: #C41A16">http://httpbin.org/headers</span>
+<span style="color: #A90D91">rm</span> <span style="color: #000000">invalid command</span>
+<span style="color: #A90D91">get</span> <span style="color: #000000">--auth </span><span style="color: #C41A16">user:pass</span> &#39;<span style="color: #000000">name=</span><span style="color: #C41A16">John Doe</span>&#39; <span style="color: #000000">Accept:</span><span style="color: #C41A16">application/json</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span><span style="color: #A90D91">HTTP</span><span style="color: #000000">/</span><span style="color: #1C01CE">1.1</span> <span style="color: #1C01CE">200</span> <span style="color: #000000">OK</span>
+<span style="color: #836C28">Connection</span><span style="color: #000000">:</span> <span style="color: #C41A16">keep-alive</span>
+<span style="color: #836C28">Content-Type</span><span style="color: #000000">:</span> <span style="color: #C41A16">application/json</span>
+<span style="color: #836C28">Server</span><span style="color: #000000">:</span> <span style="color: #C41A16">nginx</span>
+</pre></div>
+
+<div class="highlight" style="background: #ffffff"><pre style="line-height: 125%"><span></span>{
+    <span style="color: #000000">&quot;headers&quot;</span>: {
+        <span style="color: #000000">&quot;Accept&quot;</span>: <span style="color: #C41A16">&quot;application/json&quot;</span>,
+        <span style="color: #000000">&quot;Authorization&quot;</span>: <span style="color: #C41A16">&quot;Basic dXNlcjpwYXNz&quot;</span>,
+        <span style="color: #000000">&quot;Content-Type&quot;</span>: <span style="color: #C41A16">&quot;application/json&quot;</span>,
+        <span style="color: #000000">&quot;Host&quot;</span>: <span style="color: #C41A16">&quot;httpbin.org&quot;</span>,
+        <span style="color: #000000">&quot;User-Agent&quot;</span>: <span style="color: #C41A16">&quot;HTTPie/0.9.3&quot;</span>
+    }
+}
+</pre></div>
+
