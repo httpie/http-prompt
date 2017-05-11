@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import json
 import os
+import re
 import sys
 
 import click
@@ -16,8 +17,7 @@ from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.parse import urlparse
-from six.moves.urllib.request import urlopen
+from six.moves.urllib.request import urlopen, pathname2url
 
 from . import __version__
 from . import config
@@ -75,8 +75,8 @@ class ExecutionListener(object):
 
 def normalize_url(ctx, param, value):
     if value:
-        if not urlparse(value).scheme:
-            value = 'file://' + os.path.abspath(value)
+        if not re.search(r'^\w+://', value):
+            value = 'file:' + pathname2url(os.path.abspath(value))
         return value
     return None
 
