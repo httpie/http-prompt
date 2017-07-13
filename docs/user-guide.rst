@@ -299,7 +299,7 @@ environment and assign the value to a parameter::
     # "secret_api_key".
     > password==`cat ./apikey.txt`
     > httpie
-    http http://localhost:8000 apikey==secret_api_key
+    http http://localhost:8000 password==secret_api_key
 
 
 Configuration
