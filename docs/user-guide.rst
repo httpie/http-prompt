@@ -230,8 +230,8 @@ Usage:
     > exec /path/to/file
 
 
-Saving HTTP Respones
-~~~~~~~~~~~~~~~~~~~~
+Saving HTTP Responses
+~~~~~~~~~~~~~~~~~~~~~
 
 Printing HTTP responses to the console is good for small text responses. For
 larger text or binary data, you may want to save the response to a file. Usage:
@@ -348,7 +348,7 @@ replaced by ``env``, ``exec`` and ``source`` commands. See the discussion in
 
 *New in v0.10.0.*
 
-OpenAPI_ (formerly known as Swagger_) is a specifcation that describes an
+OpenAPI_ (formerly known as Swagger_) is a specification that describes an
 HTTP/REST API. The ``http-prompt`` has a ``--spec`` option for you to provide
 an OpenAPI specification in JSON format. The specification enables HTTP Prompt
 to do some cool things like autocomplete API endpoint paths and parameters
