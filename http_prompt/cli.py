@@ -34,11 +34,11 @@ click.disable_unicode_literals_warning = True
 
 
 def fix_incomplete_url(url):
-    if url.startswith('s://') or url.startswith('://'):
+    if url.startswith(('s://', '://')):
         url = 'http' + url
     elif url.startswith('//'):
         url = 'http:' + url
-    elif not url.startswith('http://') and not url.startswith('https://'):
+    elif not url.startswith(('http://', 'https://')):
         url = 'http://' + url
     return url
 
