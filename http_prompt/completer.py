@@ -54,7 +54,7 @@ def fuzzyfinder(text, collection):
     """https://github.com/amjith/fuzzyfinder"""
     suggestions = []
     if not isinstance(text, six.text_type):
-        text = six.u(text, 'utf-8')
+        text = six.u(text)
     pat = '.*?'.join(map(re.escape, text))
     regex = re.compile(pat, flags=re.IGNORECASE)
     for item in collection:
