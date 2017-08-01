@@ -6,6 +6,7 @@ except ImportError:
 import codecs
 import os
 import re
+import sys
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -37,9 +38,15 @@ def read_description(filename):
 def read_requirements(filename):
     try:
         with open(filename) as f:
-            return f.read().splitlines()
+            result = [line.rstrip() for line in f]
     except IOError:
         raise IOError(os.getcwd())
+    else:
+        # "New in version 2.7."
+        # https://docs.python.org/2/library/collections.html#collections.OrderedDict
+        if sys.version_info < (2, 7):
+            result.append('ordereddict>=1.1')
+        return result
 
 
 setup(
