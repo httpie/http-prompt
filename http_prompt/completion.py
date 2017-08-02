@@ -3,7 +3,7 @@
 try:
     from collections import OrderedDict
 except ImportError:  # For Python 2.6, nocover
-    from .ordereddict import OrderedDict
+    from ordereddict import OrderedDict
 
 from . import options as opt
 
