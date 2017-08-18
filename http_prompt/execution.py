@@ -1,6 +1,7 @@
 import io
 import json
 import re
+import os
 import sys
 
 import click
@@ -291,7 +292,7 @@ class ExecutionVisitor(NodeVisitor):
 
     def _redirect_output(self, filepath, mode):
         filepath = normalize_filepath(filepath)
-        self.output = TextWriter(open(filepath, mode))
+        self.output = TextWriter(open(os.path.expandvars(filepath), mode))
 
     def visit_redir_append(self, node, children):
         self._redirect_output(children[3], 'ab')

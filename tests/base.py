@@ -46,11 +46,15 @@ class TempAppDirTestCase(unittest.TestCase):
 
         shutil.rmtree(self.temp_dir)
 
-    def make_tempfile(self, data=''):
+    def make_tempfile(self, data='', subdir_name=''):
         """Create a file under self.temp_dir and return the path."""
+        full_tempdir = os.path.join(self.temp_dir, subdir_name)
+        if not os.path.exists(full_tempdir):
+            os.makedirs(full_tempdir)
+
         if isinstance(data, six.text_type):
             data = data.encode('utf-8')
 
-        with tempfile.NamedTemporaryFile(dir=self.temp_dir, delete=False) as f:
+        with tempfile.NamedTemporaryFile(dir=full_tempdir, delete=False) as f:
             f.write(data)
             return f.name
