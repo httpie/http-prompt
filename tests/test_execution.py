@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import shutil
+import os
 import sys
 
 import pytest
@@ -169,6 +170,26 @@ class TestExecution_env(ExecutionTestCase):
                          "'name=John Doe'\n"
                          "Accept:text/csv\n"
                          "'Authorization:ApiKey 1234'\n")
+
+    def test_env_write_to_file_with_env_vars(self):
+        filename = self.make_tempfile('hello world\n', 'testenvvar')
+        filename_with_var = filename.replace("testenvvar", "${MYPRIVATEVAR}")
+
+        os.environ['MYPRIVATEVAR'] = 'testenvvar'
+        execute('env > %s' % filename_with_var, self.context)
+        os.environ['MYPRIVATEVAR'] = ''
+
+        with open(filename) as f:
+            content = f.read()
+
+        self.assertEqual(content,
+                         "--form\n--verify=no\n"
+                         "cd http://localhost:8000/api\n"
+                         "limit==50\npage==1\n"
+                         "'name=John Doe'\n"
+                         "Accept:text/csv\n"
+                         "'Authorization:ApiKey 1234'\n")
+
 
     def test_env_non_ascii_and_write_to_file(self):
         filename = self.make_tempfile()
