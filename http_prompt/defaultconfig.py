@@ -24,3 +24,7 @@ set_cookies = 'auto'
 # When Vi mode is enabled, you use Vi-like keybindings to edit your commands.
 # When it is disabled, you use Emacs keybindings.
 vi = False
+
+# History file. If set, history will be saved to this file on exiting
+# http-prompt and will be loaded the next time http-prompt is run.
+# histfile = '~/.http-prompt_history'

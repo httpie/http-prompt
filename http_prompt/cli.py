@@ -11,7 +11,7 @@ from httpie.plugins import FormatterPlugin  # noqa, avoid cyclic import
 from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit import prompt, AbortAction
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import InMemoryHistory, FileHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
@@ -124,7 +124,11 @@ def cli(spec, url, http_options):
         context.options['--style'] = output_style
 
     # For prompt-toolkit
-    history = InMemoryHistory()
+    histfile = cfg.get('histfile')
+    if histfile:
+        history = FileHistory(os.path.expanduser(histfile))
+    else:
+        history = InMemoryHistory()
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
     try:
