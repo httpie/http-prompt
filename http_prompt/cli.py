@@ -11,7 +11,7 @@ from httpie.plugins import FormatterPlugin  # noqa, avoid cyclic import
 from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit import prompt, AbortAction
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
-from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.history import FileHistory
 from prompt_toolkit.layout.lexers import PygmentsLexer
 from prompt_toolkit.styles.from_pygments import style_from_pygments
 from pygments.styles import get_style_by_name
@@ -27,6 +27,7 @@ from .contextio import load_context, save_context
 from .execution import execute
 from .lexer import HttpPromptLexer
 from .utils import smart_quote
+from .xdg import get_data_dir
 
 
 # XXX: http://click.pocoo.org/python3/#unicode-literals
@@ -124,7 +125,7 @@ def cli(spec, url, http_options):
         context.options['--style'] = output_style
 
     # For prompt-toolkit
-    history = InMemoryHistory()
+    history = FileHistory(os.path.join(get_data_dir(), 'history'))
     lexer = PygmentsLexer(HttpPromptLexer)
     completer = HttpPromptCompleter(context)
     try:
