@@ -20,9 +20,10 @@ def _get_context_filepath():
     return os.path.join(dir_path, CONTEXT_FILENAME)
 
 
-def load_context(context):
+def load_context(context, file_path=None):
     """Load a Context object in place from user data directory."""
-    file_path = _get_context_filepath()
+    if not file_path:
+        file_path = _get_context_filepath()
     if os.path.exists(file_path):
         with io.open(file_path, encoding='utf-8') as f:
             for line in f:

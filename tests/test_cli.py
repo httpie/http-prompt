@@ -164,6 +164,36 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
 
+    def test_env_only(self):
+        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
+        result, context = run_and_exit(["--env", env_filepath])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
+
+    def test_env_with_url(self):
+        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
+        result, context = run_and_exit(["--env", env_filepath, 'other_example.com'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://other_example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'bob'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
+
+    def test_env_with_options(self):
+        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
+        result, context = run_and_exit(["--env", env_filepath, 'other_example.com', 'name=alice'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://other_example.com')
+        self.assertEqual(context.options, {})
+        self.assertEqual(context.body_params, {'name': 'alice'})
+        self.assertEqual(context.headers, {})
+        self.assertEqual(context.querystring_params, {'id': ['10']})
+
     @patch('http_prompt.cli.prompt')
     @patch('http_prompt.cli.execute')
     def test_press_ctrl_d(self, execute_mock, prompt_mock):

@@ -87,10 +87,11 @@ def normalize_url(ctx, param, value):
 ))
 @click.option('--spec', help="OpenAPI/Swagger specification file.",
               callback=normalize_url)
+@click.option('--env', help="Environment file to preload.")
 @click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
-def cli(spec, url, http_options):
+def cli(spec, env, url, http_options):
     click.echo('Version: %s' % __version__)
 
     copied, config_path = config.initialize()
@@ -136,12 +137,20 @@ def cli(spec, url, http_options):
 
     listener = ExecutionListener(cfg)
 
-    # Execute HTTPie options from CLI or load from last context
-    if len(sys.argv) > 1:
-        http_options = [smart_quote(a) for a in http_options]
-        execute(' '.join(http_options), context, listener=listener)
-    else:
+    if len(sys.argv) == 1:
+        # load previous context if nothing defined
         load_context(context)
+    else:
+        if env:
+            load_context(context, env)
+            if url != 'http://localhost:8000':
+                # overwrite the env url if not default
+                context.url = url
+
+        if http_options:
+            # Execute HTTPie options from CLI (can overwrite env file values)
+            http_options = [smart_quote(a) for a in http_options]
+            execute(' '.join(http_options), context, listener=listener)
 
     while True:
         try:
