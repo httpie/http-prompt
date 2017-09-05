@@ -229,6 +229,28 @@ Usage:
     # Wipe out the current session and load from a file
     > exec /path/to/file
 
+*New in v0.11.0.*
+
+Load a saved session from the command line directly with the ``--env`` option.
+This allows you for example to define aliases and easily start HTTP Prompt with
+a full configuration already loaded for each of your projects.
+
+.. code-block:: bash
+
+    # Define alias for project1
+    $ alias http_project1='http-prompt --env /path/to/project1/env/file'
+
+    # Launch HTTP Prompt for project1
+    $ http_project1
+
+Any extra argument in the command line is still used and overwrites the value
+from the session file if already present
+
+.. code-block:: bash
+
+    # Use saved session but overwrite the URL and add a parameter
+    $ http-prompt --env /path/to/file localhost:8080 page==2
+
 
 Saving HTTP Responses
 ~~~~~~~~~~~~~~~~~~~~~
