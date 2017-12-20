@@ -150,7 +150,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.body_params, {'name': 'John Doe'})
         self.assertEqual(context.headers, {'Authorization': 'Bearer API KEY'})
 
-    def test_spec(self):
+    def test_spec_from_local(self):
         spec_filepath = self.make_tempfile(json.dumps({
             'paths': {
                 '/users': {},
@@ -164,8 +164,20 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
 
+    def test_spec_from_http(self):
+        spec_url = 'https://api.apis.guru/v2/specs/github.com/v3/swagger.json'
+        result, context = run_and_exit(['https://api.github.com', '--spec',
+                                        spec_url])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'https://api.github.com')
+
+        top_level_paths = set([n.name for n in context.root.children])
+        self.assertIn('repos', top_level_paths)
+        self.assertIn('users', top_level_paths)
+
     def test_env_only(self):
-        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
+        env_filepath = self.make_tempfile(
+            "cd http://example.com\nname=bob\nid==10")
         result, context = run_and_exit(["--env", env_filepath])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(context.url, 'http://example.com')
@@ -175,8 +187,10 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.querystring_params, {'id': ['10']})
 
     def test_env_with_url(self):
-        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
-        result, context = run_and_exit(["--env", env_filepath, 'other_example.com'])
+        env_filepath = self.make_tempfile(
+            "cd http://example.com\nname=bob\nid==10")
+        result, context = run_and_exit(["--env", env_filepath,
+                                        'other_example.com'])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(context.url, 'http://other_example.com')
         self.assertEqual(context.options, {})
@@ -185,8 +199,10 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.querystring_params, {'id': ['10']})
 
     def test_env_with_options(self):
-        env_filepath = self.make_tempfile("cd http://example.com\nname=bob\nid==10")
-        result, context = run_and_exit(["--env", env_filepath, 'other_example.com', 'name=alice'])
+        env_filepath = self.make_tempfile(
+            "cd http://example.com\nname=bob\nid==10")
+        result, context = run_and_exit(["--env", env_filepath,
+                                        'other_example.com', 'name=alice'])
         self.assertEqual(result.exit_code, 0)
         self.assertEqual(context.url, 'http://other_example.com')
         self.assertEqual(context.options, {})
