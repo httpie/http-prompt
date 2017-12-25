@@ -86,10 +86,9 @@ def normalize_url(ctx, param, value):
     ignore_unknown_options=True,
 ))
 @click.option('--spec', help="OpenAPI/Swagger specification file.",
-        type=click.Path(exists=True),
-        callback=normalize_url)
+              callback=normalize_url)
 @click.option('--env', help="Environment file to preload.",
-        type=click.Path(exists=True))
+              type=click.Path(exists=True))
 @click.argument('url', default='http://localhost:8000')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
