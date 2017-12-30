@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import math
 import re
 
-from prompt_toolkit.shortcuts import create_output
+from prompt_toolkit.output.defaults import create_output
 from six.moves import range
 
 
