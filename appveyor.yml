@@ -11,7 +11,8 @@ environment:
     # click doesn't work on Python 2.6 and Windows
     # - PYTHON: "C:\\Python26"
     - PYTHON: "C:\\Python27"
-    - PYTHON: "C:\\Python33"
+    # pytest does not support Python 3.3
+    # - PYTHON: "C:\\Python33"
     - PYTHON: "C:\\Python34"
     - PYTHON: "C:\\Python35"
 
