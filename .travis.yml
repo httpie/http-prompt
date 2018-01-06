@@ -47,7 +47,7 @@ install:
         brew update
         brew install "$BREW_INSTALL"
       fi
-      sudo pip install tox
+      sudo pip2 install tox
     else
       pip install -e .
       pip install -r requirements-test.txt
