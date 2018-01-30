@@ -15,18 +15,22 @@ class Context(object):
         # Create a tree for supporting API spec and ls command
         self.root = Node('root')
         if spec:
+            base_path = list(filter(lambda s: s,
+                                    spec.get('basePath', '').split('/')))
             paths = spec.get('paths')
             if paths:
                 for path in paths:
                     path_tokens = list(filter(lambda s: s, path.split('/')))
-                    self.root.add_path(*path_tokens)
+                    self.root.add_path(*(base_path + path_tokens))
                     endpoint = paths[path]
                     for method, info in endpoint.items():
                         params = info.get('parameters')
                         if params:
                             for param in params:
                                 if param.get('in') != 'path':
-                                    full_path = path_tokens + [param['name']]
+                                    full_path = base_path \
+                                                + path_tokens \
+                                                + [param['name']]
                                     self.root.add_path(*full_path,
                                                        node_type='file')
 
