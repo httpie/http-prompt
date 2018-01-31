@@ -12,8 +12,8 @@ from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit import prompt
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import FileHistory
-from prompt_toolkit.layout.lexers import PygmentsLexer
-from prompt_toolkit.styles.pygments import style_from_pygments
+from prompt_toolkit.lexers import PygmentsLexer
+from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 from six.moves.http_cookies import SimpleCookie
@@ -134,7 +134,7 @@ def cli(spec, env, url, http_options):
         style_class = get_style_by_name(cfg['command_style'])
     except ClassNotFound:
         style_class = Solarized256Style
-    style = style_from_pygments(style_class)
+    style = style_from_pygments_cls(style_class)
 
     listener = ExecutionListener(cfg)
 
