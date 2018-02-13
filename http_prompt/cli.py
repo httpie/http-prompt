@@ -89,7 +89,7 @@ def normalize_url(ctx, param, value):
               callback=normalize_url)
 @click.option('--env', help="Environment file to preload.",
               type=click.Path(exists=True))
-@click.argument('url', default='http://localhost:8000')
+@click.argument('url', default='')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
 def cli(spec, env, url, http_options):
@@ -112,12 +112,17 @@ def cli(spec, env, url, http_options):
             content = f.read().decode('utf-8')
             try:
                 spec = json.loads(content)
+                if url == '' and spec:
+                    url = spec.get('host', '') + spec.get('basePath', '')
             except json.JSONDecodeError:
                 click.secho("Warning: Specification file '%s' is not JSON" %
                             spec, err=True, fg='red')
                 spec = None
         finally:
             f.close()
+
+    if url == '':
+        url = 'http://localhost:8000'
 
     url = fix_incomplete_url(url)
     context = Context(url, spec=spec)
