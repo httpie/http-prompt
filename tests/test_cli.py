@@ -164,6 +164,27 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
 
+    def test_spec_basePath(self):
+        spec_filepath = self.make_tempfile(json.dumps({
+            'basePath': '/api/v1',
+            'paths': {
+                '/users': {},
+                '/orgs': {}
+            }
+        }))
+        result, context = run_and_exit(['example.com', "--spec",
+                                        spec_filepath])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+
+        lv1_names = set([node.name for node in context.root.ls()])
+        lv2_names = set([node.name for node in context.root.ls('api')])
+        lv3_names = set([node.name for node in context.root.ls('api', 'v1')])
+
+        self.assertEqual(lv1_names, set(['api']))
+        self.assertEqual(lv2_names, set(['v1']))
+        self.assertEqual(lv3_names, set(['users', 'orgs']))
+
     def test_spec_from_http(self):
         spec_url = 'https://api.apis.guru/v2/specs/github.com/v3/swagger.json'
         result, context = run_and_exit(['https://api.github.com', '--spec',
@@ -174,6 +195,19 @@ class TestCli(TempAppDirTestCase):
         top_level_paths = set([n.name for n in context.root.children])
         self.assertIn('repos', top_level_paths)
         self.assertIn('users', top_level_paths)
+
+    def test_spec_from_http_only(self):
+        spec_url = (
+            'https://api.apis.guru/v2/specs/medium.com/1.0.0/swagger.json')
+        result, context = run_and_exit(['--spec', spec_url])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'https://api.medium.com/v1')
+
+        lv1_names = set([node.name for node in context.root.ls()])
+        lv2_names = set([node.name for node in context.root.ls('v1')])
+
+        self.assertEqual(lv1_names, set(['v1']))
+        self.assertEqual(lv2_names, set(['me', 'publications', 'users']))
 
     def test_env_only(self):
         env_filepath = self.make_tempfile(
