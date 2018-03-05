@@ -112,8 +112,6 @@ def cli(spec, env, url, http_options):
             content = f.read().decode('utf-8')
             try:
                 spec = json.loads(content)
-                if url == '' and spec:
-                    url = spec.get('host', '') + spec.get('basePath', '')
             except json.JSONDecodeError:
                 click.secho("Warning: Specification file '%s' is not JSON" %
                             spec, err=True, fg='red')
@@ -121,10 +119,8 @@ def cli(spec, env, url, http_options):
         finally:
             f.close()
 
-    if url == '':
-        url = 'http://localhost:8000'
-
-    url = fix_incomplete_url(url)
+    if url:
+        url = fix_incomplete_url(url)
     context = Context(url, spec=spec)
 
     output_style = cfg.get('output_style')
@@ -149,8 +145,8 @@ def cli(spec, env, url, http_options):
     else:
         if env:
             load_context(context, env)
-            if url != 'http://localhost:8000':
-                # overwrite the env url if not default
+            if url:
+                # Overwrite the env url if not default
                 context.url = url
 
         if http_options:
