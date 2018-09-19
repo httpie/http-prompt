@@ -93,7 +93,7 @@ grammar = r"""
     rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
     tool = "httpie" / "curl"
     method = ~r"get"i / ~r"head"i / ~r"post"i / ~r"put"i / ~r"delete"i /
-             ~r"patch"i / ~r"options"i
+             ~r"patch"i / ~r"options"i / ~r"connect"i
     mutkey = unquoted_mutkey / ("'" squoted_mutkey "'") /
              ('"' dquoted_mutkey '"') / flag_optname / value_optname
 
