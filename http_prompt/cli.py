@@ -48,7 +48,7 @@ def update_cookies(base_value, cookies):
     cookie = SimpleCookie(base_value)
     for k, v in cookies.items():
         cookie[k] = v
-    return cookie.output(header='', sep=';').lstrip()
+    return str(cookie.output(header='', sep=';').lstrip())
 
 
 class ExecutionListener(object):
