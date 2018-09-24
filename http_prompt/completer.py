@@ -23,7 +23,7 @@ RULES = [
     (r'((?:[^\s\'"\\=:]|(?:\\.))+):((?:[^\s\'"\\]|(?:\\.))*)$',
      'header_values'),
 
-    (r'(get|head|post|put|patch|delete)\s+', 'concat_mutations'),
+    (r'(get|head|post|put|patch|delete|connect)\s+', 'concat_mutations'),
     (r'(httpie|curl)\s+', 'preview'),
     (r'rm\s+\-b\s+', 'existing_body_params'),
     (r'rm\s+\-h\s+', 'existing_header_names'),
