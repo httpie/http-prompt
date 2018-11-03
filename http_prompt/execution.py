@@ -33,7 +33,7 @@ grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / ls / env / help / exit / exec / source / _
+    immutation = preview / action / ls / env / help / exit / exec / source / clear / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -43,6 +43,7 @@ grammar = r"""
     urlpath = (~r"https?://" unquoted_string) /
               (!concat_mut !redir_out string)
 
+    clear = _ "clear" _
     help = _ "help" _
     exit = _ "exit" _
     ls = _ "ls" _ (urlpath _)? (redir_out)?
@@ -356,6 +357,10 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_exit(self, node, children):
         self.context.should_exit = True
+        return node
+
+    def visit_clear(self, node, children):
+        self.output.clear()
         return node
 
     def visit_mutkey(self, node, children):

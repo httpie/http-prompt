@@ -27,6 +27,9 @@ class Printer(object):
     def fileno(self):
         return sys.stdout.fileno()
 
+    def clear(self):
+        click.clear()
+
 
 class TextWriter(object):
     """Wrap a file-like object, opened with 'wb' or 'ab', so it accepts text

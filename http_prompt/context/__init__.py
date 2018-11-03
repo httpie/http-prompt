@@ -29,6 +29,10 @@ class Context(object):
                 for path in paths:
                     path_tokens = (base_path_tokens +
                                    list(filter(lambda s: s, path.split('/'))))
+                    if path == '/':  # Path is a trailing slash
+                        path_tokens.insert(len(base_path_tokens), '/')
+                    elif path[-1] == '/':  # Path ends with a trailing slash
+                        path_tokens[-1] = path_tokens[-1] + '/'
                     self.root.add_path(*path_tokens)
                     endpoint = paths[path]
                     for method, info in endpoint.items():

@@ -46,7 +46,8 @@ class HttpPromptLexer(RegexLexer):
 
             (words(HTTP_METHODS, prefix='(?i)', suffix='(?!\S)(\s*)'),
              bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
-
+            
+            (r'(clear)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
             (r'(env)(\s*)', bygroups(Keyword, Text),
