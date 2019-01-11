@@ -39,6 +39,10 @@ class Context(object):
                         params = info.get('parameters')
                         if params:
                             for param in params:
+                                if param.get("$ref"):
+                                    for section in param.get("$ref").split('/'):
+                                        param = param.get(section) if not section == "#" else spec
+
                                 if param.get('in') != 'path':
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
