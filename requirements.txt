@@ -4,3 +4,4 @@ parsimonious>=0.6.2
 prompt-toolkit>=1.0.0,<2.0.0
 Pygments>=2.1.0
 six>=1.10.0
+PyYAML>=3.0
