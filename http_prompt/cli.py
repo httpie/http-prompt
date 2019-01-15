@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import json
+import yaml
 import os
 import re
 import sys
@@ -113,9 +114,12 @@ def cli(spec, env, url, http_options):
             try:
                 spec = json.loads(content)
             except json.JSONDecodeError:
-                click.secho("Warning: Specification file '%s' is not JSON" %
-                            spec, err=True, fg='red')
-                spec = None
+                try:
+                    spec = yaml.load(content)
+                except yaml.YAMLError:
+                    click.secho("Warning: Specification file '%s' is neither valid JSON nor YAML" %
+                                spec, err=True, fg='red')
+                    spec = None
         finally:
             f.close()
 
