@@ -115,7 +115,7 @@ def cli(spec, env, url, http_options):
                 spec = json.loads(content)
             except json.JSONDecodeError:
                 try:
-                    spec = yaml.load(content)
+                    spec = yaml.load(content, Loader=yaml.SafeLoader)
                 except yaml.YAMLError:
                     click.secho("Warning: Specification file '%s' is neither valid JSON nor YAML" %
                                 spec, err=True, fg='red')
