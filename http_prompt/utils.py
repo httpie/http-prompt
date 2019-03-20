@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 
+import sys
 import math
 import re
 
-from prompt_toolkit.output.defaults import create_output
+if sys.version_info <= (3,):
+    from prompt_toolkit.shortcuts import create_output
+else:
+    from prompt_toolkit.output.defaults import create_output
 from six.moves import range
 
 

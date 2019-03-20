@@ -64,6 +64,14 @@ setup(
         http-prompt=http_prompt.cli:cli
     """,
     install_requires=read_requirements('requirements.txt'),
+    extras_require={
+        ':python_version < "2"': [
+            read_requirements('requirements-py2.txt'),
+        ],
+        ':python_version >= "3"': [
+            read_requirements('requirements-py3.txt'),
+        ],
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
