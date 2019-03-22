@@ -46,6 +46,12 @@ def read_requirements(filename):
         # https://docs.python.org/2/library/collections.html#collections.OrderedDict
         if sys.version_info < (2, 7):
             result.append('ordereddict>=1.1')
+
+        if sys.version_info < (3,):
+            result.append('prompt-toolkit>=1.0.0,<2.0.0')
+        else:
+            result.append('prompt-toolkit>=2.0.0,<2.1.0')
+
         return result
 
 
@@ -64,14 +70,6 @@ setup(
         http-prompt=http_prompt.cli:cli
     """,
     install_requires=read_requirements('requirements.txt'),
-    extras_require={
-        ':python_version < "2"': [
-            read_requirements('requirements-py2.txt'),
-        ],
-        ':python_version >= "3"': [
-            read_requirements('requirements-py3.txt'),
-        ],
-    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
