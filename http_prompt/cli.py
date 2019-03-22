@@ -12,17 +12,15 @@ from httpie.plugins import FormatterPlugin  # noqa, avoid cyclic import
 from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import FileHistory
+from prompt_toolkit import prompt
 if sys.version_info <= (3,):
-    from prompt_toolkit import prompt, AbortAction
     from prompt_toolkit.layout.lexers import PygmentsLexer
     from prompt_toolkit.styles.from_pygments import (
         style_from_pygments as style_from_pygments_cls
     )
 else:
-    from prompt_toolkit import prompt
     from prompt_toolkit.lexers import PygmentsLexer
     from prompt_toolkit.styles.pygments import style_from_pygments_cls
-
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
 from six.moves.http_cookies import SimpleCookie
@@ -166,30 +164,12 @@ def cli(spec, env, url, http_options):
             http_options = [smart_quote(a) for a in http_options]
             execute(' '.join(http_options), context, listener=listener)
 
-    def cli_prompt_py2(text, completer, lexer, style, history, auto_suggest,
-                       vi_mode):
-        return prompt(text, completer=completer,
-                      lexer=lexer, style=style, history=history,
-                      auto_suggest=AutoSuggestFromHistory(),
-                      on_abort=AbortAction.RETRY, vi_mode=cfg['vi'])
-
-    def cli_prompt_py3(text, completer, lexer, style, history, auto_suggest,
-                       vi_mode):
-        return prompt(text, completer=completer,
-                      lexer=lexer, style=style, history=history,
-                      auto_suggest=AutoSuggestFromHistory(),
-                      vi_mode=cfg['vi'])
-
-    cli_prompt = cli_prompt_py3
-    if sys.version_info < (3,):
-        cli_prompt = cli_prompt_py2
-
     while True:
         try:
-            text = cli_prompt('%s> ' % context.url, completer=completer,
-                              lexer=lexer, style=style, history=history,
-                              auto_suggest=AutoSuggestFromHistory(),
-                              vi_mode=cfg['vi'])
+            text = prompt('%s> ' % context.url, completer=completer,
+                          lexer=lexer, style=style, history=history,
+                          auto_suggest=AutoSuggestFromHistory(),
+                          vi_mode=cfg['vi'])
         except KeyboardInterrupt as e:
             click.echo("Info: Press Ctrl-D if you want to exit")
             continue # Control-C pressed

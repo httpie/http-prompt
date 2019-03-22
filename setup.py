@@ -47,6 +47,10 @@ def read_requirements(filename):
         if sys.version_info < (2, 7):
             result.append('ordereddict>=1.1')
 
+        # For convenience,
+        # changes prompt-toolkit version according to python version.
+        # On python2, version 1 is used in famous app like iPython,
+        # whereas on python3 version 2 is used.
         if sys.version_info < (3,):
             result.append('prompt-toolkit>=1.0.0,<2.0.0')
         else:
