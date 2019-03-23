@@ -4,7 +4,7 @@ import sys
 import math
 import re
 
-if sys.version_info <= (3,):
+if sys.version_info < (3,5):
     from prompt_toolkit.shortcuts import create_output
 else:
     from prompt_toolkit.output.defaults import create_output

@@ -13,7 +13,7 @@ from httpie.output.formatters.colors import Solarized256Style
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit import prompt
-if sys.version_info <= (3,):
+if sys.version_info < (3,5):
     from prompt_toolkit.layout.lexers import PygmentsLexer
     from prompt_toolkit.styles.from_pygments import (
         style_from_pygments as style_from_pygments_cls
