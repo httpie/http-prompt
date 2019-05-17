@@ -35,16 +35,17 @@ class Context(object):
                         path_tokens[-1] = path_tokens[-1] + '/'
                     self.root.add_path(*path_tokens)
                     endpoint = paths[path]
+                    params = []
                     for method, info in endpoint.items():
-                        if not isinstance(info, dict):
+                        if method == 'parameters':
+                            params.extend(info)
+                        else:
+                            params.extend(getattr(info, 'parameters', []))
+                    for param in params:
+                        if param.get('in') == 'path':
                             continue
-                        params = info.get('parameters')
-                        if params:
-                            for param in params:
-                                if param.get('in') != 'path':
-                                    full_path = path_tokens + [param['name']]
-                                    self.root.add_path(*full_path,
-                                                       node_type='file')
+                        full_path = path_tokens + [param['name']]
+                        self.root.add_path(*full_path, node_type='file')
         elif not self.url:
             self.url = 'http://localhost:8000'
 
