@@ -8,6 +8,7 @@ class Context(object):
         self.headers = {}
         self.querystring_params = {}
         self.body_params = {}
+        self.file_params = {}
         self.body_json_params = {}
         self.options = {}
         self.should_exit = False
@@ -52,6 +53,7 @@ class Context(object):
                 self.options == other.options and
                 self.querystring_params == other.querystring_params and
                 self.body_params == other.body_params and
+                self.file_params == other.file_params and
                 self.body_json_params == other.body_json_params and
                 self.should_exit == other.should_exit)
 
@@ -60,6 +62,7 @@ class Context(object):
         context.headers = self.headers.copy()
         context.querystring_params = self.querystring_params.copy()
         context.body_params = self.body_params.copy()
+        context.file_params = self.file_params.copy()
         context.body_json_params = self.body_json_params.copy()
         context.options = self.options.copy()
         context.should_exit = self.should_exit
@@ -72,6 +75,7 @@ class Context(object):
         self.headers.update(context.headers)
         self.querystring_params.update(context.querystring_params)
         self.body_params.update(context.body_params)
+        self.file_params.update(context.file_params)
         self.body_json_params.update(context.body_json_params)
         self.options.update(context.options)
         self.should_exit = self.should_exit
