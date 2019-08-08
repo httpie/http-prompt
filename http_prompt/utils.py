@@ -5,6 +5,7 @@ import re
 
 from prompt_toolkit.shortcuts import create_output
 from six.moves import range
+from six.moves.urllib.parse import urlparse
 
 
 RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')
@@ -87,3 +88,40 @@ def colformat(strings, num_sep_spaces=1, terminal_width=None):
     sep = ' ' * num_sep_spaces
     for line in lines:
         yield sep.join(line)
+
+def get_prompt(url, fmt):
+    """Generate a prompt following the user config prompt format."""
+    prompt = []
+    whitelist = [ 'scheme', 'netloc', 'path', 'params', 'query', 'fragment' ]
+    parse_result = urlparse(url)
+
+    for w in filter(bool, fmt.replace('{', '').split('}')):
+        try:
+            attribute = re.search('^[a-z_]+', w).group(0)
+        except AttributeError:
+            return url
+        if attribute not in whitelist:
+            return url
+        try:
+            index = re.search('\[([-?0-9:?])+\]', w).group(0)
+            if attribute == 'path':
+                path_slice = eval('parse_result.path.split(\'/\')' + index)
+                join = '/'.join(path_slice)
+                new_path = join[1:] if join.startswith('/') else join
+                prompt.append('/' + new_path)
+            elif attribute == 'netloc':
+                netloc_slice = eval('parse_result.netloc.split(\'.\')' + index)
+                new_netloc = '.'.join(netloc_slice)
+                prompt.append(new_netloc)
+            else:
+                raise AttributeError
+        except AttributeError:
+            if attribute == 'scheme':
+                prompt.append(parse_result.scheme + '://')
+            elif attribute == 'query' and parse_result.query:
+                prompt.append('?' + parse_result.query)
+            elif attribute == 'fragment' and parse_result.fragment:
+                prompt.append('#' + parse_result.fragment)
+            else:
+                prompt.append(getattr(parse_result, attribute))
+    return ''.join(prompt)

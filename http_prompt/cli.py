@@ -27,7 +27,7 @@ from .context import Context
 from .contextio import load_context, save_context
 from .execution import execute
 from .lexer import HttpPromptLexer
-from .utils import smart_quote
+from .utils import smart_quote, get_prompt
 from .xdg import get_data_dir
 
 
@@ -160,8 +160,9 @@ def cli(spec, env, url, http_options):
 
     while True:
         try:
-            text = prompt('%s> ' % context.url, completer=completer,
-                          lexer=lexer, style=style, history=history,
+            p = get_prompt(context.url, cfg['prompt'])
+            text = prompt('%s> ' % p, completer=completer, lexer=lexer,
+                          style=style, history=history,
                           auto_suggest=AutoSuggestFromHistory(),
                           on_abort=AbortAction.RETRY, vi_mode=cfg['vi'])
         except EOFError:
