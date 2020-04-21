@@ -489,6 +489,11 @@ class ExecutionVisitor(NodeVisitor):
 
     def _call_httpie_main(self):
         context = self._final_context()
+
+        # XXX: httpie_main() expects args[0] to be program_name as in
+        # sys.argv, so we use this dirty hack to prevent it from taking
+        # some option name as program name thus misinterpreting other args.
+        program_name = "https" if context.url.startswith("https://") else "http"
         args = extract_args_for_httpie_main(context, self.method)
         env = Environment(stdout=self.output, stdin=sys.stdin,
                           is_windows=False)
@@ -503,7 +508,7 @@ class ExecutionVisitor(NodeVisitor):
         # interested in.
         sys.settrace(self._trace_get_response)
         try:
-            httpie_main(args, env=env)
+            httpie_main([program_name] + args, env=env)
         finally:
             sys.settrace(None)
 

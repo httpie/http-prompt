@@ -58,7 +58,7 @@ class ExecutionTestCase(TempAppDirTestCase):
             patcher.stop()
 
     def assert_httpie_main_called_with(self, args):
-        self.assertEqual(self.httpie_main.call_args[0][0], args)
+        self.assertEqual(self.httpie_main.call_args[0][0][1:], args)
 
     def assert_stdout(self, expected_msg):
         # Append '\n' to simulate behavior of click.echo_via_pager(),
