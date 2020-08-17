@@ -1,6 +1,10 @@
 from __future__ import unicode_literals
 
 import json
+from http.cookies import SimpleCookie
+from urllib.request import pathname2url, urlopen
+
+import yaml
 import os
 import re
 import sys
@@ -16,8 +20,6 @@ from prompt_toolkit.lexers import PygmentsLexer
 from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
-from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.request import urlopen, pathname2url
 
 from . import __version__
 from . import config
@@ -48,7 +50,7 @@ def update_cookies(base_value, cookies):
     cookie = SimpleCookie(base_value)
     for k, v in cookies.items():
         cookie[k] = v
-    return cookie.output(header='', sep=';').lstrip()
+    return str(cookie.output(header='', sep=';').lstrip())
 
 
 class ExecutionListener(object):
@@ -89,7 +91,7 @@ def normalize_url(ctx, param, value):
               callback=normalize_url)
 @click.option('--env', help="Environment file to preload.",
               type=click.Path(exists=True))
-@click.argument('url', default='http://localhost:8000')
+@click.argument('url', default='')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
 def cli(spec, env, url, http_options):
@@ -113,13 +115,17 @@ def cli(spec, env, url, http_options):
             try:
                 spec = json.loads(content)
             except json.JSONDecodeError:
-                click.secho("Warning: Specification file '%s' is not JSON" %
-                            spec, err=True, fg='red')
-                spec = None
+                try:
+                    spec = yaml.load(content)
+                except yaml.YAMLError:
+                    click.secho("Warning: Specification file '%s' is neither valid JSON nor YAML" %
+                                spec, err=True, fg='red')
+                    spec = None
         finally:
             f.close()
 
-    url = fix_incomplete_url(url)
+    if url:
+        url = fix_incomplete_url(url)
     context = Context(url, spec=spec)
 
     output_style = cfg.get('output_style')
@@ -144,8 +150,8 @@ def cli(spec, env, url, http_options):
     else:
         if env:
             load_context(context, env)
-            if url != 'http://localhost:8000':
-                # overwrite the env url if not default
+            if url:
+                # Overwrite the env url if not default
                 context.url = url
 
         if http_options:

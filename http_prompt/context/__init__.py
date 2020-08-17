@@ -15,10 +15,24 @@ class Context(object):
         # Create a tree for supporting API spec and ls command
         self.root = Node('root')
         if spec:
+            if not self.url:
+                schemes = spec.get('schemes')
+                scheme = schemes[0] if schemes else 'https'
+                self.url = (scheme + '://' +
+                            spec.get('host', 'http://localhost:8000') +
+                            spec.get('basePath', ''))
+
+            base_path_tokens = list(filter(lambda s: s,
+                                    spec.get('basePath', '').split('/')))
             paths = spec.get('paths')
             if paths:
                 for path in paths:
-                    path_tokens = list(filter(lambda s: s, path.split('/')))
+                    path_tokens = (base_path_tokens +
+                                   list(filter(lambda s: s, path.split('/'))))
+                    if path == '/':  # Path is a trailing slash
+                        path_tokens.insert(len(base_path_tokens), '/')
+                    elif path[-1] == '/':  # Path ends with a trailing slash
+                        path_tokens[-1] = path_tokens[-1] + '/'
                     self.root.add_path(*path_tokens)
                     endpoint = paths[path]
                     for method, info in endpoint.items():
@@ -29,6 +43,8 @@ class Context(object):
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
                                                        node_type='file')
+        elif not self.url:
+            self.url = 'http://localhost:8000'
 
     def __eq__(self, other):
         return (self.url == other.url and

@@ -10,6 +10,7 @@ from . import options as opt
 
 ROOT_COMMANDS = OrderedDict([
     ('cd', 'Change URL/path'),
+    ('clear', 'Clear console screen'),
     ('curl', 'Preview curl command'),
     ('env', 'Print environment'),
     ('exec', 'Clear and load environment from a file'),
@@ -29,6 +30,7 @@ ROOT_COMMANDS = OrderedDict([
 ])
 
 ACTIONS = OrderedDict([
+    ('connect', 'CONNECT request'),
     ('delete', 'DELETE request'),
     ('get', 'GET request'),
     ('head', 'HEAD request'),

@@ -3,6 +3,7 @@ import json
 import re
 import os
 import sys
+from urllib.parse import urlparse, urljoin
 
 import click
 
@@ -15,8 +16,6 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from parsimonious.nodes import Node
 from pygments.token import String, Name
-from six.moves import StringIO
-from six.moves.urllib.parse import urljoin, urlparse
 
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
@@ -29,11 +28,14 @@ from .output import Printer, TextWriter
 from .utils import unescape, unquote, colformat
 
 
+HTTPIE_PROGRAM_NAME = 'http'
+
+
 grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / ls / env / help / exit / exec / source / _
+    immutation = preview / action / ls / env / help / exit / exec / source / clear / _
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -43,6 +45,7 @@ grammar = r"""
     urlpath = (~r"https?://" unquoted_string) /
               (!concat_mut !redir_out string)
 
+    clear = _ "clear" _
     help = _ "help" _
     exit = _ "exit" _
     ls = _ "ls" _ (urlpath _)? (redir_out)?
@@ -93,7 +96,7 @@ grammar = r"""
     rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
     tool = "httpie" / "curl"
     method = ~r"get"i / ~r"head"i / ~r"post"i / ~r"put"i / ~r"delete"i /
-             ~r"patch"i / ~r"options"i
+             ~r"patch"i / ~r"options"i / ~r"connect"i
     mutkey = unquoted_mutkey / ("'" squoted_mutkey "'") /
              ('"' dquoted_mutkey '"') / flag_optname / value_optname
 
@@ -328,7 +331,7 @@ class ExecutionVisitor(NodeVisitor):
         if not self.formatter:
             return text
 
-        out = StringIO()
+        out = io.StringIO()
         self.formatter.format([(token_type, text)], out)
         return out.getvalue()
 
@@ -356,6 +359,10 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_exit(self, node, children):
         self.context.should_exit = True
+        return node
+
+    def visit_clear(self, node, children):
+        self.output.clear()
         return node
 
     def visit_mutkey(self, node, children):
@@ -498,7 +505,7 @@ class ExecutionVisitor(NodeVisitor):
         # interested in.
         sys.settrace(self._trace_get_response)
         try:
-            httpie_main(args, env=env)
+            httpie_main([HTTPIE_PROGRAM_NAME, *args], env=env)
         finally:
             sys.settrace(None)
 
