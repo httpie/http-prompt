@@ -4,7 +4,6 @@ import math
 import re
 
 from prompt_toolkit.shortcuts import create_output
-from six.moves import range
 
 
 RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')

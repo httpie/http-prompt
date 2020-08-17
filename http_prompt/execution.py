@@ -3,6 +3,7 @@ import json
 import re
 import os
 import sys
+from urllib.parse import urlparse, urljoin
 
 import click
 
@@ -15,8 +16,6 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 from parsimonious.nodes import Node
 from pygments.token import String, Name
-from six.moves import StringIO
-from six.moves.urllib.parse import urljoin, urlparse
 
 from .completion import ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES
 from .context import Context
@@ -332,7 +331,7 @@ class ExecutionVisitor(NodeVisitor):
         if not self.formatter:
             return text
 
-        out = StringIO()
+        out = io.StringIO()
         self.formatter.format([(token_type, text)], out)
         return out.getvalue()
 

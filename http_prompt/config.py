@@ -3,8 +3,6 @@
 import os
 import shutil
 
-import six
-
 from . import defaultconfig
 from . import xdg
 
@@ -55,7 +53,7 @@ def load_user():
         code = compile(f.read(), config_path, 'exec')
     exec(code, config)
 
-    keys = list(six.iterkeys(config))
+    keys = list(config.keys())
     for k in keys:
         if k.startswith('_'):
             del config[k]

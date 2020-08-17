@@ -2,8 +2,6 @@
 
 import json
 
-import six
-
 from http_prompt.utils import smart_quote
 
 
@@ -26,7 +24,7 @@ def _extract_httpie_options(context, quote=False, join_key_value=False,
     excluded_keys = excluded_keys or []
 
     opts = []
-    for k, v in sorted(six.iteritems(context.options)):
+    for k, v in sorted(context.options.items()):
         if k not in excluded_keys:
             if v is not None:
                 v = quote_func(v)
@@ -52,11 +50,11 @@ def _extract_httpie_request_items(context, quote=False):
         (':', context.headers)
     ]
     for sep, item_dict in operators_and_items:
-        for k, value in sorted(six.iteritems(item_dict)):
+        for k, value in sorted(item_dict.items()):
             if sep == ':=':
                 json_str = json.dumps(value,
                                       sort_keys=True).replace("'", "\\'")
-                if isinstance(value, six.string_types) and quote:
+                if isinstance(value, str) and quote:
                     json_str = "'" + json_str + "'"
                 item = quote_func('%s:=%s' % (k, json_str))
                 items.append(item)
