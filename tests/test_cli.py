@@ -185,6 +185,7 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(lv2_names, set(['v1']))
         self.assertEqual(lv3_names, set(['users', 'orgs']))
 
+    @unittest.skip('the linked spec file no longer exist')
     def test_spec_from_http(self):
         spec_url = 'https://api.apis.guru/v2/specs/github.com/v3/swagger.json'
         result, context = run_and_exit(['https://api.github.com', '--spec',
