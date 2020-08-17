@@ -503,7 +503,7 @@ class ExecutionVisitor(NodeVisitor):
         # interested in.
         sys.settrace(self._trace_get_response)
         try:
-            httpie_main(args, env=env)
+            httpie_main(['http'] + args, env=env)
         finally:
             sys.settrace(None)
 
