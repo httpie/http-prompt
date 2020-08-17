@@ -12,8 +12,8 @@ and syntax highlighting, built on HTTPie_ and prompt_toolkit_.
 Links
 -----
 
-* Home: http://http-prompt.com
-* Documentation: http://docs.http-prompt.com
+* Home: https://http-prompt.com
+* Documentation: https://docs.http-prompt.com
 * Code: https://github.com/eliangcs/http-prompt
 * Chat: https://gitter.im/eliangcs/http-prompt
 
