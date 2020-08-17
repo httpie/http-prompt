@@ -1,9 +1,6 @@
 """Meta data for autocomplete."""
 
-try:
-    from collections import OrderedDict
-except ImportError:  # For Python 2.6, nocover
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from . import options as opt
 
