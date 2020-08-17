@@ -1,9 +1,10 @@
 from __future__ import unicode_literals
 
+import sys
 import math
 import re
 
-from prompt_toolkit.shortcuts import create_output
+from prompt_toolkit.output.defaults import create_output
 
 
 RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')
