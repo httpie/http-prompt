@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
 
 import json
+from http.cookies import SimpleCookie
+from urllib.request import pathname2url, urlopen
+
 import yaml
 import os
 import re
@@ -23,8 +26,6 @@ else:
     from prompt_toolkit.styles.pygments import style_from_pygments_cls
 from pygments.styles import get_style_by_name
 from pygments.util import ClassNotFound
-from six.moves.http_cookies import SimpleCookie
-from six.moves.urllib.request import urlopen, pathname2url
 
 from . import __version__
 from . import config

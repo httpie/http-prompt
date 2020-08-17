@@ -2,17 +2,13 @@
 from __future__ import unicode_literals
 
 import re
-import six
 
-try:
-    from collections import OrderedDict
-except ImportError:  # For Python 2.6, nocover
-    from ordereddict import OrderedDict
+from collections import OrderedDict
 
 from itertools import chain
+from urllib.parse import urlparse
 
 from prompt_toolkit.completion import Completer, Completion
-from six.moves.urllib.parse import urlparse
 
 from .completion import (ROOT_COMMANDS, ACTIONS, OPTION_NAMES, HEADER_NAMES,
                          HEADER_VALUES)
@@ -53,8 +49,8 @@ RULES = compile_rules(RULES)
 def fuzzyfinder(text, collection):
     """https://github.com/amjith/fuzzyfinder"""
     suggestions = []
-    if not isinstance(text, six.text_type):
-        text = six.u(text)
+    if not isinstance(text, str):
+        text = str(text)
     pat = '.*?'.join(map(re.escape, text))
     regex = re.compile(pat, flags=re.IGNORECASE)
     for item in collection:
@@ -145,7 +141,7 @@ class CompletionGenerator(object):
 
     def _generic_generate(self, names, values, descs):
         for name in sorted(names):
-            if isinstance(descs, six.string_types):
+            if isinstance(descs, str):
                 desc = descs
             else:
                 desc = descs.get(name, '')
@@ -154,7 +150,7 @@ class CompletionGenerator(object):
                 if value is None:
                     desc += ' (on)'
                 else:
-                    value = six.text_type(value)
+                    value = str(value)
                     if len(value) > 16:
                         value = value[:13] + '...'
                     desc += ' (=%s)' % value

@@ -1,14 +1,13 @@
 import sys
 
 import click
-import six
 
 
 class Printer(object):
     """Wrap click.echo_via_pager() so it accepts binary data."""
 
     def write(self, data):
-        if isinstance(data, six.binary_type):
+        if isinstance(data, bytes):
             data = data.decode('utf-8')
 
         # echo_via_pager() already appends a '\n' at the end of text,
@@ -39,7 +38,7 @@ class TextWriter(object):
         self.fp = fp
 
     def write(self, data):
-        if isinstance(data, six.text_type):
+        if isinstance(data, str):
             data = data.encode('utf-8')
         self.fp.write(data)
 
