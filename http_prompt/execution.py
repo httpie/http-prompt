@@ -29,6 +29,9 @@ from .output import Printer, TextWriter
 from .utils import unescape, unquote, colformat
 
 
+HTTPIE_PROGRAM_NAME = 'http'
+
+
 grammar = r"""
     command = mutation / immutation
 
@@ -503,7 +506,7 @@ class ExecutionVisitor(NodeVisitor):
         # interested in.
         sys.settrace(self._trace_get_response)
         try:
-            httpie_main(['http'] + args, env=env)
+            httpie_main([HTTPIE_PROGRAM_NAME, *args], env=env)
         finally:
             sys.settrace(None)
 

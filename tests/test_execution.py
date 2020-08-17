@@ -16,7 +16,7 @@ from collections import namedtuple
 from mock import patch
 
 from http_prompt.context import Context
-from http_prompt.execution import execute
+from http_prompt.execution import execute, HTTPIE_PROGRAM_NAME
 
 from .base import TempAppDirTestCase
 
@@ -58,7 +58,7 @@ class ExecutionTestCase(TempAppDirTestCase):
             patcher.stop()
 
     def assert_httpie_main_called_with(self, args):
-        self.assertEqual(self.httpie_main.call_args[0][0], args)
+        self.assertEqual(self.httpie_main.call_args[0][0], [HTTPIE_PROGRAM_NAME, *args])
 
     def assert_stdout(self, expected_msg):
         # Append '\n' to simulate behavior of click.echo_via_pager(),
