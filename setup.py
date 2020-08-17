@@ -37,7 +37,7 @@ def read_description(filename):
 def read_requirements(filename):
     try:
         with open(filename) as f:
-            result = [line.rstrip() for line in f]
+            return [line.rstrip() for line in f]
     except IOError:
         raise IOError(os.getcwd())
 
