@@ -24,3 +24,16 @@ set_cookies = 'auto'
 # When Vi mode is enabled, you use Vi-like keybindings to edit your commands.
 # When it is disabled, you use Emacs keybindings.
 vi = False
+
+# Prompt format using the urlparse module terms.
+# Available values:
+# 'scheme': URL scheme specifier
+# 'netloc': Network location part ([] compliant on dots)
+# 'path': Hierarchical path ([] compliant on slashes)
+# 'params': Parameters for last path element
+# 'query': Query component
+# 'fragment': Fragment identifier
+# You can add a pythonic [] operator (e.g. path[-2:] returns the last two
+# elements of the variable path).
+# See https://docs.python.org/2/library/urlparse.html#module-urlparse
+prompt = '{scheme}{netloc}{path}{params}{query}{fragment}'
