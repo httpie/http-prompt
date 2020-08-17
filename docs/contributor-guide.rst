@@ -185,39 +185,29 @@ Deactivate it first if you're in a virtualenv::
 Make sure you have installed all the Python versions we're targeting. If not,
 do::
 
-    $ pyenv install 2.6.9
-    $ pyenv install 2.7.12
-    $ pyenv install 3.3.6
-    $ pyenv install 3.4.5
-    $ pyenv install 3.5.2
     $ pyenv install 3.6.0
-    $ pyenv install pypy-5.3.1
-    $ pyenv install pypy3-2.4.0
+    $ pyenv install 3.7.0
+    $ pyenv install 3.8.0
 
 To use Tox_ with pyenv_, you have to instruct pyenv to use multiple Python
 versions for the project::
 
     $ cd ~/Projects/http-prompt
-    $ pyenv local 3.6.0 3.5.2 3.4.5 3.3.6 2.7.12 2.6.9 pypy-5.3.1 pypy3-2.4.0
+    $ pyenv local 3.6.0 3.7.0 3.8.0
 
 This will generate a ``.python-version`` in the project directory::
 
     $ cat ~/Projects/http-prompt/.python-version
     3.6.0
-    3.5.2
-    3.4.5
-    3.3.6
-    2.7.12
-    2.6.9
-    pypy-5.3.1
-    pypy3-2.4.0
+    3.7.0
+    3.8.0
 
 This tells pyenv_ to choose a Python version based on the above order. In this
 case, 3.6.0 is the first choice, so any Python executables (such as ``python``
 and ``pip``) will be automatically mapped to the ones in
-``~/.pyenv/versions/3.6.0/bin``.
+``~/.pyenv/versions/3.8.0/bin``.
 
-We want to run ``tox`` using on Python 3.6.0. Make sure you have installed
+We want to run ``tox`` using on Python 3.8.0. Make sure you have installed
 Tox_::
 
     $ pip install tox
