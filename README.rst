@@ -14,7 +14,7 @@ Links
 
 * Home: https://http-prompt.com
 * Documentation: https://docs.http-prompt.com
-* Code: https://github.com/eliangcs/http-prompt
+* Code: https://github.com/httpie/http-prompt
 * Chat: https://gitter.im/eliangcs/http-prompt
 
 
