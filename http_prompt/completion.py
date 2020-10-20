@@ -27,7 +27,6 @@ ROOT_COMMANDS = OrderedDict([
 ])
 
 ACTIONS = OrderedDict([
-    ('connect', 'CONNECT request'),
     ('delete', 'DELETE request'),
     ('get', 'GET request'),
     ('head', 'HEAD request'),
