@@ -36,6 +36,8 @@ class Context(object):
                     self.root.add_path(*path_tokens)
                     endpoint = paths[path]
                     for method, info in endpoint.items():
+                        if not isinstance(info, dict):
+                            continue
                         params = info.get('parameters')
                         if params:
                             for param in params:
