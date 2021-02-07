@@ -36,7 +36,8 @@ class Context(object):
                     self.root.add_path(*path_tokens)
                     endpoint = dict(paths[path])
                     # path parameters (apply to all paths if not overriden)
-                    global_parameters = endpoint.pop('parameters', [])
+                    # exclude $ref as we have no system to handle that now
+                    global_parameters = list(endpoint.pop('parameters', []))
                     # not used
                     endpoint.pop('servers', None)
                     endpoint.pop('$ref', None)
@@ -44,12 +45,25 @@ class Context(object):
                     endpoint.pop('description', None)
                     for method, info in endpoint.items():
                         params = info.get('parameters')
+                        parameter_key = lambda i: (
+                                i.get('$ref', None),
+                                i.get('name', None),
+                                i.get('in', None)
+                        )
                         if params:
-                            params = list(global_parameters + params)
-                            # parameter is overriden based on in/name value
+                            # parameter is overriden based on $ref/in/name value
                             # last value (local definition) takes precedence
-                            params_map = dict([((i.get('name'), i.get('in')), i) for i in params])
+                            params = list(global_parameters + params)
+                            params_map = dict([
+                                (parameter_key(p), p)
+                                for p in params
+                            ])
+                            params = params_map.values()
                             for param in params:
+                                if param.get("$ref"):
+                                    for section in param.get("$ref").split('/'):
+                                        param = param.get(section) if not section == "#" else spec
+
                                 if param.get('in') != 'path':
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
