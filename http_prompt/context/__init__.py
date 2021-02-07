@@ -44,16 +44,16 @@ class Context(object):
                     endpoint.pop('summary', None)
                     endpoint.pop('description', None)
                     for method, info in endpoint.items():
-                        params = info.get('parameters')
-                        parameter_key = lambda i: (
-                                i.get('$ref', None),
-                                i.get('name', None),
-                                i.get('in', None)
-                        )
+                        params = info.get('parameters', [])
+                        params = list(global_parameters + params)
                         if params:
+                            parameter_key = lambda i: (
+                                    i.get('$ref', None),
+                                    i.get('name', None),
+                                    i.get('in', None)
+                            )
                             # parameter is overriden based on $ref/in/name value
                             # last value (local definition) takes precedence
-                            params = list(global_parameters + params)
                             params_map = dict([
                                 (parameter_key(p), p)
                                 for p in params
@@ -65,6 +65,10 @@ class Context(object):
                                         param = param.get(section) if not section == "#" else spec
 
                                 if param.get('in') != 'path':
+                                    # Note that for completion mechanism, only
+                                    # name/node_type is used
+                                    # Parameters from methods/location
+                                    # are merged
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
                                                        node_type='file')
