@@ -34,15 +34,22 @@ class Context(object):
                     elif path[-1] == '/':  # Path ends with a trailing slash
                         path_tokens[-1] = path_tokens[-1] + '/'
                     self.root.add_path(*path_tokens)
-                    endpoint = paths[path]
+                    endpoint = dict(paths[path])
+                    # path parameters (apply to all paths if not overriden)
+                    global_parameters = endpoint.pop('parameters', [])
+                    # not used
+                    endpoint.pop('servers', None)
+                    endpoint.pop('$ref', None)
+                    endpoint.pop('summary', None)
+                    endpoint.pop('description', None)
                     for method, info in endpoint.items():
                         params = info.get('parameters')
                         if params:
+                            params = list(global_parameters + params)
+                            # parameter is overriden based on in/name value
+                            # last value (local definition) takes precedence
+                            params_map = dict([((i.get('name'), i.get('in')), i) for i in params])
                             for param in params:
-                                if param.get("$ref"):
-                                    for section in param.get("$ref").split('/'):
-                                        param = param.get(section) if not section == "#" else spec
-
                                 if param.get('in') != 'path':
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
