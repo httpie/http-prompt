@@ -60,9 +60,9 @@ Thanks
     :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=1.5
 
 .. _Contributors: https://github.com/eliangcs/http-prompt/graphs/contributors
-.. _GitHub issues: https://github.com/eliangcs/http-prompt/issues
-.. _Gitter chat room: https://gitter.im/eliangcs/http-prompt
-.. _HTTPie: https://httpie.org
+.. _GitHub issues: https://github.com/httpie/http-prompt/issues
+.. _Discord: https://htpie.io/chat
+.. _HTTPie: https://httpie.io
 .. _Parsimonious: https://github.com/erikrose/parsimonious
 .. _pgcli: http://pgcli.com
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit

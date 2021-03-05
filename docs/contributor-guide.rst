@@ -137,12 +137,10 @@ Before you add a new feature, make sure you create an issue making a proposal
 first, because you don't want to waste your time on something that the
 community don't agree upon.
 
-Python 2 and 3 Compatibility
+Python Compatibility
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-HTTP Prompt is compatible with Python 2 and 3. Keep in mind that you're coding
-for Python 2 and 3 at the same time. You can use Tox_ (see below) to make sure
-the code is runnable on both Python 2 and 3.
+HTTP Prompt is compatible with Python 3.6+.
 
 Documentation
 ~~~~~~~~~~~~~

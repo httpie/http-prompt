@@ -36,5 +36,5 @@ Links
 .. |Asciinema| image:: https://asciinema.org/a/96613.png
     :target: https://asciinema.org/a/96613?theme=monokai&size=medium&autoplay=1&speed=1.5
 
-.. _HTTPie: https://httpie.org
+.. _HTTPie: https://httpie.io
 .. _prompt_toolkit: https://github.com/jonathanslenders/python-prompt-toolkit

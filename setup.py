@@ -45,7 +45,7 @@ def read_requirements(filename):
 setup(
     name='http-prompt',
     version=find_version('http_prompt', '__init__.py'),
-    url='https://github.com/eliangcs/http-prompt',
+    url='https://github.com/httpie/http-prompt',
     description='An interactive HTTP command-line client',
     long_description=read_description('README.rst'),
     author='Chang-Hung Liang',
@@ -74,5 +74,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ]
 )

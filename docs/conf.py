@@ -167,7 +167,7 @@ html_sidebars = {
 html_theme_options = {
     'extra_nav_links': OrderedDict([
         ('Home', 'http://http-prompt.com'),
-        ('Chat on Gitter', 'https://gitter.im/eliangcs/http-prompt'),
-        ('Code on GitHub', 'https://github.com/eliangcs/http-prompt'),
+        ('Discord', 'https://httpie.io/chat'),
+        ('Code on GitHub', 'https://github.com/httpie/http-prompt'),
     ])
 }
