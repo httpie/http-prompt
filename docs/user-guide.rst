@@ -362,7 +362,7 @@ only person who can read it is the owner (you).
 last context instead of grouping multiple contexts by hostnames and ports like
 it did previously. We changed the behavior because the feature can be simply
 replaced by ``env``, ``exec`` and ``source`` commands. See the discussion in
-`issue #70 <https://github.com/eliangcs/http-prompt/issues/70>`_ for detail.
+`issue #70 <https://github.com/httpie/http-prompt/issues/70>`_ for detail.
 
 
 ``ls``, ``cd``, and OpenAPI/Swagger Specification
