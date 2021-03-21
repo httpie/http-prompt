@@ -60,7 +60,7 @@ class TestInteraction(TempAppDirTestCase):
         bin_path = get_http_prompt_path()
         child = pexpect.spawn(bin_path, env=os.environ)
 
-        child.expect_exact('http://localhost:8000> ')
+        child.expect_exact('http://localhost:8000>')
 
         # Enter 'htpie', switch to command mode (ESC),
         # move two chars left (hh), and insert (i) a 't'
