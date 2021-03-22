@@ -75,6 +75,10 @@ The following are all valid:
     > names:=["foo","bar"]
     > user:='{"username": "foo", "password": "bar"}'
 
+    # File upload parameters needs to have --form enabled
+    > number@~/test.txt
+    > is_ok@some-zip.zip
+
     # Write them in one line
     > Content-Type:application/json page==2 username=foo
 

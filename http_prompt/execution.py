@@ -65,19 +65,19 @@ grammar = r"""
     full_dquoted_mut = _ '"' dquoted_mutkey mutop dquoted_mutval '"' _
     value_squoted_mut = _ unquoted_mutkey mutop "'" squoted_mutval "'" _
     value_dquoted_mut = _ unquoted_mutkey mutop '"' dquoted_mutval '"' _
-    mutop = ":=" / ":" / "==" / "="
+    mutop = ":=" / ":" / "==" / "=" / "@"
     unquoted_mutkey = unquoted_mutkey_item+
     unquoted_mutval = unquoted_stringitem*
     unquoted_mutkey_item = shell_subs / unquoted_mutkey_char / escapeseq
-    unquoted_mutkey_char = ~r"[^\s'\"\\=:>]"
+    unquoted_mutkey_char = ~r"[^\s'\"\\=:>@]"
     squoted_mutkey = squoted_mutkey_item+
     squoted_mutval = squoted_stringitem*
     squoted_mutkey_item = shell_subs / squoted_mutkey_char / escapeseq
-    squoted_mutkey_char = ~r"[^\r\n'\\=:]"
+    squoted_mutkey_char = ~r"[^\r\n'\\=:@]"
     dquoted_mutkey = dquoted_mutkey_item+
     dquoted_mutval = dquoted_stringitem*
     dquoted_mutkey_item = shell_subs / dquoted_mutkey_char / escapeseq
-    dquoted_mutkey_char = ~r'[^\r\n"\\=:]'
+    dquoted_mutkey_char = ~r'[^\r\n"\\=:@]'
 
     option_mut = flag_option_mut / value_option_mut
     flag_option_mut = _ flag_optname _
@@ -257,6 +257,7 @@ class ExecutionVisitor(NodeVisitor):
             for target in [self.context.headers,
                            self.context.querystring_params,
                            self.context.body_params,
+                           self.context.file_params,
                            self.context.body_json_params,
                            self.context.options]:
                 target.clear()
@@ -274,13 +275,16 @@ class ExecutionVisitor(NodeVisitor):
             # TODO: This is kind of ugly, will fix it
             if name == '*':
                 self.context.body_params.clear()
+                self.context.file_params.clear()
                 self.context.body_json_params.clear()
+                target = {}
             else:
-                try:
-                    del self.context.body_params[name]
-                except KeyError:
-                    del self.context.body_json_params[name]
-            return node
+                if name in self.context.body_params:
+                    target = self.context.body_params
+                elif name in self.context.file_params:
+                    target = self.context.file_params
+                elif name in self.context.body_json_params:
+                    target = self.context.body_json_params
 
         if name == '*':
             target.clear()
@@ -377,6 +381,8 @@ class ExecutionVisitor(NodeVisitor):
             self.context_override.headers[key] = val
         elif op == '=':
             self.context_override.body_params[key] = val
+        elif op == '@':
+            self.context_override.file_params[key] = val
         elif op == '==':
             # You can have multiple querystring params with the same name,
             # so we use a list to store multiple values (#20)

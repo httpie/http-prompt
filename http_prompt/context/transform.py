@@ -47,7 +47,9 @@ def _extract_httpie_request_items(context, quote=False):
         ('==', context.querystring_params),
         (':=', context.body_json_params),
         ('=', context.body_params),
+        ('@', context.file_params),
         (':', context.headers)
+
     ]
     for sep, item_dict in operators_and_items:
         for k, value in sorted(item_dict.items()):
