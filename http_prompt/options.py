@@ -29,6 +29,13 @@ FLAG_OPTIONS = [
 VALUE_OPTIONS = [
     ('--auth', 'Do authentication'),
     ('--auth-type', 'Authentication mechanism to be used'),
+    
+    # 210517 pa: adding support for OAuth2 auth-plugin, 
+    #            which adds three dynamically argparse parameters
+    ('--token-url', 'OAuth2 plugin - Token URL'),
+    ('--scope',     'OAuth2 plugin - Scope'),
+    ('--resource',  'OAuth2 plugin - Resource'),
+
     ('--cert', 'Specify client SSL certificate'),
     ('--cert-key', 'The private key to use with SSL'),
     ('--output', 'Save output to a file'),

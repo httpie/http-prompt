@@ -8,6 +8,7 @@ import yaml
 import os
 import re
 import sys
+import gzip
 
 import click
 
@@ -84,6 +85,19 @@ def normalize_url(ctx, param, value):
     return None
 
 
+def _urlopen(response):
+    # https://gist.github.com/Manouchehri/0ce55d239fb07c41c92f
+    if response.info().get('Content-Encoding') == 'gzip':
+        pagedata = gzip.decompress(response.read())
+    elif response.info().get('Content-Encoding') == 'deflate':
+        pagedata = response.read()
+    elif response.info().get('Content-Encoding'):
+        print('Encoding type unknown')
+    else:
+        pagedata = response.read()
+
+    return pagedata
+
 @click.command(context_settings=dict(
     ignore_unknown_options=True,
 ))
@@ -109,9 +123,9 @@ def cli(spec, env, url, http_options):
     os.environ['LESS'] = '-RXF'
 
     if spec:
-        f = urlopen(spec)
+        response = urlopen(spec)
         try:
-            content = f.read().decode('utf-8')
+            content = _urlopen(response) # f.read().decode('utf-8')
             try:
                 spec = json.loads(content)
             except json.JSONDecodeError:
@@ -122,7 +136,7 @@ def cli(spec, env, url, http_options):
                                 spec, err=True, fg='red')
                     spec = None
         finally:
-            f.close()
+            response.close()
 
     if url:
         url = fix_incomplete_url(url)

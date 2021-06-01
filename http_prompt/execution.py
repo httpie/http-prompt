@@ -30,7 +30,8 @@ from .utils import unescape, unquote, colformat
 
 HTTPIE_PROGRAM_NAME = 'http'
 
-
+# 210517 pa: extended grammar to reflect changes in options.py 
+#   to support 3 additional httpie-oauth2 authentication-plugin parameters
 grammar = r"""
     command = mutation / immutation
 
@@ -90,7 +91,8 @@ grammar = r"""
     value_optname = "--pretty" / "--style" / "-s" / "--print" / "-p" /
                     "--output" / "-o" / "--session-read-only" / "--session" /
                     "--auth-type" / "--auth" / "-a" / "--proxy" / "--verify" /
-                    "--cert" / "--cert-key" / "--timeout"
+                    "--cert" / "--cert-key" / "--timeout" / 
+                    "--token-url" / "--scope" / "--resource"
 
     cd = _ "cd" _ string? _
     rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
