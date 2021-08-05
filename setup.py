@@ -3,7 +3,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import codecs
 import os
 import re
 
@@ -16,8 +15,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 # see https://groups.google.com/d/topic/pypa-dev/0PkjVpcxTzQ/discussion
 def find_version(*file_paths):
     # Open in Latin-1 so that we avoid encoding errors.
-    # Use codecs.open for Python 2 compatibility
-    with codecs.open(os.path.join(here, *file_paths), 'r', 'latin1') as f:
+    with open(os.path.join(here, *file_paths), encoding='latin1') as f:
         version_file = f.read()
 
     # The version line must have the form
@@ -30,7 +28,7 @@ def find_version(*file_paths):
 
 
 def read_description(filename):
-    with codecs.open(filename, encoding='utf-8') as f:
+    with open(filename, encoding='utf-8') as f:
         return f.read()
 
 

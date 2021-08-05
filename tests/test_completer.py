@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-import six
 import unittest
 
 from prompt_toolkit.document import Document
@@ -29,8 +26,8 @@ class TestCompleter(unittest.TestCase):
         self.completer_event = None
 
     def get_completions(self, command):
-        if not isinstance(command, six.text_type):
-            command = six.u(command)
+        if not isinstance(command, str):
+            command = command.decode()
         position = len(command)
         completions = self.completer.get_completions(
             Document(text=command, cursor_position=position),

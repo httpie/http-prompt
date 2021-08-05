@@ -1,7 +1,5 @@
 """Tree data structure for ls command to work with OpenAPI specification."""
 
-from __future__ import unicode_literals
-
 
 class Node(object):
 

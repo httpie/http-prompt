@@ -1,21 +1,20 @@
 name: http-prompt
 summary: Interactive command-line HTTP client
 description: |
-  HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
-  and syntax highlighting, built on HTTPie and prompt_toolkit.
-  Home: http://http-prompt.com
+    HTTP Prompt is an interactive command-line HTTP client featuring autocomplete
+    and syntax highlighting, built on HTTPie and prompt_toolkit.
+    Home: http://http-prompt.com
 adopt-info: http-prompt
 confinement: strict
 
 apps:
     http-prompt:
         command: bin/http-prompt
-        plugs: [ network ]
+        plugs: [network]
 parts:
     http-prompt:
         source: .
         plugin: python
-        python-version: python2
         override-pull: |
             snapcraftctl pull
             version="$(git describe --always | sed -e 's/-/+git/;y/-/./')"

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import hashlib
 import io
 import json
@@ -9,11 +7,10 @@ import os
 import sys
 
 import pytest
-import six
 
 from collections import namedtuple
 
-from mock import patch
+from unittest.mock import patch
 
 from http_prompt.context import Context
 from http_prompt.execution import execute, HTTPIE_PROGRAM_NAME
@@ -704,7 +701,6 @@ class TestExecution_rm(ExecutionTestCase):
         execute('rm -q abcd', self.context)
         self.assert_stderr("Key 'abcd' not found")
 
-    @pytest.mark.skipif(not six.PY2, reason='a bug on Python 2')
     def test_non_existing_key_unicode(self):  # See #25
         execute(u'rm -q abcd', self.context)
         self.assert_stderr("Key 'abcd' not found")
@@ -1287,7 +1283,7 @@ class TestHttpBin(TempAppDirTestCase):
     def test_get_querystring(self):
         data = self.execute_redirection(
             'get /get id==1234 X-Custom-Header:5678')
-        data = json.loads(data.decode('utf-8'))
+        data = json.loads(data.decode())
         self.assertEqual(data['args'], {
             'id': '1234'
         })
@@ -1296,7 +1292,7 @@ class TestHttpBin(TempAppDirTestCase):
     def test_post_json(self):
         data = self.execute_redirection(
             'post /post id=1234 X-Custom-Header:5678')
-        data = json.loads(data.decode('utf-8'))
+        data = json.loads(data.decode())
         self.assertEqual(data['json'], {
             'id': '1234'
         })
@@ -1305,7 +1301,7 @@ class TestHttpBin(TempAppDirTestCase):
     def test_post_form(self):
         data = self.execute_redirection(
             'post /post --form id=1234 X-Custom-Header:5678')
-        data = json.loads(data.decode('utf-8'))
+        data = json.loads(data.decode())
         self.assertEqual(data['form'], {
             'id': '1234'
         })

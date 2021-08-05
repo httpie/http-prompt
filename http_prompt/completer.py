@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import re
 
 from collections import OrderedDict
@@ -42,6 +40,7 @@ def compile_rules(rules):
         regex = re.compile(pattern)
         compiled_rules.append((regex, meta_dict))
     return compiled_rules
+
 
 RULES = compile_rules(RULES)
 

@@ -54,7 +54,7 @@ most popular virtualenv management tools.
 
 Make sure you have installed pyenv_ and pyenv-virtualenv_ first.
 
-HTTP Prompt should work on Python 2.6, 2.7, 3.3 to 3.6. You can use any
+HTTP Prompt should work on Python 3.6 and newer. You can use any
 of these Python versions as your development environment, but using the latest
 version (3.6.x) is probably the best. You can install the latest Python with
 pyenv::

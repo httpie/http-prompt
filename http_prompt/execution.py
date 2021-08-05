@@ -534,7 +534,7 @@ class ExecutionVisitor(NodeVisitor):
     def visit_shell_subs(self, node, children):
         cmd = children[1]
         p = Popen(cmd, shell=True, stdout=PIPE)
-        return p.stdout.read().decode('utf-8').rstrip()
+        return p.stdout.read().decode().rstrip()
 
     def visit_shell_code(self, node, children):
         return node.text

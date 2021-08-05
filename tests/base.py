@@ -4,13 +4,12 @@ import sys
 import tempfile
 import unittest
 
-import six
-
 
 class TempAppDirTestCase(unittest.TestCase):
     """Set up temporary app data and config directories before every test
     method, and delete them afterwards.
     """
+
     def setUp(self):
         # Create a temp dir that will contain data and config directories
         self.temp_dir = tempfile.mkdtemp()
@@ -52,8 +51,8 @@ class TempAppDirTestCase(unittest.TestCase):
         if not os.path.exists(full_tempdir):
             os.makedirs(full_tempdir)
 
-        if isinstance(data, six.text_type):
-            data = data.encode('utf-8')
+        if isinstance(data, str):
+            data = data.encode()
 
         with tempfile.NamedTemporaryFile(dir=full_tempdir, delete=False) as f:
             f.write(data)

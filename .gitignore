@@ -9,3 +9,4 @@ _build
 build
 dist
 data.json
+venv*

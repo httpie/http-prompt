@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import json
 from http.cookies import SimpleCookie
 from urllib.request import pathname2url, urlopen
@@ -30,10 +28,6 @@ from .execution import execute
 from .lexer import HttpPromptLexer
 from .utils import smart_quote
 from .xdg import get_data_dir
-
-
-# XXX: http://click.pocoo.org/python3/#unicode-literals
-click.disable_unicode_literals_warning = True
 
 
 def fix_incomplete_url(url):
@@ -111,7 +105,7 @@ def cli(spec, env, url, http_options):
     if spec:
         f = urlopen(spec)
         try:
-            content = f.read().decode('utf-8')
+            content = f.read().decode()
             try:
                 spec = json.loads(content)
             except json.JSONDecodeError:
