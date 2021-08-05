@@ -82,12 +82,12 @@ def extract_args_for_httpie_main(context, method=None):
 
 def format_to_curl(context, method=None):
     """Format a Context object to a cURL command."""
-    raise NotImplementedError("curl format is not supported yet")
+    raise NotImplementedError('curl format is not supported yet')
 
 
 def format_to_raw(context, method=None):
     """Format a Context object to HTTP raw text."""
-    raise NotImplementedError("raw format is not supported yet")
+    raise NotImplementedError('raw format is not supported yet')
 
 
 def format_to_httpie(context, method=None):

@@ -47,22 +47,20 @@ class Context(object):
                         params = info.get('parameters', [])
                         params = list(global_parameters + params)
                         if params:
-                            parameter_key = lambda i: (
-                                    i.get('$ref', None),
-                                    i.get('name', None),
-                                    i.get('in', None)
+                            def parameter_key(i): return (
+                                i.get('$ref', None),
+                                i.get('name', None),
+                                i.get('in', None)
                             )
                             # parameter is overriden based on $ref/in/name value
                             # last value (local definition) takes precedence
-                            params_map = dict([
-                                (parameter_key(p), p)
-                                for p in params
-                            ])
+                            params_map = {parameter_key(p): p for p in params}
                             params = params_map.values()
                             for param in params:
-                                if param.get("$ref"):
-                                    for section in param.get("$ref").split('/'):
-                                        param = param.get(section) if not section == "#" else spec
+                                if param.get('$ref'):
+                                    for section in param.get('$ref').split('/'):
+                                        param = param.get(
+                                            section) if not section == '#' else spec
 
                                 if param.get('in') != 'path':
                                     # Note that for completion mechanism, only

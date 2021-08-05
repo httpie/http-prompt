@@ -12,7 +12,8 @@ __all__ = ['HttpPromptLexer']
 
 FLAG_OPTIONS = [name for name, _ in opt.FLAG_OPTIONS]
 VALUE_OPTIONS = [name for name, _ in opt.VALUE_OPTIONS]
-HTTP_METHODS = ('get', 'head', 'post', 'put', 'patch', 'delete', 'options', 'connect')
+HTTP_METHODS = ('get', 'head', 'post', 'put', 'patch',
+                'delete', 'options', 'connect')
 
 
 def string_rules(state):
@@ -46,7 +47,7 @@ class HttpPromptLexer(RegexLexer):
 
             (words(HTTP_METHODS, prefix='(?i)', suffix=r'(?!\S)(\s*)'),
              bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
-            
+
             (r'(clear)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(exit)(\s*)', bygroups(Keyword, Text), 'end'),
             (r'(help)(\s)*', bygroups(Keyword, Text), 'end'),
