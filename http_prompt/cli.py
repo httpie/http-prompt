@@ -63,7 +63,7 @@ class ExecutionListener(object):
         cookie_pref = self.cfg.get('set_cookies') or 'auto'
         if cookie_pref == 'auto' or (
                 cookie_pref == 'ask' and
-                click.confirm("Cookies incoming! Do you want to set them?")):
+                click.confirm('Cookies incoming! Do you want to set them?')):
             existing_cookie = context.headers.get('Cookie')
             new_cookie = update_cookies(existing_cookie, response.cookies)
             context.headers['Cookie'] = new_cookie
@@ -78,12 +78,10 @@ def normalize_url(ctx, param, value):
     return None
 
 
-@click.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.option('--spec', help="OpenAPI/Swagger specification file.",
+@click.command(context_settings={'ignore_unknown_options': True})
+@click.option('--spec', help='OpenAPI/Swagger specification file.',
               callback=normalize_url)
-@click.option('--env', help="Environment file to preload.",
+@click.option('--env', help='Environment file to preload.',
               type=click.Path(exists=True))
 @click.argument('url', default='')
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
@@ -168,4 +166,4 @@ def cli(spec, env, url, http_options):
             if context.should_exit:
                 break
 
-    click.echo("Goodbye!")
+    click.echo('Goodbye!')

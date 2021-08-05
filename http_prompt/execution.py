@@ -241,7 +241,7 @@ class ExecutionVisitor(NodeVisitor):
 
         if isinstance(path, Node):
             seg = urlparse(self.context_override.url)
-            self.context_override.url = seg.scheme + "://" + seg.netloc
+            self.context_override.url = seg.scheme + '://' + seg.netloc
         else:
             self.context_override.url = urljoin2(
                 self.context_override.url, path)
@@ -408,7 +408,7 @@ class ExecutionVisitor(NodeVisitor):
         return self._mutate(node, key, op, val)
 
     def _visit_mut_key_or_val(self, node, children):
-        return unescape(''.join([c for c in children]), exclude=':=')
+        return unescape(''.join(children), exclude=':=')
 
     visit_unquoted_mutkey = _visit_mut_key_or_val
     visit_unquoted_mutval = _visit_mut_key_or_val
