@@ -313,7 +313,7 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_exec(self, node, children):
         path = normalize_filepath(children[3])
-        with io.open(path, encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             # Wipe out context first
             execute('rm *', self.context, self.listener)
             for line in f:
@@ -322,7 +322,7 @@ class ExecutionVisitor(NodeVisitor):
 
     def visit_source(self, node, children):
         path = normalize_filepath(children[3])
-        with io.open(path, encoding='utf-8') as f:
+        with open(path, encoding='utf-8') as f:
             for line in f:
                 execute(line, self.context, self.listener)
         return node
@@ -567,7 +567,7 @@ def execute(command, context, listener=None, style=None):
                 key = re.search(r"KeyError: u?'(.*)'", str(err)).group(1)
                 click.secho("Key '%s' not found" % key, err=True,
                             fg='red')
-            elif issubclass(exc_class, IOError):
+            elif issubclass(exc_class, OSError):
                 msg = str(err).splitlines()[0]
 
                 # Remove the exception class name at the beginning

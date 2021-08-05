@@ -198,7 +198,7 @@ class TestExecution_env(ExecutionTestCase):
         self.context.body_params['name'] = '許 功蓋'
         execute('env > %s' % filename, self.context)
 
-        with io.open(filename, encoding='utf-8') as f:
+        with open(filename, encoding='utf-8') as f:
             content = f.read()
 
         self.assertEqual(content,
@@ -332,9 +332,9 @@ class TestExecution_source_and_exec(ExecutionTestCase):
         # Expect the error message would be the same as when we open the
         # non-existing file
         try:
-            with io.open('no_such_file.txt'):
+            with open('no_such_file.txt'):
                 pass
-        except IOError as err:
+        except OSError as err:
             err_msg = str(err)
         else:
             assert False, 'what?! no_such_file.txt exists!'
@@ -433,9 +433,9 @@ class TestExecution_source_and_exec(ExecutionTestCase):
 
         # Try to get the error message when opening a non-existing file
         try:
-            with io.open('no_such_file.txt'):
+            with open('no_such_file.txt'):
                 pass
-        except IOError as err:
+        except OSError as err:
             err_msg = str(err)
         else:
             assert False, 'what?! no_such_file.txt exists!'
