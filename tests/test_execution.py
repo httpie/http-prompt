@@ -58,7 +58,8 @@ class ExecutionTestCase(TempAppDirTestCase):
             patcher.stop()
 
     def assert_httpie_main_called_with(self, args):
-        self.assertEqual(self.httpie_main.call_args[0][0], [HTTPIE_PROGRAM_NAME, *args])
+        self.assertEqual(self.httpie_main.call_args[0][0], [
+                         HTTPIE_PROGRAM_NAME, *args])
 
     def assert_stdout(self, expected_msg):
         # Append '\n' to simulate behavior of click.echo_via_pager(),
@@ -189,7 +190,6 @@ class TestExecution_env(ExecutionTestCase):
                          "'name=John Doe'\n"
                          "Accept:text/csv\n"
                          "'Authorization:ApiKey 1234'\n")
-
 
     def test_env_non_ascii_and_write_to_file(self):
         filename = self.make_tempfile()
@@ -687,7 +687,7 @@ class TestExecution_rm(ExecutionTestCase):
 
     def test_body_param_escaped(self):
         self.context.body_params['family name'] = 'Doe Doe'
-        execute('rm -b family\ name', self.context)
+        execute(r'rm -b family\ name', self.context)
         self.assertFalse(self.context.body_params)
 
     def test_body_json_param_escaped_colon(self):
@@ -999,8 +999,8 @@ class TestMutation(ExecutionTestCase):
         })
 
     def test_mixed(self):
-        execute('   --form  name="John Doe"   password=1234\ 5678    '
-                'User-Agent:HTTP\ Prompt  -a   \'john:1234 5678\'  '
+        execute('   --form  name="John Doe"   password=1234\\ 5678    '
+                'User-Agent:HTTP\\ Prompt  -a   \'john:1234 5678\'  '
                 '"Accept:text/html"  ', self.context)
         self.assertEqual(self.context.options, {
             '--form': None,
@@ -1228,6 +1228,7 @@ class TestHttpBin(TempAppDirTestCase):
     """Send real requests to http://httpbin.org, save the responses to files,
     and asserts on the file content.
     """
+
     def setUp(self):
         super(TestHttpBin, self).setUp()
 
