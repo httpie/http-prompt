@@ -4,7 +4,7 @@ import math
 import re
 import shlex
 
-from prompt_toolkit.shortcuts import create_output
+from prompt_toolkit.output.defaults import create_output
 
 
 RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')

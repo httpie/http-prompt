@@ -1,6 +1,6 @@
 click>=5.0
 httpie>=2.4.0
 parsimonious>=0.6.2
-prompt-toolkit>=1.0.0,<2.0.0
+prompt-toolkit>=2.0.0,<3.0.0
 Pygments>=2.1.0
 PyYAML>=3.0
