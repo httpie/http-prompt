@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from .base import TempAppDirTestCase
 from http_prompt.context import Context
 from http_prompt.contextio import save_context, load_context

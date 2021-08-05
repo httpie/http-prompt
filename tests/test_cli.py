@@ -2,9 +2,9 @@ import json
 import os
 import sys
 import unittest
+from unittest.mock import patch, DEFAULT
 
 from click.testing import CliRunner
-from mock import patch, DEFAULT
 from requests.models import Response
 
 from .base import TempAppDirTestCase

@@ -8,7 +8,7 @@ class Printer(object):
 
     def write(self, data):
         if isinstance(data, bytes):
-            data = data.decode('utf-8')
+            data = data.decode()
 
         # echo_via_pager() already appends a '\n' at the end of text,
         # so we use rstrip() to remove extra newlines (#89)
@@ -34,12 +34,13 @@ class TextWriter(object):
     """Wrap a file-like object, opened with 'wb' or 'ab', so it accepts text
     data.
     """
+
     def __init__(self, fp):
         self.fp = fp
 
     def write(self, data):
         if isinstance(data, str):
-            data = data.encode('utf-8')
+            data = data.encode()
         self.fp.write(data)
 
     def flush(self):
