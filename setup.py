@@ -1,10 +1,6 @@
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
 import os
 import re
+from setuptools import setup
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -36,8 +32,8 @@ def read_requirements(filename):
     try:
         with open(filename) as f:
             return [line.rstrip() for line in f]
-    except IOError:
-        raise IOError(os.getcwd())
+    except OSError:
+        raise OSError(os.getcwd())
 
 
 setup(
