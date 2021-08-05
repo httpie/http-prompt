@@ -106,3 +106,56 @@ def test_spec():
     assert len(users_children) == 2
     assert users_children[0].name == 'Accept'
     assert users_children[1].name == 'since'
+
+
+def test_override():
+    """Parameters can be defined at path level
+    """
+    c = Context('http://localhost', spec={
+        'paths': {
+            '/users': {
+                'parameters': [
+                    {'name': 'username', 'in': 'query'},
+                    {'name': 'Accept', 'in': 'header'}
+                ],
+                'get': {
+                    'parameters': [
+                        {'name': 'custom1', 'in': 'query'}
+                    ]
+                },
+                'post': {
+                    'parameters': [
+                        {'name': 'custom2', 'in': 'query'},
+                    ]
+                },
+            },
+            '/orgs': {
+                'parameters': [
+                    {'name': 'username', 'in': 'query'},
+                    {'name': 'Accept', 'in': 'header'}
+                ],
+                'get': {}
+            }
+        }
+    })
+    assert c.url == 'http://localhost'
+
+    root_children = list(sorted(c.root.children))
+    # one path
+    assert len(root_children) == 2
+    assert root_children[0].name == 'orgs'
+    assert root_children[1].name == 'users'
+
+    orgs_methods = list(sorted(list(root_children)[0].children))
+    # path parameters are used even if no method parameter
+    assert len(orgs_methods) == 2
+    assert next(filter(lambda i:i.name == 'username', orgs_methods), None) is not None
+    assert next(filter(lambda i:i.name == 'Accept', orgs_methods), None) is not None
+
+    users_methods = list(sorted(list(root_children)[1].children))
+    # path and methods parameters are merged
+    assert len(users_methods) == 4
+    assert next(filter(lambda i:i.name == 'username', users_methods), None) is not None
+    assert next(filter(lambda i:i.name == 'custom1', users_methods), None) is not None
+    assert next(filter(lambda i:i.name == 'custom2', users_methods), None) is not None
+    assert next(filter(lambda i:i.name == 'Accept', users_methods), None) is not None

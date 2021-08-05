@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import sys
 import math
 import re
+import shlex
 
 from prompt_toolkit.output.defaults import create_output
 
@@ -11,10 +12,7 @@ RE_ANSI_ESCAPE = re.compile(r'\x1b[^m]*m')
 
 
 def smart_quote(s):
-    # TODO: Escape
-    if ' ' in s or r'\:' in s:
-        s = "'" + s + "'"
-    return s
+    return shlex.quote(s)
 
 
 def unquote(s):

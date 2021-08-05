@@ -6,7 +6,6 @@ except ImportError:
 import codecs
 import os
 import re
-import sys
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -38,32 +37,15 @@ def read_description(filename):
 def read_requirements(filename):
     try:
         with open(filename) as f:
-            result = [line.rstrip() for line in f]
+            return [line.rstrip() for line in f]
     except IOError:
         raise IOError(os.getcwd())
-    else:
-        # "New in version 2.7."
-        # https://docs.python.org/2/library/collections.html#collections.OrderedDict
-        if sys.version_info < (2, 7):
-            result.append('ordereddict>=1.1')
-
-        # For convenience, changes prompt-toolkit version according to iPython.
-        # iPython <v6 using prompt-toolkit v1 works with python version
-        # less than 3.5.
-        # iPython >=v7 using prompt-toolkit v2 works with python version
-        # above 3.5.
-        if sys.version_info < (3,5):
-            result.append('prompt-toolkit>=1.0.0,<2.0.0')
-        else:
-            result.append('prompt-toolkit>=2.0.0,<2.1.0')
-
-        return result
 
 
 setup(
     name='http-prompt',
     version=find_version('http_prompt', '__init__.py'),
-    url='https://github.com/eliangcs/http-prompt',
+    url='https://github.com/httpie/http-prompt',
     description='An interactive HTTP command-line client',
     long_description=read_description('README.rst'),
     author='Chang-Hung Liang',
@@ -92,5 +74,6 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ]
 )

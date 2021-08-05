@@ -34,16 +34,41 @@ class Context(object):
                     elif path[-1] == '/':  # Path ends with a trailing slash
                         path_tokens[-1] = path_tokens[-1] + '/'
                     self.root.add_path(*path_tokens)
-                    endpoint = paths[path]
+                    endpoint = dict(paths[path])
+                    # path parameters (apply to all paths if not overriden)
+                    # exclude $ref as we have no system to handle that now
+                    global_parameters = list(endpoint.pop('parameters', []))
+                    # not used
+                    endpoint.pop('servers', None)
+                    endpoint.pop('$ref', None)
+                    endpoint.pop('summary', None)
+                    endpoint.pop('description', None)
                     for method, info in endpoint.items():
-                        params = info.get('parameters')
+                        params = info.get('parameters', [])
+                        params = list(global_parameters + params)
                         if params:
+                            parameter_key = lambda i: (
+                                    i.get('$ref', None),
+                                    i.get('name', None),
+                                    i.get('in', None)
+                            )
+                            # parameter is overriden based on $ref/in/name value
+                            # last value (local definition) takes precedence
+                            params_map = dict([
+                                (parameter_key(p), p)
+                                for p in params
+                            ])
+                            params = params_map.values()
                             for param in params:
                                 if param.get("$ref"):
                                     for section in param.get("$ref").split('/'):
                                         param = param.get(section) if not section == "#" else spec
 
                                 if param.get('in') != 'path':
+                                    # Note that for completion mechanism, only
+                                    # name/node_type is used
+                                    # Parameters from methods/location
+                                    # are merged
                                     full_path = path_tokens + [param['name']]
                                     self.root.add_path(*full_path,
                                                        node_type='file')
