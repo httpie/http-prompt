@@ -44,7 +44,7 @@ class HttpPromptLexer(RegexLexer):
             (r'(rm)(\s*)', bygroups(Keyword, Text), 'rm_option'),
             (r'(httpie|curl)(\s*)', bygroups(Keyword, Text), 'action'),
 
-            (words(HTTP_METHODS, prefix='(?i)', suffix='(?!\S)(\s*)'),
+            (words(HTTP_METHODS, prefix='(?i)', suffix=r'(?!\S)(\s*)'),
              bygroups(Keyword, Text), combined('redir_out', 'urlpath')),
             
             (r'(clear)(\s*)', bygroups(Keyword, Text), 'end'),
@@ -123,7 +123,7 @@ class HttpPromptLexer(RegexLexer):
         ],
 
         'action': [
-            (words(HTTP_METHODS, prefix='(?i)', suffix='(\s*)'),
+            (words(HTTP_METHODS, prefix='(?i)', suffix=r'(\s*)'),
              bygroups(Keyword, Text),
              combined('redir_out', 'pipe', 'urlpath')),
             (r'', Text, combined('redir_out', 'pipe', 'urlpath'))
