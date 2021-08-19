@@ -57,7 +57,7 @@ class Node(object):
 
         return None
 
-    def findtopnode(self, path):
+    def findtopnode(self, *path):
         success = True
         cur = self
         for name in path:
@@ -77,7 +77,7 @@ class Node(object):
             return cur
 
     def ls(self, *path):
-        topnode = self.findtopnode(path)
+        topnode = self.findtopnode(*path)
         if not topnode:
             return
         for node in sorted(topnode.children):
