@@ -29,7 +29,7 @@ RULES = [
     # '/foo/bar' => ('/foo/bar', 'bar')
     # '/foo/bar/' => ('/foo/bar/', '')
     # 'foo/bar' => ('foo/bar', 'bar')
-    (r'(ls|cd)\s+(/?(?:[^/]+/)*([^/]*)/?)$', 'urlpaths'),
+    (r'(ls|cd|tree)\s+(/?(?:[^/]+/)*([^/]*)/?)$', 'urlpaths'),
     (r'^\s*[^\s]*$', 'root_commands')
 ]
 
