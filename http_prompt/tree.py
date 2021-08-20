@@ -1,5 +1,6 @@
 """Tree data structure for ls command to work with OpenAPI specification."""
 
+
 class Node(object):
 
     def __init__(self, name, data=None, parent=None):
