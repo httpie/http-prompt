@@ -353,13 +353,22 @@ class ExecutionVisitor(NodeVisitor):
             self.output.write('\n'.join(lines))
         return node
    
-    def _fetchtreenode(self, node, children, filtertypes=[], prepend=""):
+    def _formattreename(self, node, color=False):
+        if color:
+            col = Name
+            if node.data.get("type") == "dir": 
+                col = String
+            return self._colorize(node.name, col)
+        else:
+            return node.name
+
+    def _fetchtreenode(self, node, children, filtertypes=[], prepend="", colorize=True):
         #return [str(x) for x in range(10)]
         ret = []
         ppsym = " "
         
         #cnodes = sorted([c for c in node.children if c.data.get("type") in filtertypes])
-        cnodes = sorted([c for c in node.children], key=lambda x: x.data.get("type"), reverse=True)
+        cnodes = sorted(sorted([c for c in node.children if c.data.get("type") not in filtertypes], key=lambda x: x.name), key=lambda y: y.data.get("type"), reverse=True)
             
         for i,c in enumerate(cnodes):
             if i == len(cnodes)-1:
@@ -368,12 +377,8 @@ class ExecutionVisitor(NodeVisitor):
             else:
                 ppsym =   "├── "
                 postsym = "│   "
-            if c.data.get("type") == "dir":
-                ret.append(prepend + ppsym + self._colorize(c.name, String))
-            else:
-                ret.append(prepend + ppsym + self._colorize(c.name + " -> " + c.data.get("type"), Name))
-            #token_type = String if c.data.get('type') == 'dir' else Name
-            ret += self._fetchtreenode(c, children, filtertypes, prepend + postsym)
+            ret.append(prepend + ppsym + self._formattreename(c, colorize))
+            ret += self._fetchtreenode(c, children, filtertypes, prepend + postsym, colorize)
             
         return ret
         
@@ -382,13 +387,8 @@ class ExecutionVisitor(NodeVisitor):
         path = filter(None, path.split('/'))
         topnode = self.context.root.findtopnode(*path)
         lines = []
-        if self.output.isatty():
-            token_type = String if topnode.data.get('type') == 'dir' else Name
-            lines.append(self._colorize(topnode.name, token_type))
-            lines += self._fetchtreenode(topnode, children, ["dir"])
-        else:
-            #TODO: Test this
-            lines = [n.name for n in nodes]
+        lines.append(self._formattreename(topnode,self.output.isatty()))
+        lines += self._fetchtreenode(topnode, children, ["file"], "", self.output.isatty())
         if lines:
             self.output.write('\n'.join(lines))
         return node
