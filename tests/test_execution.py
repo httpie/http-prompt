@@ -798,12 +798,12 @@ class TestExecution_tree(ExecutionTestCase):
         filename = self.make_tempfile()
 
         # Write something first to make sure it's a full overwrite
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             f.write('hello world\n')
 
         execute('tree > %s' % filename, self.context)
 
-        with open(filename) as f:
+        with open(filename, encoding="utf-8") as f:
             content = f.read()
         self.assertEqual(content, "root\n" +
                                   "├── orgs\n" +
@@ -819,12 +819,12 @@ class TestExecution_tree(ExecutionTestCase):
         filename = self.make_tempfile()
 
         # Write something first to make sure it's an append
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             f.write('hello world\n')
 
         execute('tree >> %s' % filename, self.context)
 
-        with open(filename) as f:
+        with open(filename, encoding="utf-8") as f:
             content = f.read()
         self.assertEqual(content, "hello world\nroot\n" +
                                   "├── orgs\n" +
