@@ -90,7 +90,7 @@ grammar = r"""
     value_optname = "--pretty" / "--style" / "-s" / "--print" / "-p" /
                     "--output" / "-o" / "--session-read-only" / "--session" /
                     "--auth-type" / "--auth" / "-a" / "--proxy" / "--verify" /
-                    "--cert" / "--cert-key" / "--timeout"
+                    "--cert" / "--cert-key" / "--timeout" / "--raw"
 
     cd = _ "cd" _ string? _
     rm = (_ "rm" _ "*" _) / (_ "rm" _ ~r"\-(h|q|b|o)" _ mutkey _)
