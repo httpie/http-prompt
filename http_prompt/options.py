@@ -35,6 +35,7 @@ VALUE_OPTIONS = [
     ('--pretty', 'Control output processing'),
     ('--print', 'Specify what output should contain'),
     ('--proxy', 'Specify proxy URL'),
+    ('--raw', 'Pass raw request data without extra processing'),
     ('--session', 'Create, or reuse and update a session'),
     ('--session-read-only', 'Create or read a session'),
     ('--style', 'Output coloring style'),
