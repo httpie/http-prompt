@@ -25,6 +25,10 @@ To upgrade HTTP Prompt, do::
 
     $ pip install -U http-prompt
 
+It's also possible to install it using Homebrew::
+
+    $ brew install http-prompt
+
 
 Quickstart
 ----------
