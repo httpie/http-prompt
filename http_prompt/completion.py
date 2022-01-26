@@ -24,6 +24,7 @@ ROOT_COMMANDS = OrderedDict([
     ('rm -q', 'Remove querystring parameter'),
     ('rm -q *', 'Remove all querystring parameters'),
     ('source', 'Load environment from a file'),
+    ('tree', 'Show tree structure'),
 ])
 
 ACTIONS = OrderedDict([

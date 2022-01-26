@@ -149,13 +149,19 @@ def test_override():
     orgs_methods = list(sorted(list(root_children)[0].children))
     # path parameters are used even if no method parameter
     assert len(orgs_methods) == 2
-    assert next(filter(lambda i:i.name == 'username', orgs_methods), None) is not None
-    assert next(filter(lambda i:i.name == 'Accept', orgs_methods), None) is not None
+    assert next(filter(lambda i: i.name == 'username', orgs_methods), None)\
+           is not None
+    assert next(filter(lambda i: i.name == 'Accept', orgs_methods), None)\
+           is not None
 
     users_methods = list(sorted(list(root_children)[1].children))
     # path and methods parameters are merged
     assert len(users_methods) == 4
-    assert next(filter(lambda i:i.name == 'username', users_methods), None) is not None
-    assert next(filter(lambda i:i.name == 'custom1', users_methods), None) is not None
-    assert next(filter(lambda i:i.name == 'custom2', users_methods), None) is not None
-    assert next(filter(lambda i:i.name == 'Accept', users_methods), None) is not None
+    assert next(filter(lambda i: i.name == 'username', users_methods), None)\
+           is not None
+    assert next(filter(lambda i: i.name == 'custom1', users_methods), None)\
+           is not None
+    assert next(filter(lambda i: i.name == 'custom2', users_methods), None)\
+           is not None
+    assert next(filter(lambda i: i.name == 'Accept', users_methods), None)\
+           is not None

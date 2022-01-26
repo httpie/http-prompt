@@ -35,7 +35,8 @@ grammar = r"""
     command = mutation / immutation
 
     mutation = concat_mut+ / nonconcat_mut
-    immutation = preview / action / ls / env / help / exit / exec / source / clear / _
+    immutation = preview / action / ls / env / help /
+                 exit / exec / source / clear / tree /_
 
     concat_mut = option_mut / full_quoted_mut / value_quoted_mut / unquoted_mut
     nonconcat_mut = cd / rm
@@ -49,6 +50,7 @@ grammar = r"""
     help = _ "help" _
     exit = _ "exit" _
     ls = _ "ls" _ (urlpath _)? (redir_out)?
+    tree = _ "tree" _ (urlpath _)? (redir_out)?
     env  = _ "env" _ (redir_out)?
     source = _ "source" _ filepath _
     exec = _ "exec" _ filepath _
@@ -348,6 +350,55 @@ class ExecutionVisitor(NodeVisitor):
             lines = list(colformat(list(names)))
         else:
             lines = [n.name for n in nodes]
+        if lines:
+            self.output.write('\n'.join(lines))
+        return node
+
+    def _formattreename(self, node, color=False):
+        if color:
+            col = Name
+            if node.data.get("type") == "dir":
+                col = String
+            return self._colorize(node.name, col)
+        else:
+            return node.name
+
+    def _fetchtreenode(self, node, children, filtertypes=[], prepend="",
+                       colorize=True):
+        ret = []
+        ppsym = " "
+
+        cnodes = sorted(sorted([c for c in node.children if c.data.get("type")
+                        not in filtertypes], key=lambda x: x.name),
+                        key=lambda y: y.data.get("type"), reverse=True)
+
+        for i, c in enumerate(cnodes):
+            if i == len(cnodes)-1:
+                ppsym = "└── "
+                postsym = "    "
+            else:
+                ppsym = "├── "
+                postsym = "│   "
+            ret.append(prepend + ppsym + self._formattreename(c, colorize))
+            ret += self._fetchtreenode(c,
+                                       children,
+                                       filtertypes,
+                                       prepend + postsym,
+                                       colorize)
+
+        return ret
+
+    def visit_tree(self, node, children):
+        path = urlparse(self.context_override.url).path
+        path = filter(None, path.split('/'))
+        topnode = self.context.root.findtopnode(*path)
+        lines = []
+        lines.append(self._formattreename(topnode, self.output.isatty()))
+        lines += self._fetchtreenode(topnode,
+                                     children,
+                                     ["file"],
+                                     "",
+                                     self.output.isatty())
         if lines:
             self.output.write('\n'.join(lines))
         return node

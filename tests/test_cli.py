@@ -186,7 +186,9 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(lv3_names, set(['users', 'orgs']))
 
     def test_spec_from_http(self):
-        spec_url = 'https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json'
+        spec_url = 'https://raw.githubusercontent.com/github/'\
+                   'rest-api-description/main/descriptions/api.github.com/'\
+                   'api.github.com.json'
         result, context = run_and_exit(['https://api.github.com', '--spec',
                                         spec_url])
         self.assertEqual(result.exit_code, 0)

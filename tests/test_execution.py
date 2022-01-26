@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import hashlib
-import io
 import json
 import shutil
 import os
@@ -765,6 +764,81 @@ class TestExecution_rm(ExecutionTestCase):
         self.assertFalse(self.context.querystring_params)
         self.assertFalse(self.context.body_params)
         self.assertFalse(self.context.body_json_params)
+
+
+class TestExecution_tree(ExecutionTestCase):
+
+    def test_root(self):
+        execute('tree', self.context)
+        self.assert_stdout("root\n" +
+                           "├── orgs\n" +
+                           "│   └── {org}\n" +
+                           "│       ├── events\n" +
+                           "│       └── members\n" +
+                           "└── users\n" +
+                           "    └── {username}\n" +
+                           "        ├── events\n" +
+                           "        └── orgs\n")
+
+    def test_relative_path(self):
+        self.context.url = 'http://localhost/users'
+        execute('tree 101', self.context)
+        self.assert_stdout("{username}\n" +
+                           "├── events\n" +
+                           "└── orgs\n")
+
+    def test_absolute_path(self):
+        self.context.url = 'http://localhost/users'
+        execute('tree /orgs/1', self.context)
+        self.assert_stdout("{org}\n" +
+                           "├── events\n" +
+                           "└── members\n")
+
+    def test_redirect_write(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's a full overwrite
+        with open(filename, 'w', encoding="utf-8") as f:
+            f.write('hello world\n')
+
+        execute('tree > %s' % filename, self.context)
+
+        with open(filename, encoding="utf-8") as f:
+            content = f.read()
+        self.assertEqual(content, "root\n" +
+                                  "├── orgs\n" +
+                                  "│   └── {org}\n" +
+                                  "│       ├── events\n" +
+                                  "│       └── members\n" +
+                                  "└── users\n" +
+                                  "    └── {username}\n" +
+                                  "        ├── events\n" +
+                                  "        └── orgs")
+
+    def test_redirect_append(self):
+        filename = self.make_tempfile()
+
+        # Write something first to make sure it's an append
+        with open(filename, 'w', encoding="utf-8") as f:
+            f.write('hello world\n')
+
+        execute('tree >> %s' % filename, self.context)
+
+        with open(filename, encoding="utf-8") as f:
+            content = f.read()
+        self.assertEqual(content, "hello world\nroot\n" +
+                                  "├── orgs\n" +
+                                  "│   └── {org}\n" +
+                                  "│       ├── events\n" +
+                                  "│       └── members\n" +
+                                  "└── users\n" +
+                                  "    └── {username}\n" +
+                                  "        ├── events\n" +
+                                  "        └── orgs")
+
+    def test_grep(self):
+        execute('tree | grep users', self.context)
+        self.assert_stdout('└── users\n')
 
 
 class TestExecution_ls(ExecutionTestCase):
