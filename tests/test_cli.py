@@ -181,6 +181,28 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
 
+    def test_spec_from_local_yml_openapi(self):
+        spec_filepath = self.make_tempfile("""
+            openapi: "3.0.0"
+            servers:
+              - url: https://localhost:8080/
+            paths:
+              /api/users:
+                get:
+                  description:
+              /api/orgs:
+                get:
+                  description:
+        """)
+        result, context = run_and_exit(['example.com/api', "--spec",
+                                        spec_filepath])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com/api')
+        self.assertEqual(set([n.name for n in context.root.children]),
+                         set(['api']))
+        self.assertEqual(set([n.name for n in context.root.ls('api')]),
+                         set(['users', 'orgs']))
+
     def test_spec_basePath(self):
         spec_filepath = self.make_tempfile(json.dumps({
             'basePath': '/api/v1',
