@@ -164,6 +164,23 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
 
+    def test_spec_from_local_yml(self):
+        spec_filepath = self.make_tempfile("""
+            paths:
+              /users:
+                get:
+                  description:
+              /orgs:
+                get:
+                  description:
+        """)
+        result, context = run_and_exit(['example.com', "--spec",
+                                        spec_filepath])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(context.url, 'http://example.com')
+        self.assertEqual(set([n.name for n in context.root.children]),
+                         set(['users', 'orgs']))
+
     def test_spec_basePath(self):
         spec_filepath = self.make_tempfile(json.dumps({
             'basePath': '/api/v1',
