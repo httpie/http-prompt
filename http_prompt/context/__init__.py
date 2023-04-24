@@ -1,4 +1,5 @@
 from http_prompt.tree import Node
+from urllib.parse import urlparse
 
 
 class Context(object):
@@ -15,15 +16,28 @@ class Context(object):
         # Create a tree for supporting API spec and ls command
         self.root = Node('root')
         if spec:
-            if not self.url:
-                schemes = spec.get('schemes')
-                scheme = schemes[0] if schemes else 'https'
-                self.url = (scheme + '://' +
-                            spec.get('host', 'http://localhost:8000') +
-                            spec.get('basePath', ''))
+            is_open_api = 'openapi' in spec
 
-            base_path_tokens = list(filter(lambda s: s,
-                                    spec.get('basePath', '').split('/')))
+            if not self.url:
+                if is_open_api:
+                    # In open api, the schemes are in the 'server' element,
+                    self.url = spec.get('servers', [{'url': 'http://localhost:8000'}])[0].get('url')
+                else:
+                    schemes = spec.get('schemes')
+                    scheme = schemes[0] if schemes else 'https'
+                    self.url = (scheme + '://' +
+                                spec.get('host', 'http://localhost:8000') +
+                                spec.get('basePath', ''))
+
+            # in open api, there is no 'basePath', we should extract that from the url
+            if is_open_api:
+                server = spec.get('servers', [{'url': 'http://localhost:8000'}])[0].get('url')
+                base_path_tokens = list(filter(lambda s: s,
+                                        urlparse(server).path.split('/')))
+            else:
+                base_path_tokens = list(filter(lambda s: s,
+                                        spec.get('basePath', '').split('/')))
+
             paths = spec.get('paths')
             if paths:
                 for path in paths:
