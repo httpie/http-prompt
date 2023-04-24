@@ -16,11 +16,15 @@ class Context(object):
         self.root = Node('root')
         if spec:
             if not self.url:
-                schemes = spec.get('schemes')
-                scheme = schemes[0] if schemes else 'https'
-                self.url = (scheme + '://' +
-                            spec.get('host', 'http://localhost:8000') +
-                            spec.get('basePath', ''))
+                self.url = spec.get('servers')[0].get('url')
+                if 'servers' in spec:
+                    self.url = spec.get('servers')[0].get('url')
+                else:
+                    schemes = spec.get('schemes')
+                    scheme = schemes[0] if schemes else 'https'
+                    self.url = (scheme + '://' +
+                                spec.get('host', 'http://localhost:8000') +
+                                spec.get('basePath', ''))
 
             base_path_tokens = list(filter(lambda s: s,
                                     spec.get('basePath', '').split('/')))

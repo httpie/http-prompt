@@ -198,16 +198,16 @@ class TestCli(TempAppDirTestCase):
 
     def test_spec_from_http_only(self):
         spec_url = (
-            'https://api.apis.guru/v2/specs/medium.com/1.0.0/swagger.json')
+            'https://api.apis.guru/v2/specs/medium.com/1.0/openapi.json')
         result, context = run_and_exit(['--spec', spec_url])
         self.assertEqual(result.exit_code, 0)
-        self.assertEqual(context.url, 'https://api.medium.com/v1')
+        self.assertEqual(context.url, 'https://medium2.p.rapidapi.com')
 
         lv1_names = set([node.name for node in context.root.ls()])
-        lv2_names = set([node.name for node in context.root.ls('v1')])
+        lv2_names = set([node.name for node in context.root.ls('article')])
 
-        self.assertEqual(lv1_names, set(['v1']))
-        self.assertEqual(lv2_names, set(['me', 'publications', 'users']))
+        self.assertEqual(lv1_names, set(['/', 'topfeeds', 'related_tags', 'user', 'article', 'list', 'latestposts', 'search', 'top_writer', 'publication']))
+        self.assertEqual(lv2_names, set(['{article_id}']))
 
     def test_spec_with_trailing_slash(self):
         spec_filepath = self.make_tempfile(json.dumps({
