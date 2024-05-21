@@ -1,38 +1,37 @@
 """Tree data structure for ls command to work with OpenAPI specification."""
 
+from typing import Optional, Union, List, Generator
 
-class Node(object):
-
-    def __init__(self, name, data=None, parent=None):
+class Node:
+    def __init__(self, name: str, data: Optional[dict] = None, parent: Optional['Node'] = None):
         if name in ('.', '..'):
             raise ValueError("name cannot be '.' or '..'")
 
         self.name = name
-        self.data = data or {}
+        self.data = data if data is not None else {}
         self.parent = parent
         self.children = set()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
-    def __repr__(self):
-        return "Node('{}', '{}')".format(self.name, self.data.get('type'))
+    def __repr__(self) -> str:
+        return f"Node('{self.name}', '{self.data.get('type')}')"
 
-    def __lt__(self, other):
+    def __lt__(self, other: 'Node') -> bool:
         ta = self.data.get('type')
         tb = other.data.get('type')
         if ta != tb:
             return ta < tb
         return self.name < other.name
 
-    def __eq__(self, other):
+    def __eq__(self, other: 'Node') -> bool:
         return self.name == other.name and self.data == other.data
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self.name, self.data.get('type')))
 
-    def add_path(self, *path, **kwargs):
-        node_type = kwargs.get('node_type', 'dir')
+    def add_path(self, *path: str, node_type: str = 'dir') -> None:
         name = path[0]
         tail = path[1:]
         child = self.find_child(name, wildcard=False)
@@ -44,7 +43,7 @@ class Node(object):
         if tail:
             child.add_path(*tail, node_type=node_type)
 
-    def find_child(self, name, wildcard=True):
+    def find_child(self, name: str, wildcard: bool = True) -> Optional['Node']:
         for child in self.children:
             if child.name == name:
                 return child
@@ -57,7 +56,10 @@ class Node(object):
 
         return None
 
-    def ls(self, *path):
+    def ls(self, *path: str) -> Generator['Node', None, None]:
+        """
+        Generator function to list nodes in the specified path.
+        """
         success = True
         cur = self
         for name in path:
