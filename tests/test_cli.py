@@ -8,6 +8,7 @@ from click.testing import CliRunner
 from requests.models import Response
 
 from .base import TempAppDirTestCase
+from http_prompt import __version__
 from http_prompt import xdg
 from http_prompt.context import Context
 from http_prompt.cli import cli, execute, ExecutionListener
@@ -48,6 +49,11 @@ def run_and_exit(cli_args=None, prompt_commands=None):
 
 
 class TestCli(TempAppDirTestCase):
+
+    def test_short_version_option(self):
+        result = CliRunner().invoke(cli, ['-v'])
+        self.assertEqual(result.exit_code, 0)
+        self.assertEqual(result.output.strip(), __version__)
 
     def test_without_args(self):
         result, context = run_and_exit(['http://localhost'])
