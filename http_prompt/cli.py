@@ -87,6 +87,12 @@ def normalize_url(ctx, param, value):
 @click.argument('http_options', nargs=-1, type=click.UNPROCESSED)
 @click.version_option(message='%(version)s')
 def cli(spec, env, url, http_options):
+    # Backward-compatible shortcut for issue #209:
+    # treat bare `-v` the same as `--version`.
+    if url == '-v' and not http_options and spec is None and env is None:
+        click.echo(__version__)
+        return
+
     click.echo('Version: %s' % __version__)
 
     copied, config_path = config.initialize()
