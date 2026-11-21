@@ -1,5 +1,6 @@
 import json
 from http.cookies import SimpleCookie
+from urllib.error import URLError
 from urllib.request import pathname2url, urlopen
 
 import yaml
@@ -101,7 +102,11 @@ def cli(spec, env, url, http_options):
     os.environ['LESS'] = '-RXF'
 
     if spec:
-        f = urlopen(spec)
+        try:
+            f = urlopen(spec)
+        except URLError as exc:
+            raise click.ClickException(
+                "Unable to load specification '%s': %s" % (spec, exc))
         try:
             content = f.read().decode()
             try:

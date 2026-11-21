@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 from unittest.mock import patch, DEFAULT
+from urllib.error import HTTPError, URLError
 
 from click.testing import CliRunner
 from requests.models import Response
@@ -163,6 +164,51 @@ class TestCli(TempAppDirTestCase):
         self.assertEqual(context.url, 'http://example.com')
         self.assertEqual(set([n.name for n in context.root.children]),
                          set(['users', 'orgs']))
+
+    @patch('http_prompt.cli.prompt')
+    @patch('http_prompt.cli.urlopen')
+    def test_spec_from_unreachable_url(self, urlopen_mock, prompt_mock):
+        spec_url = 'http://localhost:8000/api.json'
+        urlopen_mock.side_effect = URLError('Connection refused')
+
+        result = CliRunner().invoke(cli, ['--spec', spec_url])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIsInstance(result.exception, SystemExit)
+        self.assertIn("Error: Unable to load specification '%s'" % spec_url,
+                      result.output)
+        self.assertIn('Connection refused', result.output)
+        urlopen_mock.assert_called_once_with(spec_url)
+        prompt_mock.assert_not_called()
+
+    @patch('http_prompt.cli.prompt')
+    @patch('http_prompt.cli.urlopen')
+    def test_spec_from_http_not_found(self, urlopen_mock, prompt_mock):
+        spec_url = 'https://example.com/missing.json'
+        urlopen_mock.side_effect = HTTPError(
+            spec_url, 404, 'Not Found', {}, None)
+
+        result = CliRunner().invoke(cli, ['--spec', spec_url])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIsInstance(result.exception, SystemExit)
+        self.assertIn("Error: Unable to load specification '%s'" % spec_url,
+                      result.output)
+        self.assertIn('HTTP Error 404: Not Found', result.output)
+        urlopen_mock.assert_called_once_with(spec_url)
+        prompt_mock.assert_not_called()
+
+    @patch('http_prompt.cli.prompt')
+    def test_spec_from_missing_local_file(self, prompt_mock):
+        spec_path = os.path.join(self.temp_dir, 'missing.json')
+
+        result = CliRunner().invoke(cli, ['--spec', spec_path])
+
+        self.assertEqual(result.exit_code, 1)
+        self.assertIsInstance(result.exception, SystemExit)
+        self.assertIn('Error: Unable to load specification', result.output)
+        self.assertIn('missing.json', result.output)
+        prompt_mock.assert_not_called()
 
     def test_spec_basePath(self):
         spec_filepath = self.make_tempfile(json.dumps({
